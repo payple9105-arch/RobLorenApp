@@ -1,0 +1,158 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f7f8fa;
+  color: #172033;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.container {
+  width: min(1100px, 92%);
+  margin: 0 auto;
+}
+
+.header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 18px 0;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.nav {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav a {
+  text-decoration: none;
+  color: #374151;
+  font-weight: 600;
+}
+
+.hero {
+  padding: 80px 0;
+  text-align: center;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+}
+
+.hero h1 {
+  font-size: clamp(38px, 7vw, 64px);
+  margin-bottom: 18px;
+}
+
+.hero p {
+  max-width: 650px;
+  margin: 0 auto 30px;
+  font-size: 20px;
+  color: #667085;
+}
+
+.search {
+  display: flex;
+  max-width: 650px;
+  margin: auto;
+  background: white;
+  padding: 8px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 16px;
+}
+
+.search button {
+  border: none;
+  background: #2563eb;
+  color: white;
+  padding: 0 25px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.section {
+  padding: 60px 0;
+}
+
+.section h2 {
+  text-align: center;
+  margin-bottom: 35px;
+  font-size: 32px;
+}
+
+.categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+}
+
+.category {
+  background: white;
+  padding: 30px 20px;
+  border-radius: 14px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.category:hover {
+  transform: translateY(-4px);
+}
+
+.category-icon {
+  font-size: 38px;
+  margin-bottom: 12px;
+}
+
+.footer {
+  background: #172033;
+  color: white;
+  padding: 30px 0;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .nav {
+    display: none;
+  }
+
+  .hero {
+    padding: 55px 0;
+  }
+
+  .search {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search button {
+    padding: 14px;
+  }
+}
