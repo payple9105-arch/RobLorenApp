@@ -41,7 +41,7 @@ function App() {
           <nav className="nav">
             <a href="#categorias">Categorías</a>
             <a href="#como-funciona">Cómo funciona</a>
-            <a <a
+            <a 
   href="#login"
   onClick={(event) => {
     event.preventDefault();
