@@ -56,6 +56,14 @@ function App() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [services, setServices] = useState(initialServices);
+  const [accountMode, setAccountMode] = useState("login");
+  const [account, setAccount] = useState({
+    name: "",
+    email: "",
+    password: "",
+    type: "Cliente",
+  });
+  const [loggedUser, setLoggedUser] = useState(null);
   const [form, setForm] = useState({
     name: "",
     profession: "",
@@ -77,6 +85,40 @@ function App() {
       ...form,
       [event.target.name]: event.target.value,
     });
+  }
+  function handleAccountChange(event) {
+    setAccount({
+      ...account,
+      [event.target.name]: event.target.value,
+    });
+  }
+  function handleAccountSubmit(event) {
+    event.preventDefault();
+    if (!account.email || !account.password) {
+      alert("Completa el correo y la contraseña.");
+      return;
+    }
+    if (accountMode === "register" && !account.name) {
+      alert("Escribe tu nombre.");
+      return;
+    }
+    const user = {
+      name: account.name || account.email.split("@")[0],
+      email: account.email,
+      type: account.type,
+    };
+    setLoggedUser(user);
+    alert(
+      accountMode === "register"
+        ? "¡Cuenta creada correctamente!"
+        : "¡Sesión iniciada!"
+    );
+    setPage("home");
+  }
+  function logout() {
+    setLoggedUser(null);
+    alert("Sesión cerrada.");
+    setPage("home");
   }
   function publishService(event) {
     event.preventDefault();
@@ -116,10 +158,90 @@ function App() {
     setSelectedService(service);
     setPage("profile");
   }
+  if (page === "account") {
+    return (
+      <div style={styles.app}>
+        <Header setPage={setPage} loggedUser={loggedUser} />
+        <main style={styles.formContainer}>
+          <div style={styles.accountCard}>
+            <h1>
+              {accountMode === "login"
+                ? "🔐 Iniciar sesión"
+                : "👤 Crear cuenta"}
+            </h1>
+            <p style={styles.subtitle}>
+              {accountMode === "login"
+                ? "Accede a tu cuenta de RobLoren."
+                : "Únete a la comunidad de RobLoren."}
+            </p>
+            <form onSubmit={handleAccountSubmit} style={styles.form}>
+              {accountMode === "register" && (
+                <>
+                  <label>Nombre</label>
+                  <input
+                    name="name"
+                    value={account.name}
+                    onChange={handleAccountChange}
+                    placeholder="Tu nombre"
+                    style={styles.input}
+                  />
+                  <label>Tipo de cuenta</label>
+                  <select
+                    name="type"
+                    value={account.type}
+                    onChange={handleAccountChange}
+                    style={styles.input}
+                  >
+                    <option value="Cliente">Cliente</option>
+                    <option value="Profesional">Profesional</option>
+                  </select>
+                </>
+              )}
+              <label>Correo electrónico</label>
+              <input
+                name="email"
+                type="email"
+                value={account.email}
+                onChange={handleAccountChange}
+                placeholder="tu@email.com"
+                style={styles.input}
+              />
+              <label>Contraseña</label>
+              <input
+                name="password"
+                type="password"
+                value={account.password}
+                onChange={handleAccountChange}
+                placeholder="••••••••"
+                style={styles.input}
+              />
+              <button type="submit" style={styles.publishButton}>
+                {accountMode === "login"
+                  ? "Iniciar sesión"
+                  : "Crear mi cuenta"}
+              </button>
+            </form>
+            <button
+              style={styles.linkButton}
+              onClick={() => {
+                setAccountMode(
+                  accountMode === "login" ? "register" : "login"
+                );
+              }}
+            >
+              {accountMode === "login"
+                ? "¿No tienes cuenta? Crear una"
+                : "¿Ya tienes cuenta? Iniciar sesión"}
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
   if (page === "profile" && selectedService) {
     return (
       <div style={styles.app}>
-        <Header setPage={setPage} />
+        <Header setPage={setPage} loggedUser={loggedUser} />
         <main style={styles.profileContainer}>
           <button
             style={styles.backButton}
@@ -146,11 +268,17 @@ function App() {
             </div>
             <button
               style={styles.contactButton}
-              onClick={() =>
+              onClick={() => {
+                if (!loggedUser) {
+                  alert("Inicia sesión para contactar al profesional.");
+                  setAccountMode("login");
+                  setPage("account");
+                  return;
+                }
                 alert(
-                  `Contacto con ${selectedService.professional}. Próximamente añadiremos mensajería.`
-                )
-              }
+                  `Hola ${loggedUser.name}. La mensajería real será conectada en el siguiente paso.`
+                );
+              }}
             >
               💬 Contactar
             </button>
@@ -162,7 +290,7 @@ function App() {
   if (page === "services") {
     return (
       <div style={styles.app}>
-        <Header setPage={setPage} />
+        <Header setPage={setPage} loggedUser={loggedUser} />
         <main style={styles.main}>
           <h1>Buscar servicios</h1>
           <p style={styles.subtitle}>
@@ -234,7 +362,7 @@ function App() {
   if (page === "offer") {
     return (
       <div style={styles.app}>
-        <Header setPage={setPage} />
+        <Header setPage={setPage} loggedUser={loggedUser} />
         <main style={styles.formContainer}>
           <h1>Ofrece tus servicios</h1>
           <p style={styles.subtitle}>
@@ -284,7 +412,10 @@ function App() {
               value={form.description}
               onChange={handleChange}
               placeholder="Describe lo que ofreces..."
-              style={{ ...styles.input, minHeight: "120px" }}
+              style={{
+                ...styles.input,
+                minHeight: "120px",
+              }}
             />
             <label>Precio inicial (USD)</label>
             <input
@@ -306,15 +437,22 @@ function App() {
   }
   return (
     <div style={styles.app}>
-      <Header setPage={setPage} />
+      <Header setPage={setPage} loggedUser={loggedUser} />
       <main style={styles.main}>
         <h1 style={styles.heroTitle}>
           Encuentra el talento que necesitas.
         </h1>
         <p style={styles.subtitle}>
-          RobLoren conecta clientes con profesionales que ofrecen servicios
-          desde cualquier lugar.
+          RobLoren conecta clientes con profesionales que ofrecen
+          servicios desde cualquier lugar.
         </p>
+        {loggedUser && (
+          <div style={styles.welcome}>
+            👋 Hola, <strong>{loggedUser.name}</strong>
+            <br />
+            Cuenta: {loggedUser.type}
+          </div>
+        )}
         <div style={styles.actions}>
           <button
             style={styles.darkButton}
@@ -345,7 +483,7 @@ function App() {
     </div>
   );
 }
-function Header({ setPage }) {
+function Header({ setPage, loggedUser }) {
   return (
     <header style={styles.header}>
       <button
@@ -354,12 +492,33 @@ function Header({ setPage }) {
       >
         RobLoren
       </button>
-      <button
-        style={styles.darkButton}
-        onClick={() => setPage("home")}
-      >
-        Inicio
-      </button>
+      <div style={styles.headerActions}>
+        <button
+          style={styles.darkButton}
+          onClick={() => setPage("home")}
+        >
+          Inicio
+        </button>
+        {loggedUser ? (
+          <button
+            style={styles.accountButton}
+            onClick={() => {
+              if (window.confirm("¿Quieres cerrar sesión?")) {
+                window.location.reload();
+              }
+            }}
+          >
+            👤 {loggedUser.name}
+          </button>
+        ) : (
+          <button
+            style={styles.accountButton}
+            onClick={() => setPage("account")}
+          >
+            👤 Cuenta
+          </button>
+        )}
+      </div>
     </header>
   );
 }
@@ -372,17 +531,31 @@ const styles = {
   },
   header: {
     background: "#ffffff",
-    padding: "20px 30px",
+    padding: "20px 25px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     borderBottom: "1px solid #e5e7eb",
+    gap: "15px",
+  },
+  headerActions: {
+    display: "flex",
+    gap: "8px",
+    alignItems: "center",
   },
   logoButton: {
     border: "none",
     background: "transparent",
     fontSize: "22px",
     fontWeight: "bold",
+    color: "#172033",
+    cursor: "pointer",
+  },
+  accountButton: {
+    padding: "12px 16px",
+    border: "1px solid #172033",
+    borderRadius: "9px",
+    background: "#ffffff",
     color: "#172033",
     cursor: "pointer",
   },
@@ -508,16 +681,16 @@ const styles = {
     gap: "10px",
   },
   input: {
-    width: "100%",
     padding: "14px",
     border: "1px solid #d1d5db",
     borderRadius: "8px",
     fontSize: "16px",
+    marginBottom: "10px",
     boxSizing: "border-box",
-    marginBottom: "12px",
+    width: "100%",
   },
   publishButton: {
-    padding: "14px",
+    padding: "14px 20px",
     border: "none",
     borderRadius: "9px",
     background: "#172033",
@@ -526,6 +699,30 @@ const styles = {
     cursor: "pointer",
     marginTop: "10px",
   },
+  linkButton: {
+    border: "none",
+    background: "transparent",
+    color: "#172033",
+    textDecoration: "underline",
+    cursor: "pointer",
+    marginTop: "20px",
+    fontSize: "15px",
+  },
+  accountCard: {
+    background: "#ffffff",
+    padding: "35px",
+    borderRadius: "15px",
+    border: "1px solid #e5e7eb",
+  },
+  welcome: {
+    maxWidth: "500px",
+    margin: "30px auto",
+    padding: "20px",
+    background: "#ffffff",
+    borderRadius: "12px",
+    textAlign: "center",
+    border: "1px solid #e5e7eb",
+  },
   profileContainer: {
     maxWidth: "700px",
     margin: "0 auto",
@@ -533,15 +730,14 @@ const styles = {
   },
   profileCard: {
     background: "#ffffff",
-    border: "1px solid #e5e7eb",
+    padding: "40px 30px",
     borderRadius: "18px",
-    padding: "35px",
+    border: "1px solid #e5e7eb",
     textAlign: "center",
   },
   avatar: {
     width: "90px",
     height: "90px",
-    margin: "0 auto 20px",
     borderRadius: "50%",
     background: "#e5e7eb",
     display: "flex",
@@ -549,26 +745,27 @@ const styles = {
     justifyContent: "center",
     fontSize: "38px",
     fontWeight: "bold",
+    margin: "0 auto 20px",
   },
   bio: {
     color: "#5b6475",
     lineHeight: 1.6,
-    margin: "20px auto 30px",
   },
   profileSection: {
-    textAlign: "left",
-    background: "#f5f7fb",
+    marginTop: "30px",
     padding: "25px",
+    background: "#f5f7fb",
     borderRadius: "12px",
-    marginBottom: "25px",
+    textAlign: "left",
   },
   price: {
-    fontSize: "22px",
+    fontSize: "20px",
     fontWeight: "bold",
     marginTop: "20px",
   },
   contactButton: {
     width: "100%",
+    marginTop: "25px",
     padding: "15px",
     border: "none",
     borderRadius: "9px",
@@ -583,10 +780,6 @@ const styles = {
     color: "#6b7280",
   },
 };
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
-Después:
-
-Comm
-
-
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <App />
+);
