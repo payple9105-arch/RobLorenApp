@@ -587,6 +587,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 
 Después:
 
-Commit changes → Commit directly to main → Commit changes.
+Comm
 
 Cuando termine, dime “Listo” y comprobamos que GitHub lo haya publicado correctamente.
