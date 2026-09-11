@@ -589,4 +589,4 @@ Después:
 
 Comm
 
-Cuando termine, dime “Listo” y comprobamos que GitHub lo haya publicado correctamente.
+
