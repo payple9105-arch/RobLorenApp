@@ -1,9 +1,16 @@
 import React, { useState } from "react";
+import Register from "./Register";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 
 function App() {
   const [search, setSearch] = useState("");
+  const [showRegister, setShowRegister] = useState(false);
+
+  if (showRegister) {
+    return <Register />;
+  }
+  
 
   const categories = [
     { icon: "💻", name: "Tecnología" },
@@ -34,7 +41,15 @@ function App() {
           <nav className="nav">
             <a href="#categorias">Categorías</a>
             <a href="#como-funciona">Cómo funciona</a>
-            <a href="#login">Iniciar sesión</a>
+            <a <a
+  href="#login"
+  onClick={(event) => {
+    event.preventDefault();
+    setShowRegister(true);
+  }}
+>
+  Iniciar sesión
+</a>
           </nav>
         </div>
       </header>
