@@ -188,6 +188,12 @@ function App() {
   const [loadingServices, setLoadingServices] =
     useState(true);
 
+  const [requestMessage, setRequestMessage] =
+    useState("");
+
+  const [sendingRequest, setSendingRequest] =
+    useState(false);
+
   const [form, setForm] = useState({
     name: "",
     profession: "",
@@ -671,8 +677,109 @@ function App() {
     setPage("services");
   }
 
+  async function requestService() {
+    if (!loggedUser) {
+      alert(
+        "Inicia sesión para contratar un servicio."
+      );
+
+      setAccountMode("login");
+      setPage("account");
+
+      return;
+    }
+
+    if (!selectedService) {
+      return;
+    }
+
+    if (!selectedService.userId) {
+      alert(
+        "Este es un servicio de demostración. Selecciona un servicio publicado por un profesional para realizar una solicitud real."
+      );
+
+      return;
+    }
+
+    if (
+      selectedService.userId ===
+      loggedUser.id
+    ) {
+      alert(
+        "No puedes contratar tu propio servicio."
+      );
+
+      return;
+    }
+
+    setSendingRequest(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } =
+      await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setSendingRequest(false);
+
+      alert(
+        "Tu sesión ha expirado. Inicia sesión nuevamente."
+      );
+
+      setAccountMode("login");
+      setPage("account");
+
+      return;
+    }
+
+    const { data, error } =
+      await supabase
+        .from("service_requests")
+        .insert({
+          service_id:
+            selectedService.id,
+          client_id: user.id,
+          provider_id:
+            selectedService.userId,
+          status: "pending",
+          message:
+            requestMessage.trim() ||
+            null,
+        })
+        .select()
+        .single();
+
+    setSendingRequest(false);
+
+    if (error) {
+      console.error(
+        "Error creando solicitud:",
+        error
+      );
+
+      alert(
+        `No se pudo crear la solicitud: ${error.message}`
+      );
+
+      return;
+    }
+
+    console.log(
+      "Solicitud creada:",
+      data
+    );
+
+    setRequestMessage("");
+
+    alert(
+      "¡Solicitud enviada correctamente! El profesional podrá revisar tu solicitud."
+    );
+  }
+
   function openProfile(service) {
     setSelectedService(service);
+    setRequestMessage("");
     setPage("profile");
   }
 
@@ -935,6 +1042,55 @@ function App() {
                 }
               </div>
             </div>
+
+            {selectedService.userId && (
+              <>
+                <label
+                  style={{
+                    display: "block",
+                    textAlign: "left",
+                    marginTop: "25px",
+                    marginBottom: "8px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Mensaje para el profesional
+                </label>
+
+                <textarea
+                  value={
+                    requestMessage
+                  }
+                  onChange={(e) =>
+                    setRequestMessage(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Hola, estoy interesado en este servicio..."
+                  style={{
+                    ...styles.input,
+                    minHeight:
+                      "100px",
+                  }}
+                />
+
+                <button
+                  style={
+                    styles.hireButton
+                  }
+                  onClick={
+                    requestService
+                  }
+                  disabled={
+                    sendingRequest
+                  }
+                >
+                  {sendingRequest
+                    ? "Enviando solicitud..."
+                    : "🤝 Contratar servicio"}
+                </button>
+              </>
+            )}
 
             <button
               style={
@@ -1725,6 +1881,18 @@ const styles = {
     fontSize: "16px",
     cursor: "pointer",
     marginTop: "10px",
+  },
+
+  hireButton: {
+    width: "100%",
+    marginTop: "15px",
+    padding: "15px",
+    border: "none",
+    borderRadius: "9px",
+    background: "#172033",
+    color: "#ffffff",
+    fontSize: "17px",
+    cursor: "pointer",
   },
 
   linkButton: {
