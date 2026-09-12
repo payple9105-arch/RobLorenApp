@@ -80,19 +80,25 @@ function mapSupabaseService(service, profile = null) {
       `Profesional especializado en ${profession}.`,
   };
 }
-    id: service.id,
-    title: service.service_title,
-    category: service.category,
-    description: service.description,
-    price:
-      service.price !== null && service.price !== undefined
-        ? `$${service.price} USD`
-        : "Consultar precio",
-    professional: service.name || "Profesional RobLoren",
-    profession: service.profession || "Profesional",
-    bio: `Profesional especializado en ${
-      service.profession || "servicios profesionales"
-    }.`,
+
+function buildLoggedUser(user, profile) {
+  return {
+    id: user.id,
+    name:
+      profile?.name ||
+      user.user_metadata?.name ||
+      user.email?.split("@")[0] ||
+      "Usuario",
+    email: user.email,
+    type:
+      user.user_metadata?.type ||
+      "Cliente",
+    profession:
+      profile?.profession ||
+      "Profesional",
+    bio:
+      profile?.bio ||
+      "Perfil profesional de RobLoren.",
   };
 }
 
@@ -152,10 +158,14 @@ async function ensureUserProfile(user) {
 
 function App() {
   const [page, setPage] = useState("home");
+
   const [selectedService, setSelectedService] =
     useState(null);
+
   const [search, setSearch] = useState("");
+
   const [category, setCategory] = useState("");
+
   const [services, setServices] =
     useState(initialServices);
 
@@ -207,24 +217,9 @@ function App() {
         const profile =
           await ensureUserProfile(user);
 
-        setLoggedUser({
-          id: user.id,
-          name:
-            profile?.name ||
-            user.user_metadata?.name ||
-            user.email?.split("@")[0] ||
-            "Usuario",
-          email: user.email,
-          type:
-            user.user_metadata?.type ||
-            "Cliente",
-          profession:
-            profile?.profession ||
-            "Profesional",
-          bio:
-            profile?.bio ||
-            "Perfil profesional de RobLoren.",
-        });
+        setLoggedUser(
+          buildLoggedUser(user, profile)
+        );
       }
 
       if (active) {
@@ -254,24 +249,9 @@ function App() {
 
           if (!active) return;
 
-          setLoggedUser({
-            id: user.id,
-            name:
-              profile?.name ||
-              user.user_metadata?.name ||
-              user.email?.split("@")[0] ||
-              "Usuario",
-            email: user.email,
-            type:
-              user.user_metadata?.type ||
-              "Cliente",
-            profession:
-              profile?.profession ||
-              "Profesional",
-            bio:
-              profile?.bio ||
-              "Perfil profesional de RobLoren.",
-          });
+          setLoggedUser(
+            buildLoggedUser(user, profile)
+          );
 
           setLoadingAuth(false);
         }
@@ -305,9 +285,60 @@ function App() {
         return;
       }
 
-      const databaseServices = (data || []).map(
-        mapSupabaseService
-      );
+      const serviceRows = data || [];
+
+      const userIds = [
+        ...new Set(
+          serviceRows
+            .map(
+              (service) =>
+                service.user_id
+            )
+            .filter(Boolean)
+        ),
+      ];
+
+      let profiles = [];
+
+      if (userIds.length > 0) {
+        const {
+          data: profileData,
+          error: profileError,
+        } = await supabase
+          .from("profiles")
+          .select(
+            "id,name,profession,bio"
+          )
+          .in("id", userIds);
+
+        if (profileError) {
+          console.error(
+            "Error cargando perfiles:",
+            profileError
+          );
+        } else {
+          profiles = profileData || [];
+        }
+      }
+
+      const profileMap =
+        Object.fromEntries(
+          profiles.map((profile) => [
+            profile.id,
+            profile,
+          ])
+        );
+
+      const databaseServices =
+        serviceRows.map(
+          (service) =>
+            mapSupabaseService(
+              service,
+              profileMap[
+                service.user_id
+              ]
+            )
+        );
 
       setServices([
         ...databaseServices,
@@ -320,30 +351,33 @@ function App() {
     loadServices();
   }, []);
 
-  const filteredServices = services.filter(
-    (service) => {
+  const filteredServices =
+    services.filter((service) => {
       const text =
-        `${service.title} ${service.description} ${service.category} ${service.professional}`.toLowerCase();
+        `${service.title} ${service.description} ${service.category} ${service.professional} ${service.profession}`.toLowerCase();
 
       return (
-        text.includes(search.toLowerCase()) &&
+        text.includes(
+          search.toLowerCase()
+        ) &&
         (category === "" ||
           service.category === category)
       );
-    }
-  );
+    });
 
   function handleChange(event) {
     setForm({
       ...form,
-      [event.target.name]: event.target.value,
+      [event.target.name]:
+        event.target.value,
     });
   }
 
   function handleAccountChange(event) {
     setAccount({
       ...account,
-      [event.target.name]: event.target.value,
+      [event.target.name]:
+        event.target.value,
     });
   }
 
@@ -379,7 +413,8 @@ function App() {
       const { data, error } =
         await supabase.auth.signUp({
           email: account.email,
-          password: account.password,
+          password:
+            account.password,
           options: {
             data: {
               name: account.name,
@@ -393,7 +428,10 @@ function App() {
         return;
       }
 
-      if (data.user && !data.session) {
+      if (
+        data.user &&
+        !data.session
+      ) {
         alert(
           "Cuenta creada correctamente. Revisa tu correo para confirmar tu cuenta."
         );
@@ -411,26 +449,16 @@ function App() {
 
       if (data.user) {
         const profile =
-          await ensureUserProfile(data.user);
+          await ensureUserProfile(
+            data.user
+          );
 
-        setLoggedUser({
-          id: data.user.id,
-          name:
-            profile?.name ||
-            data.user.user_metadata?.name ||
-            data.user.email?.split("@")[0] ||
-            "Usuario",
-          email: data.user.email,
-          type:
-            data.user.user_metadata?.type ||
-            "Cliente",
-          profession:
-            profile?.profession ||
-            "Profesional",
-          bio:
-            profile?.bio ||
-            "Perfil profesional de RobLoren.",
-        });
+        setLoggedUser(
+          buildLoggedUser(
+            data.user,
+            profile
+          )
+        );
       }
 
       alert(
@@ -442,10 +470,13 @@ function App() {
     }
 
     const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email: account.email,
-        password: account.password,
-      });
+      await supabase.auth.signInWithPassword(
+        {
+          email: account.email,
+          password:
+            account.password,
+        }
+      );
 
     if (error) {
       alert(error.message);
@@ -457,26 +488,15 @@ function App() {
     const profile =
       await ensureUserProfile(user);
 
-    setLoggedUser({
-      id: user.id,
-      name:
-        profile?.name ||
-        user.user_metadata?.name ||
-        user.email?.split("@")[0] ||
-        "Usuario",
-      email: user.email,
-      type:
-        user.user_metadata?.type ||
-        "Cliente",
-      profession:
-        profile?.profession ||
-        "Profesional",
-      bio:
-        profile?.bio ||
-        "Perfil profesional de RobLoren.",
-    });
+    setLoggedUser(
+      buildLoggedUser(
+        user,
+        profile
+      )
+    );
 
     alert("¡Sesión iniciada!");
+
     setPage("home");
   }
 
@@ -526,7 +546,8 @@ function App() {
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
     if (!user) {
       alert(
@@ -542,22 +563,49 @@ function App() {
     const profile =
       await ensureUserProfile(user);
 
-    if (profile) {
-      await supabase
-        .from("profiles")
-        .update({
-          name: form.name,
-          profession: form.profession,
-          bio: `Profesional especializado en ${form.profession}.`,
-        })
-        .eq("id", user.id);
+    let updatedProfile = profile;
 
-      setLoggedUser((currentUser) => ({
-        ...currentUser,
+    if (profile) {
+      const profileUpdates = {
         name: form.name,
-        profession: form.profession,
+        profession:
+          form.profession,
         bio: `Profesional especializado en ${form.profession}.`,
-      }));
+      };
+
+      const {
+        data: savedProfile,
+        error:
+          profileUpdateError,
+      } = await supabase
+        .from("profiles")
+        .update(profileUpdates)
+        .eq("id", user.id)
+        .select()
+        .single();
+
+      if (profileUpdateError) {
+        console.error(
+          "Error actualizando perfil:",
+          profileUpdateError
+        );
+
+        alert(
+          `No se pudo actualizar tu perfil: ${profileUpdateError.message}`
+        );
+
+        return;
+      }
+
+      updatedProfile =
+        savedProfile;
+
+      setLoggedUser(
+        buildLoggedUser(
+          user,
+          savedProfile
+        )
+      );
     }
 
     const { data, error } =
@@ -566,11 +614,17 @@ function App() {
         .insert({
           user_id: user.id,
           name: form.name,
-          profession: form.profession,
-          service_title: form.title,
-          category: form.category,
-          description: form.description,
-          price: Number(form.price),
+          profession:
+            form.profession,
+          service_title:
+            form.title,
+          category:
+            form.category,
+          description:
+            form.description,
+          price: Number(
+            form.price
+          ),
         })
         .select()
         .single();
@@ -589,12 +643,17 @@ function App() {
     }
 
     const newService =
-      mapSupabaseService(data);
+      mapSupabaseService(
+        data,
+        updatedProfile
+      );
 
-    setServices((currentServices) => [
-      newService,
-      ...currentServices,
-    ]);
+    setServices(
+      (currentServices) => [
+        newService,
+        ...currentServices,
+      ]
+    );
 
     setForm({
       name: "",
@@ -635,36 +694,51 @@ function App() {
           logout={logout}
         />
 
-        <main style={styles.formContainer}>
-          <div style={styles.accountCard}>
+        <main
+          style={styles.formContainer}
+        >
+          <div
+            style={styles.accountCard}
+          >
             <h1>
               {accountMode === "login"
                 ? "🔐 Iniciar sesión"
                 : "👤 Crear cuenta"}
             </h1>
 
-            <p style={styles.subtitle}>
+            <p
+              style={styles.subtitle}
+            >
               {accountMode === "login"
                 ? "Accede a tu cuenta de RobLoren."
                 : "Únete a la comunidad de RobLoren."}
             </p>
 
             <form
-              onSubmit={handleAccountSubmit}
+              onSubmit={
+                handleAccountSubmit
+              }
               style={styles.form}
             >
-              {accountMode === "register" && (
+              {accountMode ===
+                "register" && (
                 <>
-                  <label>Nombre</label>
+                  <label>
+                    Nombre
+                  </label>
 
                   <input
                     name="name"
-                    value={account.name}
+                    value={
+                      account.name
+                    }
                     onChange={
                       handleAccountChange
                     }
                     placeholder="Tu nombre"
-                    style={styles.input}
+                    style={
+                      styles.input
+                    }
                   />
 
                   <label>
@@ -673,11 +747,15 @@ function App() {
 
                   <select
                     name="type"
-                    value={account.type}
+                    value={
+                      account.type
+                    }
                     onChange={
                       handleAccountChange
                     }
-                    style={styles.input}
+                    style={
+                      styles.input
+                    }
                   >
                     <option value="Cliente">
                       Cliente
@@ -697,48 +775,65 @@ function App() {
               <input
                 name="email"
                 type="email"
-                value={account.email}
+                value={
+                  account.email
+                }
                 onChange={
                   handleAccountChange
                 }
                 placeholder="tu@email.com"
-                style={styles.input}
+                style={
+                  styles.input
+                }
               />
 
-              <label>Contraseña</label>
+              <label>
+                Contraseña
+              </label>
 
               <input
                 name="password"
                 type="password"
-                value={account.password}
+                value={
+                  account.password
+                }
                 onChange={
                   handleAccountChange
                 }
                 placeholder="Mínimo 6 caracteres"
-                style={styles.input}
+                style={
+                  styles.input
+                }
               />
 
               <button
                 type="submit"
-                style={styles.publishButton}
+                style={
+                  styles.publishButton
+                }
               >
-                {accountMode === "login"
+                {accountMode ===
+                "login"
                   ? "Iniciar sesión"
                   : "Crear mi cuenta"}
               </button>
             </form>
 
             <button
-              style={styles.linkButton}
+              style={
+                styles.linkButton
+              }
               onClick={() => {
                 setAccountMode(
-                  accountMode === "login"
+                  accountMode ===
+                    "login"
                     ? "register"
                     : "login"
                 );
               }}
             >
-              {accountMode === "login"
+              {accountMode ===
+              "login"
                 ? "¿No tienes cuenta? Crear una"
                 : "¿Ya tienes cuenta? Iniciar sesión"}
             </button>
@@ -760,9 +855,15 @@ function App() {
           logout={logout}
         />
 
-        <main style={styles.profileContainer}>
+        <main
+          style={
+            styles.profileContainer
+          }
+        >
           <button
-            style={styles.backButton}
+            style={
+              styles.backButton
+            }
             onClick={() =>
               setPage("services")
             }
@@ -770,53 +871,88 @@ function App() {
             ← Volver a servicios
           </button>
 
-          <div style={styles.profileCard}>
-            <div style={styles.avatar}>
+          <div
+            style={
+              styles.profileCard
+            }
+          >
+            <div
+              style={styles.avatar}
+            >
               {selectedService.professional
                 .charAt(0)
                 .toUpperCase()}
             </div>
 
             <h1>
-              {selectedService.professional}
+              {
+                selectedService.professional
+              }
             </h1>
 
             <h3>
-              {selectedService.profession}
+              {
+                selectedService.profession
+              }
             </h3>
 
-            <p style={styles.bio}>
+            <p
+              style={styles.bio}
+            >
               {selectedService.bio}
             </p>
 
-            <div style={styles.profileSection}>
-              <span style={styles.badge}>
-                {selectedService.category}
+            <div
+              style={
+                styles.profileSection
+              }
+            >
+              <span
+                style={styles.badge}
+              >
+                {
+                  selectedService.category
+                }
               </span>
 
               <h2>
-                {selectedService.title}
+                {
+                  selectedService.title
+                }
               </h2>
 
               <p>
-                {selectedService.description}
+                {
+                  selectedService.description
+                }
               </p>
 
-              <div style={styles.price}>
-                {selectedService.price}
+              <div
+                style={styles.price}
+              >
+                {
+                  selectedService.price
+                }
               </div>
             </div>
 
             <button
-              style={styles.contactButton}
+              style={
+                styles.contactButton
+              }
               onClick={() => {
                 if (!loggedUser) {
                   alert(
                     "Inicia sesión para contactar al profesional."
                   );
 
-                  setAccountMode("login");
-                  setPage("account");
+                  setAccountMode(
+                    "login"
+                  );
+
+                  setPage(
+                    "account"
+                  );
 
                   return;
                 }
@@ -844,9 +980,13 @@ function App() {
         />
 
         <main style={styles.main}>
-          <h1>Buscar servicios</h1>
+          <h1>
+            Buscar servicios
+          </h1>
 
-          <p style={styles.subtitle}>
+          <p
+            style={styles.subtitle}
+          >
             Encuentra profesionales para lo que necesitas.
           </p>
 
@@ -855,14 +995,22 @@ function App() {
             placeholder="¿Qué servicio necesitas?"
             value={search}
             onChange={(e) =>
-              setSearch(e.target.value)
+              setSearch(
+                e.target.value
+              )
             }
             style={styles.search}
           />
 
-          <div style={styles.categories}>
+          <div
+            style={
+              styles.categories
+            }
+          >
             <button
-              onClick={() => setCategory("")}
+              onClick={() =>
+                setCategory("")
+              }
               style={{
                 ...styles.categoryButton,
                 ...(category === ""
@@ -878,11 +1026,14 @@ function App() {
                 <button
                   key={name}
                   onClick={() =>
-                    setCategory(name)
+                    setCategory(
+                      name
+                    )
                   }
                   style={{
                     ...styles.categoryButton,
-                    ...(category === name
+                    ...(category ===
+                    name
                       ? styles.selected
                       : {}),
                   }}
@@ -896,17 +1047,22 @@ function App() {
           {loadingServices ? (
             <p
               style={{
-                textAlign: "center",
+                textAlign:
+                  "center",
               }}
             >
               Cargando servicios...
             </p>
           ) : (
-            <section style={styles.grid}>
+            <section
+              style={styles.grid}
+            >
               {filteredServices.map(
                 (service) => (
                   <div
-                    key={service.id}
+                    key={
+                      service.id
+                    }
                     style={styles.card}
                   >
                     <div
@@ -920,17 +1076,25 @@ function App() {
                     </div>
 
                     <span
-                      style={styles.badge}
+                      style={
+                        styles.badge
+                      }
                     >
-                      {service.category}
+                      {
+                        service.category
+                      }
                     </span>
 
                     <h2>
-                      {service.title}
+                      {
+                        service.title
+                      }
                     </h2>
 
                     <p>
-                      {service.description}
+                      {
+                        service.description
+                      }
                     </p>
 
                     <p>
@@ -946,7 +1110,9 @@ function App() {
                     </p>
 
                     <strong>
-                      {service.price}
+                      {
+                        service.price
+                      }
                     </strong>
 
                     <br />
@@ -971,8 +1137,7 @@ function App() {
               {filteredServices.length ===
                 0 && (
                 <p>
-                  No encontramos servicios
-                  con esa búsqueda.
+                  No encontramos servicios con esa búsqueda.
                 </p>
               )}
             </section>
@@ -992,26 +1157,32 @@ function App() {
         />
 
         <main
-          style={styles.formContainer}
+          style={
+            styles.formContainer
+          }
         >
           <h1>
             Ofrece tus servicios
           </h1>
 
-          <p style={styles.subtitle}>
-            Crea tu publicación profesional
-            en RobLoren.
+          <p
+            style={styles.subtitle}
+          >
+            Crea tu publicación profesional en RobLoren.
           </p>
 
           {!loggedUser && (
-            <div style={styles.welcome}>
-              🔐 Debes iniciar sesión para
-              publicar un servicio.
+            <div
+              style={styles.welcome}
+            >
+              🔐 Debes iniciar sesión para publicar un servicio.
             </div>
           )}
 
           <form
-            onSubmit={publishService}
+            onSubmit={
+              publishService
+            }
             style={styles.form}
           >
             <label>
@@ -1021,7 +1192,9 @@ function App() {
             <input
               name="name"
               value={form.name}
-              onChange={handleChange}
+              onChange={
+                handleChange
+              }
               placeholder="Ej. Roberto Pérez"
               style={styles.input}
             />
@@ -1032,8 +1205,12 @@ function App() {
 
             <input
               name="profession"
-              value={form.profession}
-              onChange={handleChange}
+              value={
+                form.profession
+              }
+              onChange={
+                handleChange
+              }
               placeholder="Ej. Diseñador gráfico"
               style={styles.input}
             />
@@ -1044,8 +1221,12 @@ function App() {
 
             <input
               name="title"
-              value={form.title}
-              onChange={handleChange}
+              value={
+                form.title
+              }
+              onChange={
+                handleChange
+              }
               placeholder="Ej. Diseño de logotipos"
               style={styles.input}
             />
@@ -1056,8 +1237,12 @@ function App() {
 
             <select
               name="category"
-              value={form.category}
-              onChange={handleChange}
+              value={
+                form.category
+              }
+              onChange={
+                handleChange
+              }
               style={styles.input}
             >
               {categories.map(
@@ -1078,12 +1263,17 @@ function App() {
 
             <textarea
               name="description"
-              value={form.description}
-              onChange={handleChange}
+              value={
+                form.description
+              }
+              onChange={
+                handleChange
+              }
               placeholder="Describe lo que ofreces..."
               style={{
                 ...styles.input,
-                minHeight: "120px",
+                minHeight:
+                  "120px",
               }}
             />
 
@@ -1096,7 +1286,9 @@ function App() {
               type="number"
               min="1"
               value={form.price}
-              onChange={handleChange}
+              onChange={
+                handleChange
+              }
               placeholder="Ej. 25"
               style={styles.input}
             />
@@ -1124,30 +1316,43 @@ function App() {
       />
 
       <main style={styles.main}>
-        <h1 style={styles.heroTitle}>
+        <h1
+          style={styles.heroTitle}
+        >
           Encuentra el talento que necesitas.
         </h1>
 
-        <p style={styles.subtitle}>
-          RobLoren conecta clientes con
-          profesionales que ofrecen servicios
-          desde cualquier lugar.
+        <p
+          style={styles.subtitle}
+        >
+          RobLoren conecta clientes con profesionales que ofrecen servicios desde cualquier lugar.
         </p>
 
         {loggedUser && (
-          <div style={styles.welcome}>
+          <div
+            style={styles.welcome}
+          >
             👋 Hola,{" "}
             <strong>
-              {loggedUser.name}
+              {
+                loggedUser.name
+              }
             </strong>
             <br />
-            Cuenta: {loggedUser.type}
+            Cuenta:{" "}
+            {
+              loggedUser.type
+            }
           </div>
         )}
 
-        <div style={styles.actions}>
+        <div
+          style={styles.actions}
+        >
           <button
-            style={styles.darkButton}
+            style={
+              styles.darkButton
+            }
             onClick={() =>
               setPage("services")
             }
@@ -1156,7 +1361,9 @@ function App() {
           </button>
 
           <button
-            style={styles.lightButton}
+            style={
+              styles.lightButton
+            }
             onClick={() =>
               setPage("offer")
             }
@@ -1165,7 +1372,9 @@ function App() {
           </button>
         </div>
 
-        <section style={styles.grid}>
+        <section
+          style={styles.grid}
+        >
           {categories.map(
             ([icon, name]) => (
               <div
@@ -1174,13 +1383,16 @@ function App() {
               >
                 <div
                   style={{
-                    fontSize: "35px",
+                    fontSize:
+                      "35px",
                   }}
                 >
                   {icon}
                 </div>
 
-                <h3>{name}</h3>
+                <h3>
+                  {name}
+                </h3>
 
                 <p>
                   Profesionales especializados.
@@ -1191,9 +1403,10 @@ function App() {
         </section>
       </main>
 
-      <footer style={styles.footer}>
-        © 2026 RobLoren — Marketplace de
-        servicios profesionales
+      <footer
+        style={styles.footer}
+      >
+        © 2026 RobLoren — Marketplace de servicios profesionales
       </footer>
     </div>
   );
@@ -1205,9 +1418,13 @@ function Header({
   logout,
 }) {
   return (
-    <header style={styles.header}>
+    <header
+      style={styles.header}
+    >
       <button
-        style={styles.logoButton}
+        style={
+          styles.logoButton
+        }
         onClick={() =>
           setPage("home")
         }
@@ -1216,10 +1433,14 @@ function Header({
       </button>
 
       <div
-        style={styles.headerActions}
+        style={
+          styles.headerActions
+        }
       >
         <button
-          style={styles.darkButton}
+          style={
+            styles.darkButton
+          }
           onClick={() =>
             setPage("home")
           }
@@ -1229,7 +1450,9 @@ function Header({
 
         {loggedUser ? (
           <button
-            style={styles.accountButton}
+            style={
+              styles.accountButton
+            }
             onClick={() => {
               if (
                 window.confirm(
@@ -1240,11 +1463,16 @@ function Header({
               }
             }}
           >
-            👤 {loggedUser.name}
+            👤{" "}
+            {
+              loggedUser.name
+            }
           </button>
         ) : (
           <button
-            style={styles.accountButton}
+            style={
+              styles.accountButton
+            }
             onClick={() =>
               setPage("account")
             }
@@ -1260,7 +1488,8 @@ function Header({
 const styles = {
   app: {
     minHeight: "100vh",
-    fontFamily: "Arial, sans-serif",
+    fontFamily:
+      "Arial, sans-serif",
     background: "#f5f7fb",
     color: "#172033",
   },
@@ -1271,7 +1500,8 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    fontFamily: "Arial, sans-serif",
+    fontFamily:
+      "Arial, sans-serif",
     background: "#f5f7fb",
     color: "#172033",
   },
@@ -1280,7 +1510,8 @@ const styles = {
     background: "#ffffff",
     padding: "20px 25px",
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent:
+      "space-between",
     alignItems: "center",
     borderBottom:
       "1px solid #e5e7eb",
@@ -1295,7 +1526,8 @@ const styles = {
 
   logoButton: {
     border: "none",
-    background: "transparent",
+    background:
+      "transparent",
     fontSize: "22px",
     fontWeight: "bold",
     color: "#172033",
@@ -1338,7 +1570,8 @@ const styles = {
   actions: {
     display: "flex",
     gap: "12px",
-    justifyContent: "center",
+    justifyContent:
+      "center",
     flexWrap: "wrap",
   },
 
@@ -1365,32 +1598,38 @@ const styles = {
 
   backButton: {
     border: "none",
-    background: "transparent",
+    background:
+      "transparent",
     color: "#172033",
     fontSize: "16px",
     cursor: "pointer",
-    marginBottom: "20px",
+    marginBottom:
+      "20px",
   },
 
   search: {
     display: "block",
     width: "100%",
     maxWidth: "700px",
-    margin: "30px auto",
+    margin:
+      "30px auto",
     padding: "16px",
     border:
       "1px solid #d1d5db",
     borderRadius: "10px",
     fontSize: "17px",
-    boxSizing: "border-box",
+    boxSizing:
+      "border-box",
   },
 
   categories: {
     display: "flex",
     gap: "10px",
     flexWrap: "wrap",
-    justifyContent: "center",
-    marginBottom: "40px",
+    justifyContent:
+      "center",
+    marginBottom:
+      "40px",
   },
 
   categoryButton: {
@@ -1423,10 +1662,12 @@ const styles = {
   },
 
   badge: {
-    display: "inline-block",
+    display:
+      "inline-block",
     fontSize: "13px",
     color: "#5b6475",
-    marginTop: "12px",
+    marginTop:
+      "12px",
   },
 
   avatarSmall: {
@@ -1436,7 +1677,8 @@ const styles = {
     background: "#e5e7eb",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent:
+      "center",
     fontSize: "20px",
     fontWeight: "bold",
   },
@@ -1444,7 +1686,8 @@ const styles = {
   formContainer: {
     maxWidth: "650px",
     margin: "0 auto",
-    padding: "60px 25px",
+    padding:
+      "60px 25px",
   },
 
   form: {
@@ -1454,7 +1697,8 @@ const styles = {
     border:
       "1px solid #e5e7eb",
     display: "flex",
-    flexDirection: "column",
+    flexDirection:
+      "column",
     gap: "10px",
   },
 
@@ -1464,13 +1708,16 @@ const styles = {
       "1px solid #d1d5db",
     borderRadius: "8px",
     fontSize: "16px",
-    marginBottom: "10px",
-    boxSizing: "border-box",
+    marginBottom:
+      "10px",
+    boxSizing:
+      "border-box",
     width: "100%",
   },
 
   publishButton: {
-    padding: "14px 20px",
+    padding:
+      "14px 20px",
     border: "none",
     borderRadius: "9px",
     background: "#172033",
@@ -1482,11 +1729,14 @@ const styles = {
 
   linkButton: {
     border: "none",
-    background: "transparent",
+    background:
+      "transparent",
     color: "#172033",
-    textDecoration: "underline",
+    textDecoration:
+      "underline",
     cursor: "pointer",
-    marginTop: "20px",
+    marginTop:
+      "20px",
     fontSize: "15px",
   },
 
@@ -1500,7 +1750,8 @@ const styles = {
 
   welcome: {
     maxWidth: "500px",
-    margin: "30px auto",
+    margin:
+      "30px auto",
     padding: "20px",
     background: "#ffffff",
     borderRadius: "12px",
@@ -1512,12 +1763,14 @@ const styles = {
   profileContainer: {
     maxWidth: "700px",
     margin: "0 auto",
-    padding: "50px 25px",
+    padding:
+      "50px 25px",
   },
 
   profileCard: {
     background: "#ffffff",
-    padding: "40px 30px",
+    padding:
+      "40px 30px",
     borderRadius: "18px",
     border:
       "1px solid #e5e7eb",
@@ -1531,7 +1784,8 @@ const styles = {
     background: "#e5e7eb",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent:
+      "center",
     fontSize: "38px",
     fontWeight: "bold",
     margin:
