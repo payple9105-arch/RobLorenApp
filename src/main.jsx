@@ -13,7 +13,7 @@ const categories = [
 
 const initialServices = [
   {
-    id: 1,
+    id: "demo-1",
     title: "Desarrollo web",
     category: "Tecnología",
     description: "Creación y mantenimiento de sitios web.",
@@ -23,7 +23,7 @@ const initialServices = [
     bio: "Profesional especializado en creación de sitios web y aplicaciones.",
   },
   {
-    id: 2,
+    id: "demo-2",
     title: "Diseño gráfico",
     category: "Diseño",
     description: "Logotipos, imágenes y material visual.",
@@ -33,7 +33,7 @@ const initialServices = [
     bio: "Diseñadora enfocada en identidad visual, logotipos y contenido digital.",
   },
   {
-    id: 3,
+    id: "demo-3",
     title: "Marketing digital",
     category: "Marketing",
     description: "Estrategias para hacer crecer tu negocio.",
@@ -43,7 +43,7 @@ const initialServices = [
     bio: "Ayudo a negocios a mejorar su presencia digital y conseguir clientes.",
   },
   {
-    id: 4,
+    id: "demo-4",
     title: "Redacción de contenidos",
     category: "Redacción",
     description: "Artículos, textos comerciales y contenido web.",
@@ -53,6 +53,22 @@ const initialServices = [
     bio: "Redactora especializada en contenidos web, artículos y comunicación comercial.",
   },
 ];
+
+function mapSupabaseService(service) {
+  return {
+    id: service.id,
+    title: service.service_title,
+    category: service.category,
+    description: service.description,
+    price:
+      service.price !== null && service.price !== undefined
+        ? `$${service.price} USD`
+        : "Consultar precio",
+    professional: service.name,
+    profession: service.profession,
+    bio: `Profesional especializado en ${service.profession}.`,
+  };
+}
 
 function App() {
   const [page, setPage] = useState("home");
@@ -72,6 +88,7 @@ function App() {
 
   const [loggedUser, setLoggedUser] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
+  const [loadingServices, setLoadingServices] = useState(true);
 
   const [form, setForm] = useState({
     name: "",
@@ -86,11 +103,17 @@ function App() {
     let active = true;
 
     async function loadUser() {
-      const { data } = await supabase.auth.getUser();
-      const user = data.user;
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error) {
+        console.error("Error obteniendo usuario:", error);
+      }
+
+      const user = data?.user;
 
       if (active && user) {
         setLoggedUser({
+          id: user.id,
           name:
             user.user_metadata?.name ||
             user.email?.split("@")[0] ||
@@ -117,6 +140,7 @@ function App() {
       setLoggedUser(
         user
           ? {
+              id: user.id,
               name:
                 user.user_metadata?.name ||
                 user.email?.split("@")[0] ||
@@ -134,6 +158,34 @@ function App() {
       active = false;
       subscription.unsubscribe();
     };
+  }, []);
+
+  useEffect(() => {
+    async function loadServices() {
+      setLoadingServices(true);
+
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error cargando servicios:", error);
+        setLoadingServices(false);
+        return;
+      }
+
+      const databaseServices = (data || []).map(mapSupabaseService);
+
+      setServices([
+        ...databaseServices,
+        ...initialServices,
+      ]);
+
+      setLoadingServices(false);
+    }
+
+    loadServices();
   }, []);
 
   const filteredServices = services.filter((service) => {
@@ -213,6 +265,7 @@ function App() {
 
       if (data.user) {
         setLoggedUser({
+          id: data.user.id,
           name:
             data.user.user_metadata?.name ||
             data.user.email?.split("@")[0] ||
@@ -227,10 +280,11 @@ function App() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: account.email,
-      password: account.password,
-    });
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email: account.email,
+        password: account.password,
+      });
 
     if (error) {
       alert(error.message);
@@ -240,6 +294,7 @@ function App() {
     const user = data.user;
 
     setLoggedUser({
+      id: user.id,
       name:
         user.user_metadata?.name ||
         user.email?.split("@")[0] ||
@@ -265,8 +320,15 @@ function App() {
     setPage("home");
   }
 
-  function publishService(event) {
+  async function publishService(event) {
     event.preventDefault();
+
+    if (!loggedUser) {
+      alert("Debes iniciar sesión para publicar un servicio.");
+      setAccountMode("login");
+      setPage("account");
+      return;
+    }
 
     if (
       !form.name ||
@@ -279,18 +341,45 @@ function App() {
       return;
     }
 
-    const newService = {
-      id: Date.now(),
-      title: form.title,
-      category: form.category,
-      description: form.description,
-      price: `$${form.price} USD`,
-      professional: form.name,
-      profession: form.profession,
-      bio: `Profesional especializado en ${form.profession}.`,
-    };
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    setServices([newService, ...services]);
+    if (!user) {
+      alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
+      setAccountMode("login");
+      setPage("account");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("services")
+      .insert({
+        user_id: user.id,
+        name: form.name,
+        profession: form.profession,
+        service_title: form.title,
+        category: form.category,
+        description: form.description,
+        price: Number(form.price),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error publicando servicio:", error);
+      alert(
+        `No se pudo publicar el servicio: ${error.message}`
+      );
+      return;
+    }
+
+    const newService = mapSupabaseService(data);
+
+    setServices((currentServices) => [
+      newService,
+      ...currentServices,
+    ]);
 
     setForm({
       name: "",
@@ -366,8 +455,13 @@ function App() {
                     onChange={handleAccountChange}
                     style={styles.input}
                   >
-                    <option value="Cliente">Cliente</option>
-                    <option value="Profesional">Profesional</option>
+                    <option value="Cliente">
+                      Cliente
+                    </option>
+
+                    <option value="Profesional">
+                      Profesional
+                    </option>
                   </select>
                 </>
               )}
@@ -477,6 +571,7 @@ function App() {
                   alert(
                     "Inicia sesión para contactar al profesional."
                   );
+
                   setAccountMode("login");
                   setPage("account");
                   return;
@@ -548,54 +643,62 @@ function App() {
             ))}
           </div>
 
-          <section style={styles.grid}>
-            {filteredServices.map((service) => (
-              <div
-                key={service.id}
-                style={styles.card}
-              >
-                <div style={styles.avatarSmall}>
-                  {service.professional
-                    .charAt(0)
-                    .toUpperCase()}
-                </div>
-
-                <span style={styles.badge}>
-                  {service.category}
-                </span>
-
-                <h2>{service.title}</h2>
-
-                <p>{service.description}</p>
-
-                <p>
-                  <strong>
-                    {service.professional}
-                  </strong>
-                  <br />
-                  {service.profession}
-                </p>
-
-                <strong>{service.price}</strong>
-
-                <br />
-                <br />
-
-                <button
-                  style={styles.darkButton}
-                  onClick={() => openProfile(service)}
+          {loadingServices ? (
+            <p style={{ textAlign: "center" }}>
+              Cargando servicios...
+            </p>
+          ) : (
+            <section style={styles.grid}>
+              {filteredServices.map((service) => (
+                <div
+                  key={service.id}
+                  style={styles.card}
                 >
-                  Ver servicio
-                </button>
-              </div>
-            ))}
+                  <div style={styles.avatarSmall}>
+                    {service.professional
+                      .charAt(0)
+                      .toUpperCase()}
+                  </div>
 
-            {filteredServices.length === 0 && (
-              <p>
-                No encontramos servicios con esa búsqueda.
-              </p>
-            )}
-          </section>
+                  <span style={styles.badge}>
+                    {service.category}
+                  </span>
+
+                  <h2>{service.title}</h2>
+
+                  <p>{service.description}</p>
+
+                  <p>
+                    <strong>
+                      {service.professional}
+                    </strong>
+                    <br />
+                    {service.profession}
+                  </p>
+
+                  <strong>{service.price}</strong>
+
+                  <br />
+                  <br />
+
+                  <button
+                    style={styles.darkButton}
+                    onClick={() =>
+                      openProfile(service)
+                    }
+                  >
+                    Ver servicio
+                  </button>
+                </div>
+              ))}
+
+              {filteredServices.length === 0 && (
+                <p>
+                  No encontramos servicios con esa búsqueda.
+                </p>
+              )}
+            </section>
+          )}
         </main>
       </div>
     );
@@ -616,6 +719,12 @@ function App() {
           <p style={styles.subtitle}>
             Crea tu publicación profesional en RobLoren.
           </p>
+
+          {!loggedUser && (
+            <div style={styles.welcome}>
+              🔐 Debes iniciar sesión para publicar un servicio.
+            </div>
+          )}
 
           <form
             onSubmit={publishService}
