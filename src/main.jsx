@@ -54,8 +54,32 @@ const initialServices = [
   },
 ];
 
-function mapSupabaseService(service) {
+function mapSupabaseService(service, profile = null) {
+  const profession =
+    profile?.profession ||
+    service.profession ||
+    "Profesional";
+
   return {
+    id: service.id,
+    userId: service.user_id,
+    title: service.service_title,
+    category: service.category,
+    description: service.description,
+    price:
+      service.price !== null && service.price !== undefined
+        ? `$${service.price} USD`
+        : "Consultar precio",
+    professional:
+      profile?.name ||
+      service.name ||
+      "Profesional RobLoren",
+    profession,
+    bio:
+      profile?.bio ||
+      `Profesional especializado en ${profession}.`,
+  };
+}
     id: service.id,
     title: service.service_title,
     category: service.category,
