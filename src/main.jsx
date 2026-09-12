@@ -264,7 +264,10 @@ function App() {
         .in("id", profileIds);
 
       if (profilesError) {
-        console.error("Error cargando perfiles de solicitudes:", profilesError);
+        console.error(
+          "Error cargando perfiles de solicitudes:",
+          profilesError
+        );
       } else {
         profilesById = Object.fromEntries(
           (profiles || []).map((profile) => [profile.id, profile])
@@ -437,6 +440,7 @@ function App() {
       );
 
       setAccountMode("login");
+
       setForm({
         name: "",
         email: form.email,
@@ -465,14 +469,18 @@ function App() {
 
     if (data.user) {
       const profile = await ensureUserProfile(data.user);
+
       setLoggedUser(buildLoggedUser(data.user, profile));
+
       alert("Sesión iniciada.");
+
       setPage("home");
     }
   }
 
   async function logout() {
     await supabase.auth.signOut();
+
     setLoggedUser(null);
     setRequests([]);
     setPage("home");
@@ -498,22 +506,13 @@ function App() {
       return;
     }
 
-    const updatedProfile = {
-      id: loggedUser.id,
-      name: loggedUser.name,
-      profession: loggedUser.profession,
-      bio: loggedUser.bio || "",
-    };
-
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .upsert(updatedProfile, { onConflict: "id" });
-
-    if (profileError) {
-      console.error("Error actualizando perfil:", profileError);
-      alert("No se pudo actualizar el perfil.");
-      return;
-    }
+    /*
+      IMPORTANTE:
+      Ya no actualizamos la tabla profiles aquí.
+      El perfil ya se obtiene durante el inicio de sesión.
+      Así publicar un servicio no depende de una operación UPDATE/UPSERT
+      sobre profiles.
+    */
 
     const { data, error } = await supabase
       .from("services")
@@ -530,12 +529,22 @@ function App() {
       .single();
 
     if (error) {
-      console.error(error);
+      console.error("Error publicando servicio:", error);
       alert(error.message);
       return;
     }
 
-    const newService = mapSupabaseService(data, updatedProfile);
+    const serviceProfile = {
+      id: loggedUser.id,
+      name: loggedUser.name,
+      profession: loggedUser.profession,
+      bio: loggedUser.bio || "",
+    };
+
+    const newService = mapSupabaseService(
+      data,
+      serviceProfile
+    );
 
     setServices((current) => [
       newService,
@@ -546,6 +555,7 @@ function App() {
     alert("Servicio publicado correctamente.");
 
     event.target.reset();
+
     setPage("services");
   }
 
@@ -852,7 +862,9 @@ function App() {
                   setSelectedCategory(event.target.value)
                 }
               >
-                <option value="Todas">Todas las categorías</option>
+                <option value="Todas">
+                  Todas las categorías
+                </option>
 
                 {categories.map(([, name]) => (
                   <option key={name} value={name}>
@@ -885,7 +897,9 @@ function App() {
                       </span>
 
                       {service.demo && (
-                        <span style={styles.demoBadge}>Demo</span>
+                        <span style={styles.demoBadge}>
+                          Demo
+                        </span>
                       )}
                     </div>
 
@@ -976,7 +990,9 @@ function App() {
               </div>
 
               <aside style={styles.hireCard}>
-                <span style={styles.priceLabel}>Precio desde</span>
+                <span style={styles.priceLabel}>
+                  Precio desde
+                </span>
 
                 <div style={styles.price}>
                   ${selectedService.price}
@@ -984,9 +1000,9 @@ function App() {
 
                 {selectedService.demo ? (
                   <div style={styles.demoNotice}>
-                    Este es un servicio de demostración. Los servicios
-                    reales podrán contratarse cuando estén publicados
-                    por un profesional registrado.
+                    Este es un servicio de demostración. Los
+                    servicios reales podrán contratarse cuando estén
+                    publicados por un profesional registrado.
                   </div>
                 ) : (
                   <>
@@ -1125,10 +1141,12 @@ function App() {
                   {receivedRequests.length === 0 ? (
                     <div style={styles.emptyCard}>
                       <div style={styles.emptyIcon}>📭</div>
-                      <h3>No tienes solicitudes recibidas</h3>
+                      <h3>
+                        No tienes solicitudes recibidas
+                      </h3>
                       <p>
-                        Cuando un cliente solicite uno de tus servicios,
-                        aparecerá aquí.
+                        Cuando un cliente solicite uno de tus
+                        servicios, aparecerá aquí.
                       </p>
                     </div>
                   ) : (
@@ -1168,6 +1186,7 @@ function App() {
 
                           <div style={styles.messageBox}>
                             <strong>Mensaje:</strong>
+
                             <p>
                               {request.message ||
                                 "El cliente no dejó un mensaje."}
@@ -1221,7 +1240,9 @@ function App() {
                   {sentRequests.length === 0 ? (
                     <div style={styles.emptyCard}>
                       <div style={styles.emptyIcon}>📨</div>
-                      <h3>No has enviado solicitudes</h3>
+                      <h3>
+                        No has enviado solicitudes
+                      </h3>
                       <p>
                         Cuando contrates un servicio, podrás ver aquí
                         el estado de tu solicitud.
@@ -1264,6 +1285,7 @@ function App() {
 
                           <div style={styles.messageBox}>
                             <strong>Tu mensaje:</strong>
+
                             <p>
                               {request.message ||
                                 "No enviaste un mensaje."}
@@ -1426,7 +1448,9 @@ function App() {
                       <>
                         ¿No tienes cuenta?{" "}
                         <button
-                          onClick={() => setAccountMode("register")}
+                          onClick={() =>
+                            setAccountMode("register")
+                          }
                           style={styles.linkButton}
                         >
                           Crear cuenta
@@ -1436,7 +1460,9 @@ function App() {
                       <>
                         ¿Ya tienes cuenta?{" "}
                         <button
-                          onClick={() => setAccountMode("login")}
+                          onClick={() =>
+                            setAccountMode("login")
+                          }
                           style={styles.linkButton}
                         >
                           Iniciar sesión
@@ -1652,14 +1678,6 @@ const styles = {
     flexWrap: "wrap",
   },
 
-  heroStatsItem: {},
-
-  heroStats: {
-    display: "flex",
-    gap: 60,
-    flexWrap: "wrap",
-  },
-
   categoriesSection: {
     marginTop: 70,
   },
@@ -1810,8 +1828,6 @@ const styles = {
     justifyContent: "center",
     fontWeight: 900,
   },
-
-  providerInfoSmall: {},
 
   serviceBottom: {
     display: "flex",
@@ -2041,8 +2057,6 @@ const styles = {
     lineHeight: 1.5,
     color: "#42534a",
   },
-
-  messageBoxP: {},
 
   status: {
     borderRadius: 20,
