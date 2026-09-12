@@ -64,20 +64,79 @@ function mapSupabaseService(service) {
       service.price !== null && service.price !== undefined
         ? `$${service.price} USD`
         : "Consultar precio",
-    professional: service.name,
-    profession: service.profession,
-    bio: `Profesional especializado en ${service.profession}.`,
+    professional: service.name || "Profesional RobLoren",
+    profession: service.profession || "Profesional",
+    bio: `Profesional especializado en ${
+      service.profession || "servicios profesionales"
+    }.`,
   };
+}
+
+async function ensureUserProfile(user) {
+  if (!user) return null;
+
+  const { data: existingProfile, error: profileError } =
+    await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+  if (profileError) {
+    console.error(
+      "Error buscando perfil:",
+      profileError
+    );
+    return null;
+  }
+
+  if (existingProfile) {
+    return existingProfile;
+  }
+
+  const profileName =
+    user.user_metadata?.name ||
+    user.email?.split("@")[0] ||
+    "Usuario";
+
+  const { data: newProfile, error: insertError } =
+    await supabase
+      .from("profiles")
+      .insert({
+        id: user.id,
+        name: profileName,
+        profession:
+          user.user_metadata?.profession ||
+          "Profesional",
+        bio:
+          user.user_metadata?.bio ||
+          "Perfil profesional de RobLoren.",
+      })
+      .select()
+      .single();
+
+  if (insertError) {
+    console.error(
+      "Error creando perfil:",
+      insertError
+    );
+    return null;
+  }
+
+  return newProfile;
 }
 
 function App() {
   const [page, setPage] = useState("home");
-  const [selectedService, setSelectedService] = useState(null);
+  const [selectedService, setSelectedService] =
+    useState(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-  const [services, setServices] = useState(initialServices);
+  const [services, setServices] =
+    useState(initialServices);
 
-  const [accountMode, setAccountMode] = useState("login");
+  const [accountMode, setAccountMode] =
+    useState("login");
 
   const [account, setAccount] = useState({
     name: "",
@@ -86,9 +145,14 @@ function App() {
     type: "Cliente",
   });
 
-  const [loggedUser, setLoggedUser] = useState(null);
-  const [loadingAuth, setLoadingAuth] = useState(true);
-  const [loadingServices, setLoadingServices] = useState(true);
+  const [loggedUser, setLoggedUser] =
+    useState(null);
+
+  const [loadingAuth, setLoadingAuth] =
+    useState(true);
+
+  const [loadingServices, setLoadingServices] =
+    useState(true);
 
   const [form, setForm] = useState({
     name: "",
@@ -103,23 +167,39 @@ function App() {
     let active = true;
 
     async function loadUser() {
-      const { data, error } = await supabase.auth.getUser();
+      const { data, error } =
+        await supabase.auth.getUser();
 
       if (error) {
-        console.error("Error obteniendo usuario:", error);
+        console.error(
+          "Error obteniendo usuario:",
+          error
+        );
       }
 
       const user = data?.user;
 
       if (active && user) {
+        const profile =
+          await ensureUserProfile(user);
+
         setLoggedUser({
           id: user.id,
           name:
+            profile?.name ||
             user.user_metadata?.name ||
             user.email?.split("@")[0] ||
             "Usuario",
           email: user.email,
-          type: user.user_metadata?.type || "Cliente",
+          type:
+            user.user_metadata?.type ||
+            "Cliente",
+          profession:
+            profile?.profession ||
+            "Profesional",
+          bio:
+            profile?.bio ||
+            "Perfil profesional de RobLoren.",
         });
       }
 
@@ -132,27 +212,46 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!active) return;
+    } =
+      supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          if (!active) return;
 
-      const user = session?.user;
+          const user = session?.user;
 
-      setLoggedUser(
-        user
-          ? {
-              id: user.id,
-              name:
-                user.user_metadata?.name ||
-                user.email?.split("@")[0] ||
-                "Usuario",
-              email: user.email,
-              type: user.user_metadata?.type || "Cliente",
-            }
-          : null
+          if (!user) {
+            setLoggedUser(null);
+            setLoadingAuth(false);
+            return;
+          }
+
+          const profile =
+            await ensureUserProfile(user);
+
+          if (!active) return;
+
+          setLoggedUser({
+            id: user.id,
+            name:
+              profile?.name ||
+              user.user_metadata?.name ||
+              user.email?.split("@")[0] ||
+              "Usuario",
+            email: user.email,
+            type:
+              user.user_metadata?.type ||
+              "Cliente",
+            profession:
+              profile?.profession ||
+              "Profesional",
+            bio:
+              profile?.bio ||
+              "Perfil profesional de RobLoren.",
+          });
+
+          setLoadingAuth(false);
+        }
       );
-
-      setLoadingAuth(false);
-    });
 
     return () => {
       active = false;
@@ -164,18 +263,27 @@ function App() {
     async function loadServices() {
       setLoadingServices(true);
 
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } =
+        await supabase
+          .from("services")
+          .select("*")
+          .order("created_at", {
+            ascending: false,
+          });
 
       if (error) {
-        console.error("Error cargando servicios:", error);
+        console.error(
+          "Error cargando servicios:",
+          error
+        );
+
         setLoadingServices(false);
         return;
       }
 
-      const databaseServices = (data || []).map(mapSupabaseService);
+      const databaseServices = (data || []).map(
+        mapSupabaseService
+      );
 
       setServices([
         ...databaseServices,
@@ -188,15 +296,18 @@ function App() {
     loadServices();
   }, []);
 
-  const filteredServices = services.filter((service) => {
-    const text =
-      `${service.title} ${service.description} ${service.category} ${service.professional}`.toLowerCase();
+  const filteredServices = services.filter(
+    (service) => {
+      const text =
+        `${service.title} ${service.description} ${service.category} ${service.professional}`.toLowerCase();
 
-    return (
-      text.includes(search.toLowerCase()) &&
-      (category === "" || service.category === category)
-    );
-  });
+      return (
+        text.includes(search.toLowerCase()) &&
+        (category === "" ||
+          service.category === category)
+      );
+    }
+  );
 
   function handleChange(event) {
     setForm({
@@ -215,32 +326,43 @@ function App() {
   async function handleAccountSubmit(event) {
     event.preventDefault();
 
-    if (!account.email || !account.password) {
-      alert("Completa el correo y la contraseña.");
+    if (
+      !account.email ||
+      !account.password
+    ) {
+      alert(
+        "Completa el correo y la contraseña."
+      );
       return;
     }
 
-    if (accountMode === "register" && !account.name) {
+    if (
+      accountMode === "register" &&
+      !account.name
+    ) {
       alert("Escribe tu nombre.");
       return;
     }
 
     if (account.password.length < 6) {
-      alert("La contraseña debe tener al menos 6 caracteres.");
+      alert(
+        "La contraseña debe tener al menos 6 caracteres."
+      );
       return;
     }
 
     if (accountMode === "register") {
-      const { data, error } = await supabase.auth.signUp({
-        email: account.email,
-        password: account.password,
-        options: {
-          data: {
-            name: account.name,
-            type: account.type,
+      const { data, error } =
+        await supabase.auth.signUp({
+          email: account.email,
+          password: account.password,
+          options: {
+            data: {
+              name: account.name,
+              type: account.type,
+            },
           },
-        },
-      });
+        });
 
       if (error) {
         alert(error.message);
@@ -264,18 +386,33 @@ function App() {
       }
 
       if (data.user) {
+        const profile =
+          await ensureUserProfile(data.user);
+
         setLoggedUser({
           id: data.user.id,
           name:
+            profile?.name ||
             data.user.user_metadata?.name ||
             data.user.email?.split("@")[0] ||
             "Usuario",
           email: data.user.email,
-          type: data.user.user_metadata?.type || "Cliente",
+          type:
+            data.user.user_metadata?.type ||
+            "Cliente",
+          profession:
+            profile?.profession ||
+            "Profesional",
+          bio:
+            profile?.bio ||
+            "Perfil profesional de RobLoren.",
         });
       }
 
-      alert("¡Cuenta creada correctamente!");
+      alert(
+        "¡Cuenta creada correctamente!"
+      );
+
       setPage("home");
       return;
     }
@@ -293,14 +430,26 @@ function App() {
 
     const user = data.user;
 
+    const profile =
+      await ensureUserProfile(user);
+
     setLoggedUser({
       id: user.id,
       name:
+        profile?.name ||
         user.user_metadata?.name ||
         user.email?.split("@")[0] ||
         "Usuario",
       email: user.email,
-      type: user.user_metadata?.type || "Cliente",
+      type:
+        user.user_metadata?.type ||
+        "Cliente",
+      profession:
+        profile?.profession ||
+        "Profesional",
+      bio:
+        profile?.bio ||
+        "Perfil profesional de RobLoren.",
     });
 
     alert("¡Sesión iniciada!");
@@ -308,7 +457,8 @@ function App() {
   }
 
   async function logout() {
-    const { error } = await supabase.auth.signOut();
+    const { error } =
+      await supabase.auth.signOut();
 
     if (error) {
       alert(error.message);
@@ -316,7 +466,9 @@ function App() {
     }
 
     setLoggedUser(null);
+
     alert("Sesión cerrada.");
+
     setPage("home");
   }
 
@@ -324,9 +476,13 @@ function App() {
     event.preventDefault();
 
     if (!loggedUser) {
-      alert("Debes iniciar sesión para publicar un servicio.");
+      alert(
+        "Debes iniciar sesión para publicar un servicio."
+      );
+
       setAccountMode("login");
       setPage("account");
+
       return;
     }
 
@@ -337,7 +493,10 @@ function App() {
       !form.description ||
       !form.price
     ) {
-      alert("Completa todos los campos antes de publicar.");
+      alert(
+        "Completa todos los campos antes de publicar."
+      );
+
       return;
     }
 
@@ -346,35 +505,67 @@ function App() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      alert("Tu sesión ha expirado. Inicia sesión nuevamente.");
+      alert(
+        "Tu sesión ha expirado. Inicia sesión nuevamente."
+      );
+
       setAccountMode("login");
       setPage("account");
+
       return;
     }
 
-    const { data, error } = await supabase
-      .from("services")
-      .insert({
-        user_id: user.id,
+    const profile =
+      await ensureUserProfile(user);
+
+    if (profile) {
+      await supabase
+        .from("profiles")
+        .update({
+          name: form.name,
+          profession: form.profession,
+          bio: `Profesional especializado en ${form.profession}.`,
+        })
+        .eq("id", user.id);
+
+      setLoggedUser((currentUser) => ({
+        ...currentUser,
         name: form.name,
         profession: form.profession,
-        service_title: form.title,
-        category: form.category,
-        description: form.description,
-        price: Number(form.price),
-      })
-      .select()
-      .single();
+        bio: `Profesional especializado en ${form.profession}.`,
+      }));
+    }
+
+    const { data, error } =
+      await supabase
+        .from("services")
+        .insert({
+          user_id: user.id,
+          name: form.name,
+          profession: form.profession,
+          service_title: form.title,
+          category: form.category,
+          description: form.description,
+          price: Number(form.price),
+        })
+        .select()
+        .single();
 
     if (error) {
-      console.error("Error publicando servicio:", error);
+      console.error(
+        "Error publicando servicio:",
+        error
+      );
+
       alert(
         `No se pudo publicar el servicio: ${error.message}`
       );
+
       return;
     }
 
-    const newService = mapSupabaseService(data);
+    const newService =
+      mapSupabaseService(data);
 
     setServices((currentServices) => [
       newService,
@@ -390,7 +581,10 @@ function App() {
       price: "",
     });
 
-    alert("¡Tu servicio fue publicado en RobLoren!");
+    alert(
+      "¡Tu servicio fue publicado en RobLoren!"
+    );
+
     setPage("services");
   }
 
@@ -442,17 +636,23 @@ function App() {
                   <input
                     name="name"
                     value={account.name}
-                    onChange={handleAccountChange}
+                    onChange={
+                      handleAccountChange
+                    }
                     placeholder="Tu nombre"
                     style={styles.input}
                   />
 
-                  <label>Tipo de cuenta</label>
+                  <label>
+                    Tipo de cuenta
+                  </label>
 
                   <select
                     name="type"
                     value={account.type}
-                    onChange={handleAccountChange}
+                    onChange={
+                      handleAccountChange
+                    }
                     style={styles.input}
                   >
                     <option value="Cliente">
@@ -466,13 +666,17 @@ function App() {
                 </>
               )}
 
-              <label>Correo electrónico</label>
+              <label>
+                Correo electrónico
+              </label>
 
               <input
                 name="email"
                 type="email"
                 value={account.email}
-                onChange={handleAccountChange}
+                onChange={
+                  handleAccountChange
+                }
                 placeholder="tu@email.com"
                 style={styles.input}
               />
@@ -483,7 +687,9 @@ function App() {
                 name="password"
                 type="password"
                 value={account.password}
-                onChange={handleAccountChange}
+                onChange={
+                  handleAccountChange
+                }
                 placeholder="Mínimo 6 caracteres"
                 style={styles.input}
               />
@@ -518,7 +724,10 @@ function App() {
     );
   }
 
-  if (page === "profile" && selectedService) {
+  if (
+    page === "profile" &&
+    selectedService
+  ) {
     return (
       <div style={styles.app}>
         <Header
@@ -530,7 +739,9 @@ function App() {
         <main style={styles.profileContainer}>
           <button
             style={styles.backButton}
-            onClick={() => setPage("services")}
+            onClick={() =>
+              setPage("services")
+            }
           >
             ← Volver a servicios
           </button>
@@ -542,9 +753,13 @@ function App() {
                 .toUpperCase()}
             </div>
 
-            <h1>{selectedService.professional}</h1>
+            <h1>
+              {selectedService.professional}
+            </h1>
 
-            <h3>{selectedService.profession}</h3>
+            <h3>
+              {selectedService.profession}
+            </h3>
 
             <p style={styles.bio}>
               {selectedService.bio}
@@ -555,9 +770,13 @@ function App() {
                 {selectedService.category}
               </span>
 
-              <h2>{selectedService.title}</h2>
+              <h2>
+                {selectedService.title}
+              </h2>
 
-              <p>{selectedService.description}</p>
+              <p>
+                {selectedService.description}
+              </p>
 
               <div style={styles.price}>
                 {selectedService.price}
@@ -574,6 +793,7 @@ function App() {
 
                   setAccountMode("login");
                   setPage("account");
+
                   return;
                 }
 
@@ -610,7 +830,9 @@ function App() {
             type="text"
             placeholder="¿Qué servicio necesitas?"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
             style={styles.search}
           />
 
@@ -627,74 +849,106 @@ function App() {
               Todos
             </button>
 
-            {categories.map(([icon, name]) => (
-              <button
-                key={name}
-                onClick={() => setCategory(name)}
-                style={{
-                  ...styles.categoryButton,
-                  ...(category === name
-                    ? styles.selected
-                    : {}),
-                }}
-              >
-                {icon} {name}
-              </button>
-            ))}
+            {categories.map(
+              ([icon, name]) => (
+                <button
+                  key={name}
+                  onClick={() =>
+                    setCategory(name)
+                  }
+                  style={{
+                    ...styles.categoryButton,
+                    ...(category === name
+                      ? styles.selected
+                      : {}),
+                  }}
+                >
+                  {icon} {name}
+                </button>
+              )
+            )}
           </div>
 
           {loadingServices ? (
-            <p style={{ textAlign: "center" }}>
+            <p
+              style={{
+                textAlign: "center",
+              }}
+            >
               Cargando servicios...
             </p>
           ) : (
             <section style={styles.grid}>
-              {filteredServices.map((service) => (
-                <div
-                  key={service.id}
-                  style={styles.card}
-                >
-                  <div style={styles.avatarSmall}>
-                    {service.professional
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
-
-                  <span style={styles.badge}>
-                    {service.category}
-                  </span>
-
-                  <h2>{service.title}</h2>
-
-                  <p>{service.description}</p>
-
-                  <p>
-                    <strong>
-                      {service.professional}
-                    </strong>
-                    <br />
-                    {service.profession}
-                  </p>
-
-                  <strong>{service.price}</strong>
-
-                  <br />
-                  <br />
-
-                  <button
-                    style={styles.darkButton}
-                    onClick={() =>
-                      openProfile(service)
-                    }
+              {filteredServices.map(
+                (service) => (
+                  <div
+                    key={service.id}
+                    style={styles.card}
                   >
-                    Ver servicio
-                  </button>
-                </div>
-              ))}
+                    <div
+                      style={
+                        styles.avatarSmall
+                      }
+                    >
+                      {service.professional
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
 
-              {filteredServices.length === 0 && (
+                    <span
+                      style={styles.badge}
+                    >
+                      {service.category}
+                    </span>
+
+                    <h2>
+                      {service.title}
+                    </h2>
+
+                    <p>
+                      {service.description}
+                    </p>
+
+                    <p>
+                      <strong>
+                        {
+                          service.professional
+                        }
+                      </strong>
+                      <br />
+                      {
+                        service.profession
+                      }
+                    </p>
+
+                    <strong>
+                      {service.price}
+                    </strong>
+
+                    <br />
+                    <br />
+
+                    <button
+                      style={
+                        styles.darkButton
+                      }
+                      onClick={() =>
+                        openProfile(
+                          service
+                        )
+                      }
+                    >
+                      Ver servicio
+                    </button>
+                  </div>
+                )
+              )}
+
+              {filteredServices.length ===
+                0 && (
                 <p>
-                  No encontramos servicios con esa búsqueda.
+                  No encontramos servicios
+                  con esa búsqueda.
                 </p>
               )}
             </section>
@@ -713,16 +967,22 @@ function App() {
           logout={logout}
         />
 
-        <main style={styles.formContainer}>
-          <h1>Ofrece tus servicios</h1>
+        <main
+          style={styles.formContainer}
+        >
+          <h1>
+            Ofrece tus servicios
+          </h1>
 
           <p style={styles.subtitle}>
-            Crea tu publicación profesional en RobLoren.
+            Crea tu publicación profesional
+            en RobLoren.
           </p>
 
           {!loggedUser && (
             <div style={styles.welcome}>
-              🔐 Debes iniciar sesión para publicar un servicio.
+              🔐 Debes iniciar sesión para
+              publicar un servicio.
             </div>
           )}
 
@@ -730,7 +990,9 @@ function App() {
             onSubmit={publishService}
             style={styles.form}
           >
-            <label>Tu nombre</label>
+            <label>
+              Tu nombre
+            </label>
 
             <input
               name="name"
@@ -752,7 +1014,9 @@ function App() {
               style={styles.input}
             />
 
-            <label>Nombre del servicio</label>
+            <label>
+              Nombre del servicio
+            </label>
 
             <input
               name="title"
@@ -762,7 +1026,9 @@ function App() {
               style={styles.input}
             />
 
-            <label>Categoría</label>
+            <label>
+              Categoría
+            </label>
 
             <select
               name="category"
@@ -770,17 +1036,21 @@ function App() {
               onChange={handleChange}
               style={styles.input}
             >
-              {categories.map(([icon, name]) => (
-                <option
-                  key={name}
-                  value={name}
-                >
-                  {icon} {name}
-                </option>
-              ))}
+              {categories.map(
+                ([icon, name]) => (
+                  <option
+                    key={name}
+                    value={name}
+                  >
+                    {icon} {name}
+                  </option>
+                )
+              )}
             </select>
 
-            <label>Descripción</label>
+            <label>
+              Descripción
+            </label>
 
             <textarea
               name="description"
@@ -793,7 +1063,9 @@ function App() {
               }}
             />
 
-            <label>Precio inicial (USD)</label>
+            <label>
+              Precio inicial (USD)
+            </label>
 
             <input
               name="price"
@@ -807,7 +1079,9 @@ function App() {
 
             <button
               type="submit"
-              style={styles.publishButton}
+              style={
+                styles.publishButton
+              }
             >
               Publicar mi servicio
             </button>
@@ -831,14 +1105,17 @@ function App() {
         </h1>
 
         <p style={styles.subtitle}>
-          RobLoren conecta clientes con profesionales que
-          ofrecen servicios desde cualquier lugar.
+          RobLoren conecta clientes con
+          profesionales que ofrecen servicios
+          desde cualquier lugar.
         </p>
 
         {loggedUser && (
           <div style={styles.welcome}>
             👋 Hola,{" "}
-            <strong>{loggedUser.name}</strong>
+            <strong>
+              {loggedUser.name}
+            </strong>
             <br />
             Cuenta: {loggedUser.type}
           </div>
@@ -847,42 +1124,52 @@ function App() {
         <div style={styles.actions}>
           <button
             style={styles.darkButton}
-            onClick={() => setPage("services")}
+            onClick={() =>
+              setPage("services")
+            }
           >
             Buscar servicios
           </button>
 
           <button
             style={styles.lightButton}
-            onClick={() => setPage("offer")}
+            onClick={() =>
+              setPage("offer")
+            }
           >
             Ofrecer mis servicios
           </button>
         </div>
 
         <section style={styles.grid}>
-          {categories.map(([icon, name]) => (
-            <div
-              key={name}
-              style={styles.card}
-            >
-              <div style={{ fontSize: "35px" }}>
-                {icon}
+          {categories.map(
+            ([icon, name]) => (
+              <div
+                key={name}
+                style={styles.card}
+              >
+                <div
+                  style={{
+                    fontSize: "35px",
+                  }}
+                >
+                  {icon}
+                </div>
+
+                <h3>{name}</h3>
+
+                <p>
+                  Profesionales especializados.
+                </p>
               </div>
-
-              <h3>{name}</h3>
-
-              <p>
-                Profesionales especializados.
-              </p>
-            </div>
-          ))}
+            )
+          )}
         </section>
       </main>
 
       <footer style={styles.footer}>
-        © 2026 RobLoren — Marketplace de servicios
-        profesionales
+        © 2026 RobLoren — Marketplace de
+        servicios profesionales
       </footer>
     </div>
   );
@@ -897,15 +1184,21 @@ function Header({
     <header style={styles.header}>
       <button
         style={styles.logoButton}
-        onClick={() => setPage("home")}
+        onClick={() =>
+          setPage("home")
+        }
       >
         RobLoren
       </button>
 
-      <div style={styles.headerActions}>
+      <div
+        style={styles.headerActions}
+      >
         <button
           style={styles.darkButton}
-          onClick={() => setPage("home")}
+          onClick={() =>
+            setPage("home")
+          }
         >
           Inicio
         </button>
@@ -928,7 +1221,9 @@ function Header({
         ) : (
           <button
             style={styles.accountButton}
-            onClick={() => setPage("account")}
+            onClick={() =>
+              setPage("account")
+            }
           >
             👤 Cuenta
           </button>
@@ -963,7 +1258,8 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom:
+      "1px solid #e5e7eb",
     gap: "15px",
   },
 
@@ -984,7 +1280,8 @@ const styles = {
 
   accountButton: {
     padding: "12px 16px",
-    border: "1px solid #172033",
+    border:
+      "1px solid #172033",
     borderRadius: "9px",
     background: "#ffffff",
     color: "#172033",
@@ -998,7 +1295,8 @@ const styles = {
   },
 
   heroTitle: {
-    fontSize: "clamp(38px, 7vw, 64px)",
+    fontSize:
+      "clamp(38px, 7vw, 64px)",
     textAlign: "center",
     marginBottom: "20px",
   },
@@ -1009,7 +1307,8 @@ const styles = {
     textAlign: "center",
     lineHeight: 1.6,
     maxWidth: "700px",
-    margin: "0 auto 35px",
+    margin:
+      "0 auto 35px",
   },
 
   actions: {
@@ -1031,7 +1330,8 @@ const styles = {
 
   lightButton: {
     padding: "12px 20px",
-    border: "1px solid #172033",
+    border:
+      "1px solid #172033",
     borderRadius: "9px",
     background: "#ffffff",
     color: "#172033",
@@ -1054,7 +1354,8 @@ const styles = {
     maxWidth: "700px",
     margin: "30px auto",
     padding: "16px",
-    border: "1px solid #d1d5db",
+    border:
+      "1px solid #d1d5db",
     borderRadius: "10px",
     fontSize: "17px",
     boxSizing: "border-box",
@@ -1070,7 +1371,8 @@ const styles = {
 
   categoryButton: {
     padding: "10px 15px",
-    border: "1px solid #d1d5db",
+    border:
+      "1px solid #d1d5db",
     borderRadius: "20px",
     background: "#ffffff",
     cursor: "pointer",
@@ -1092,7 +1394,8 @@ const styles = {
     background: "#ffffff",
     padding: "25px",
     borderRadius: "14px",
-    border: "1px solid #e5e7eb",
+    border:
+      "1px solid #e5e7eb",
   },
 
   badge: {
@@ -1124,7 +1427,8 @@ const styles = {
     background: "#ffffff",
     padding: "30px",
     borderRadius: "15px",
-    border: "1px solid #e5e7eb",
+    border:
+      "1px solid #e5e7eb",
     display: "flex",
     flexDirection: "column",
     gap: "10px",
@@ -1132,7 +1436,8 @@ const styles = {
 
   input: {
     padding: "14px",
-    border: "1px solid #d1d5db",
+    border:
+      "1px solid #d1d5db",
     borderRadius: "8px",
     fontSize: "16px",
     marginBottom: "10px",
@@ -1165,7 +1470,8 @@ const styles = {
     background: "#ffffff",
     padding: "35px",
     borderRadius: "15px",
-    border: "1px solid #e5e7eb",
+    border:
+      "1px solid #e5e7eb",
   },
 
   welcome: {
@@ -1175,7 +1481,8 @@ const styles = {
     background: "#ffffff",
     borderRadius: "12px",
     textAlign: "center",
-    border: "1px solid #e5e7eb",
+    border:
+      "1px solid #e5e7eb",
   },
 
   profileContainer: {
@@ -1188,7 +1495,8 @@ const styles = {
     background: "#ffffff",
     padding: "40px 30px",
     borderRadius: "18px",
-    border: "1px solid #e5e7eb",
+    border:
+      "1px solid #e5e7eb",
     textAlign: "center",
   },
 
@@ -1202,7 +1510,8 @@ const styles = {
     justifyContent: "center",
     fontSize: "38px",
     fontWeight: "bold",
-    margin: "0 auto 20px",
+    margin:
+      "0 auto 20px",
   },
 
   bio: {
