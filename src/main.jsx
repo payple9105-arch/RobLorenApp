@@ -96,6 +96,17 @@ function statusLabel(status) {
   return "Pendiente";
 }
 
+function formatMessageDate(date) {
+  if (!date) return "";
+
+  return new Date(date).toLocaleString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function App() {
   const [page, setPage] = useState("home");
   const [selectedService, setSelectedService] = useState(null);
@@ -117,6 +128,12 @@ function App() {
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [updatingRequestId, setUpdatingRequestId] = useState(null);
+
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageText, setMessageText] = useState("");
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -148,15 +165,17 @@ function App() {
         user.user_metadata?.name ||
         user.user_metadata?.full_name ||
         "Usuario",
-      profession: user.user_metadata?.profession || "Profesional",
+      profession:
+        user.user_metadata?.profession || "Profesional",
       bio: user.user_metadata?.bio || "",
     };
 
-    const { data: createdProfile, error: createError } = await supabase
-      .from("profiles")
-      .insert(profile)
-      .select()
-      .single();
+    const { data: createdProfile, error: createError } =
+      await supabase
+        .from("profiles")
+        .insert(profile)
+        .select()
+        .single();
 
     if (createError) {
       console.error("Error creando perfil:", createError);
@@ -186,28 +205,40 @@ function App() {
     const rows = data || [];
 
     const userIds = [
-      ...new Set(rows.map((service) => service.user_id).filter(Boolean)),
+      ...new Set(
+        rows.map((service) => service.user_id).filter(Boolean)
+      ),
     ];
 
     let profilesById = {};
 
     if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id,name,profession,bio")
-        .in("id", userIds);
+      const { data: profiles, error: profilesError } =
+        await supabase
+          .from("profiles")
+          .select("id,name,profession,bio")
+          .in("id", userIds);
 
       if (profilesError) {
-        console.error("Error cargando perfiles:", profilesError);
+        console.error(
+          "Error cargando perfiles:",
+          profilesError
+        );
       } else {
         profilesById = Object.fromEntries(
-          (profiles || []).map((profile) => [profile.id, profile])
+          (profiles || []).map((profile) => [
+            profile.id,
+            profile,
+          ])
         );
       }
     }
 
     const realServices = rows.map((service) =>
-      mapSupabaseService(service, profilesById[service.user_id])
+      mapSupabaseService(
+        service,
+        profilesById[service.user_id]
+      )
     );
 
     setServices([...realServices, ...initialServices]);
@@ -227,11 +258,16 @@ function App() {
     const { data, error } = await supabase
       .from("service_requests")
       .select("*")
-      .or(`client_id.eq.${userId},provider_id.eq.${userId}`)
+      .or(
+        `client_id.eq.${userId},provider_id.eq.${userId}`
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error cargando solicitudes:", error);
+      console.error(
+        "Error cargando solicitudes:",
+        error
+      );
       setRequests([]);
       setLoadingRequests(false);
       return;
@@ -251,17 +287,22 @@ function App() {
     ];
 
     const serviceIds = [
-      ...new Set(rows.map((request) => request.service_id).filter(Boolean)),
+      ...new Set(
+        rows
+          .map((request) => request.service_id)
+          .filter(Boolean)
+      ),
     ];
 
     let profilesById = {};
     let servicesById = {};
 
     if (profileIds.length > 0) {
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id,name,profession,bio")
-        .in("id", profileIds);
+      const { data: profiles, error: profilesError } =
+        await supabase
+          .from("profiles")
+          .select("id,name,profession,bio")
+          .in("id", profileIds);
 
       if (profilesError) {
         console.error(
@@ -270,18 +311,22 @@ function App() {
         );
       } else {
         profilesById = Object.fromEntries(
-          (profiles || []).map((profile) => [profile.id, profile])
+          (profiles || []).map((profile) => [
+            profile.id,
+            profile,
+          ])
         );
       }
     }
 
     if (serviceIds.length > 0) {
-      const { data: serviceRows, error: servicesError } = await supabase
-        .from("services")
-        .select(
-          "id,service_title,category,description,price,user_id"
-        )
-        .in("id", serviceIds);
+      const { data: serviceRows, error: servicesError } =
+        await supabase
+          .from("services")
+          .select(
+            "id,service_title,category,description,price,user_id"
+          )
+          .in("id", serviceIds);
 
       if (servicesError) {
         console.error(
@@ -290,35 +335,201 @@ function App() {
         );
       } else {
         servicesById = Object.fromEntries(
-          (serviceRows || []).map((service) => [service.id, service])
+          (serviceRows || []).map((service) => [
+            service.id,
+            service,
+          ])
         );
       }
     }
 
     const enrichedRequests = rows.map((request) => {
       const service = servicesById[request.service_id];
-      const clientProfile = profilesById[request.client_id];
-      const providerProfile = profilesById[request.provider_id];
+      const clientProfile =
+        profilesById[request.client_id];
+      const providerProfile =
+        profilesById[request.provider_id];
 
       return {
         ...request,
         clientName:
           clientProfile?.name ||
-          (request.client_id === userId ? loggedUser.name : "Cliente"),
+          (request.client_id === userId
+            ? loggedUser.name
+            : "Cliente"),
         providerName:
           providerProfile?.name ||
           (request.provider_id === userId
             ? loggedUser.name
             : "Profesional"),
         serviceTitle:
-          service?.service_title || "Servicio profesional",
-        serviceCategory: service?.category || "Otros",
-        serviceDescription: service?.description || "",
+          service?.service_title ||
+          "Servicio profesional",
+        serviceCategory:
+          service?.category || "Otros",
+        serviceDescription:
+          service?.description || "",
       };
     });
 
     setRequests(enrichedRequests);
     setLoadingRequests(false);
+  }
+
+  async function loadMessages(contactId) {
+    if (!loggedUser?.id || !contactId) {
+      setMessages([]);
+      return;
+    }
+
+    setLoadingMessages(true);
+
+    const userId = loggedUser.id;
+
+    const { data, error } = await supabase
+      .from("messages")
+      .select(
+        "id,created_at,sender_id,receiver_id,request_id,message"
+      )
+      .or(
+        `and(sender_id.eq.${userId},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${userId})`
+      )
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error(
+        "Error cargando mensajes:",
+        error
+      );
+      setMessages([]);
+      setLoadingMessages(false);
+      return;
+    }
+
+    setMessages(data || []);
+    setLoadingMessages(false);
+  }
+
+  async function sendMessage(event) {
+    if (event) {
+      event.preventDefault();
+    }
+
+    if (!loggedUser?.id) {
+      alert("Debes iniciar sesión para enviar mensajes.");
+      setPage("account");
+      setAccountMode("login");
+      return;
+    }
+
+    if (!selectedContact?.id) {
+      alert("No hay un profesional seleccionado.");
+      return;
+    }
+
+    const text = messageText.trim();
+
+    if (!text) {
+      return;
+    }
+
+    if (selectedContact.id === loggedUser.id) {
+      alert("No puedes enviarte mensajes a ti mismo.");
+      return;
+    }
+
+    setSendingMessage(true);
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        sender_id: loggedUser.id,
+        receiver_id: selectedContact.id,
+        request_id: selectedContact.requestId || null,
+        message: text,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error(
+        "Error enviando mensaje:",
+        error
+      );
+      alert(error.message);
+      setSendingMessage(false);
+      return;
+    }
+
+    setMessages((current) => [...current, data]);
+    setMessageText("");
+    setSendingMessage(false);
+  }
+
+  async function openMessaging(contact) {
+    if (!loggedUser) {
+      alert(
+        "Debes iniciar sesión para utilizar la mensajería."
+      );
+      setAccountMode("login");
+      setPage("account");
+      return;
+    }
+
+    if (!contact?.userId) {
+      alert(
+        "Este profesional todavía no tiene mensajería disponible."
+      );
+      return;
+    }
+
+    if (contact.userId === loggedUser.id) {
+      alert(
+        "No puedes iniciar una conversación contigo mismo."
+      );
+      return;
+    }
+
+    const contactData = {
+      id: contact.userId,
+      name: contact.name || "Profesional",
+      profession:
+        contact.profession || "Profesional",
+      requestId: contact.requestId || null,
+    };
+
+    setSelectedContact(contactData);
+    setMessageText("");
+    setMessages([]);
+    setPage("messages");
+
+    await loadMessages(contactData.id);
+  }
+
+  function openMessagingFromRequest(request) {
+    if (!loggedUser) return;
+
+    const isProvider =
+      request.provider_id === loggedUser.id;
+
+    const contactId = isProvider
+      ? request.client_id
+      : request.provider_id;
+
+    const contactName = isProvider
+      ? request.clientName
+      : request.providerName;
+
+    const contactProfession = isProvider
+      ? "Cliente"
+      : "Profesional";
+
+    openMessaging({
+      userId: contactId,
+      name: contactName,
+      profession: contactProfession,
+      requestId: request.id,
+    });
   }
 
   useEffect(() => {
@@ -330,8 +541,13 @@ function App() {
       } = await supabase.auth.getSession();
 
       if (session?.user) {
-        const profile = await ensureUserProfile(session.user);
-        setLoggedUser(buildLoggedUser(session.user, profile));
+        const profile = await ensureUserProfile(
+          session.user
+        );
+
+        setLoggedUser(
+          buildLoggedUser(session.user, profile)
+        );
       } else {
         setLoggedUser(null);
       }
@@ -343,14 +559,21 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const profile = await ensureUserProfile(session.user);
-        setLoggedUser(buildLoggedUser(session.user, profile));
-      } else {
-        setLoggedUser(null);
+    } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          const profile = await ensureUserProfile(
+            session.user
+          );
+
+          setLoggedUser(
+            buildLoggedUser(session.user, profile)
+          );
+        } else {
+          setLoggedUser(null);
+        }
       }
-    });
+    );
 
     return () => subscription.unsubscribe();
   }, []);
@@ -367,23 +590,49 @@ function App() {
     }
   }, [loggedUser?.id]);
 
-  const filteredServices = services.filter((service) => {
-    const text = search.toLowerCase().trim();
+  useEffect(() => {
+    if (
+      page === "messages" &&
+      loggedUser?.id &&
+      selectedContact?.id
+    ) {
+      loadMessages(selectedContact.id);
+    }
+  }, [
+    page,
+    loggedUser?.id,
+    selectedContact?.id,
+  ]);
 
-    const matchesSearch =
-      !text ||
-      service.service.toLowerCase().includes(text) ||
-      service.name.toLowerCase().includes(text) ||
-      service.profession.toLowerCase().includes(text) ||
-      service.category.toLowerCase().includes(text) ||
-      service.description.toLowerCase().includes(text);
+  const filteredServices = services.filter(
+    (service) => {
+      const text = search.toLowerCase().trim();
 
-    const matchesCategory =
-      selectedCategory === "Todas" ||
-      service.category === selectedCategory;
+      const matchesSearch =
+        !text ||
+        service.service
+          .toLowerCase()
+          .includes(text) ||
+        service.name
+          .toLowerCase()
+          .includes(text) ||
+        service.profession
+          .toLowerCase()
+          .includes(text) ||
+        service.category
+          .toLowerCase()
+          .includes(text) ||
+        service.description
+          .toLowerCase()
+          .includes(text);
 
-    return matchesSearch && matchesCategory;
-  });
+      const matchesCategory =
+        selectedCategory === "Todas" ||
+        service.category === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    }
+  );
 
   function handleFormChange(event) {
     setForm({
@@ -396,22 +645,29 @@ function App() {
     event.preventDefault();
 
     if (accountMode === "register") {
-      if (!form.name || !form.email || !form.password) {
-        alert("Completa nombre, correo y contraseña.");
+      if (
+        !form.name ||
+        !form.email ||
+        !form.password
+      ) {
+        alert(
+          "Completa nombre, correo y contraseña."
+        );
         return;
       }
 
-      const { data, error } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: {
-          data: {
-            name: form.name,
-            profession: form.profession,
-            bio: form.bio,
+      const { data, error } =
+        await supabase.auth.signUp({
+          email: form.email,
+          password: form.password,
+          options: {
+            data: {
+              name: form.name,
+              profession: form.profession,
+              bio: form.bio,
+            },
           },
-        },
-      });
+        });
 
       if (error) {
         alert(error.message);
@@ -422,13 +678,17 @@ function App() {
         const profile = {
           id: data.user.id,
           name: form.name,
-          profession: form.profession || "Profesional",
+          profession:
+            form.profession || "Profesional",
           bio: form.bio || "",
         };
 
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .upsert(profile, { onConflict: "id" });
+        const { error: profileError } =
+          await supabase
+            .from("profiles")
+            .upsert(profile, {
+              onConflict: "id",
+            });
 
         if (profileError) {
           console.error(profileError);
@@ -453,14 +713,17 @@ function App() {
     }
 
     if (!form.email || !form.password) {
-      alert("Introduce tu correo y contraseña.");
+      alert(
+        "Introduce tu correo y contraseña."
+      );
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: form.email,
-      password: form.password,
-    });
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password,
+      });
 
     if (error) {
       alert(error.message);
@@ -468,9 +731,13 @@ function App() {
     }
 
     if (data.user) {
-      const profile = await ensureUserProfile(data.user);
+      const profile = await ensureUserProfile(
+        data.user
+      );
 
-      setLoggedUser(buildLoggedUser(data.user, profile));
+      setLoggedUser(
+        buildLoggedUser(data.user, profile)
+      );
 
       alert("Sesión iniciada.");
 
@@ -483,6 +750,8 @@ function App() {
 
     setLoggedUser(null);
     setRequests([]);
+    setMessages([]);
+    setSelectedContact(null);
     setPage("home");
   }
 
@@ -490,29 +759,32 @@ function App() {
     event.preventDefault();
 
     if (!loggedUser) {
-      alert("Debes iniciar sesión para publicar un servicio.");
+      alert(
+        "Debes iniciar sesión para publicar un servicio."
+      );
       setPage("account");
       setAccountMode("login");
       return;
     }
 
-    const serviceTitle = event.target.serviceTitle.value.trim();
+    const serviceTitle =
+      event.target.serviceTitle.value.trim();
     const category = event.target.category.value;
-    const description = event.target.description.value.trim();
-    const price = Number(event.target.price.value);
+    const description =
+      event.target.description.value.trim();
+    const price = Number(
+      event.target.price.value
+    );
 
-    if (!serviceTitle || !category || !description || !price) {
+    if (
+      !serviceTitle ||
+      !category ||
+      !description ||
+      !price
+    ) {
       alert("Completa todos los campos.");
       return;
     }
-
-    /*
-      IMPORTANTE:
-      Ya no actualizamos la tabla profiles aquí.
-      El perfil ya se obtiene durante el inicio de sesión.
-      Así publicar un servicio no depende de una operación UPDATE/UPSERT
-      sobre profiles.
-    */
 
     const { data, error } = await supabase
       .from("services")
@@ -529,7 +801,10 @@ function App() {
       .single();
 
     if (error) {
-      console.error("Error publicando servicio:", error);
+      console.error(
+        "Error publicando servicio:",
+        error
+      );
       alert(error.message);
       return;
     }
@@ -548,11 +823,17 @@ function App() {
 
     setServices((current) => [
       newService,
-      ...current.filter((service) => !service.demo),
-      ...current.filter((service) => service.demo),
+      ...current.filter(
+        (service) => !service.demo
+      ),
+      ...current.filter(
+        (service) => service.demo
+      ),
     ]);
 
-    alert("Servicio publicado correctamente.");
+    alert(
+      "Servicio publicado correctamente."
+    );
 
     event.target.reset();
 
@@ -561,7 +842,9 @@ function App() {
 
   async function requestService() {
     if (!loggedUser) {
-      alert("Debes iniciar sesión para contratar un servicio.");
+      alert(
+        "Debes iniciar sesión para contratar un servicio."
+      );
       setPage("account");
       setAccountMode("login");
       return;
@@ -574,21 +857,26 @@ function App() {
       return;
     }
 
-    if (selectedService.userId === loggedUser.id) {
-      alert("No puedes contratar tu propio servicio.");
+    if (
+      selectedService.userId === loggedUser.id
+    ) {
+      alert(
+        "No puedes contratar tu propio servicio."
+      );
       return;
     }
 
     setSendingRequest(true);
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("service_requests")
       .insert({
         service_id: selectedService.id,
         client_id: loggedUser.id,
         provider_id: selectedService.userId,
         status: "pending",
-        message: requestMessage.trim() || null,
+        message:
+          requestMessage.trim() || null,
       })
       .select()
       .single();
@@ -603,14 +891,19 @@ function App() {
     setRequestMessage("");
     setSendingRequest(false);
 
-    alert("Solicitud enviada correctamente.");
+    alert(
+      "Solicitud enviada correctamente."
+    );
 
     await loadRequests();
 
     setPage("requests");
   }
 
-  async function updateRequestStatus(requestId, newStatus) {
+  async function updateRequestStatus(
+    requestId,
+    newStatus
+  ) {
     if (!loggedUser?.id) return;
 
     setUpdatingRequestId(requestId);
@@ -672,18 +965,22 @@ function App() {
   if (authLoading) {
     return (
       <div style={styles.loadingScreen}>
-        <div style={styles.loadingLogo}>RobLoren</div>
+        <div style={styles.loadingLogo}>
+          RobLoren
+        </div>
         <p>Cargando...</p>
       </div>
     );
   }
 
   const receivedRequests = requests.filter(
-    (request) => request.provider_id === loggedUser?.id
+    (request) =>
+      request.provider_id === loggedUser?.id
   );
 
   const sentRequests = requests.filter(
-    (request) => request.client_id === loggedUser?.id
+    (request) =>
+      request.client_id === loggedUser?.id
   );
 
   return (
@@ -693,7 +990,10 @@ function App() {
           style={styles.logo}
           onClick={() => setPage("home")}
         >
-          <span style={styles.logoMark}>R</span>
+          <span style={styles.logoMark}>
+            R
+          </span>
+
           <span>RobLoren</span>
         </div>
 
@@ -713,12 +1013,28 @@ function App() {
           </button>
 
           {loggedUser && (
-            <button
-              style={styles.navButton}
-              onClick={openRequests}
-            >
-              📋 Solicitudes
-            </button>
+            <>
+              <button
+                style={styles.navButton}
+                onClick={openRequests}
+              >
+                📋 Solicitudes
+              </button>
+
+              <button
+                style={styles.navButton}
+                onClick={() => {
+                  if (!selectedContact) {
+                    setPage("requests");
+                    return;
+                  }
+
+                  setPage("messages");
+                }}
+              >
+                💬 Mensajes
+              </button>
+            </>
           )}
 
           {!loggedUser ? (
@@ -734,7 +1050,9 @@ function App() {
           ) : (
             <button
               style={styles.accountButton}
-              onClick={() => setPage("account")}
+              onClick={() =>
+                setPage("account")
+              }
             >
               👤 {loggedUser.name}
             </button>
@@ -747,26 +1065,31 @@ function App() {
           <section style={styles.hero}>
             <div style={styles.heroContent}>
               <div style={styles.badge}>
-                🚀 Marketplace de servicios profesionales
+                🚀 Marketplace de servicios
+                profesionales
               </div>
 
               <h1 style={styles.heroTitle}>
                 Conecta talento
                 <br />
+
                 <span style={styles.greenText}>
                   con oportunidades.
                 </span>
               </h1>
 
               <p style={styles.heroText}>
-                Encuentra profesionales, publica tus servicios y
-                conecta con clientes nacionales e internacionales.
+                Encuentra profesionales, publica
+                tus servicios y conecta con clientes
+                nacionales e internacionales.
               </p>
 
               <div style={styles.heroButtons}>
                 <button
                   style={styles.primaryButton}
-                  onClick={() => setPage("services")}
+                  onClick={() =>
+                    setPage("services")
+                  }
                 >
                   Explorar servicios
                 </button>
@@ -776,7 +1099,9 @@ function App() {
                   onClick={() => {
                     if (!loggedUser) {
                       setPage("account");
-                      setAccountMode("register");
+                      setAccountMode(
+                        "register"
+                      );
                     } else {
                       setPage("offer");
                     }
@@ -789,7 +1114,10 @@ function App() {
 
             <div style={styles.heroCard}>
               <div style={styles.heroCardTop}>
-                <span style={styles.liveDot}></span>
+                <span
+                  style={styles.liveDot}
+                ></span>
+
                 Profesionales conectados
               </div>
 
@@ -812,238 +1140,635 @@ function App() {
             </div>
 
             <div style={styles.categoriesSection}>
-              <h2 style={styles.sectionTitle}>
+              <h2
+                style={styles.sectionTitle}
+              >
                 Explora por categoría
               </h2>
 
-              <div style={styles.categoryGrid}>
-                {categories.map(([icon, name]) => (
-                  <button
-                    key={name}
-                    style={styles.categoryCard}
-                    onClick={() => {
-                      setSelectedCategory(name);
-                      setPage("services");
-                    }}
-                  >
-                    <span style={styles.categoryIcon}>{icon}</span>
-                    <span>{name}</span>
-                  </button>
-                ))}
+              <div
+                style={styles.categoryGrid}
+              >
+                {categories.map(
+                  ([icon, name]) => (
+                    <button
+                      key={name}
+                      style={
+                        styles.categoryCard
+                      }
+                      onClick={() => {
+                        setSelectedCategory(
+                          name
+                        );
+                        setPage("services");
+                      }}
+                    >
+                      <span
+                        style={
+                          styles.categoryIcon
+                        }
+                      >
+                        {icon}
+                      </span>
+
+                      <span>{name}</span>
+                    </button>
+                  )
+                )}
               </div>
             </div>
           </section>
         )}
 
         {page === "services" && (
-          <section style={styles.pageSection}>
-            <div style={styles.pageHeader}>
-              <h1 style={styles.pageTitle}>
-                Encuentra el servicio que necesitas
+          <section
+            style={styles.pageSection}
+          >
+            <div
+              style={styles.pageHeader}
+            >
+              <h1
+                style={styles.pageTitle}
+              >
+                Encuentra el servicio que
+                necesitas
               </h1>
 
-              <p style={styles.pageSubtitle}>
-                Profesionales preparados para ayudarte.
+              <p
+                style={styles.pageSubtitle}
+              >
+                Profesionales preparados para
+                ayudarte.
               </p>
             </div>
 
-            <div style={styles.searchArea}>
+            <div
+              style={styles.searchArea}
+            >
               <input
                 style={styles.searchInput}
                 placeholder="🔎 Buscar servicios, profesionales..."
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) =>
+                  setSearch(
+                    event.target.value
+                  )
+                }
               />
 
               <select
-                style={styles.categorySelect}
+                style={
+                  styles.categorySelect
+                }
                 value={selectedCategory}
                 onChange={(event) =>
-                  setSelectedCategory(event.target.value)
+                  setSelectedCategory(
+                    event.target.value
+                  )
                 }
               >
                 <option value="Todas">
                   Todas las categorías
                 </option>
 
-                {categories.map(([, name]) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
+                {categories.map(
+                  ([, name]) => (
+                    <option
+                      key={name}
+                      value={name}
+                    >
+                      {name}
+                    </option>
+                  )
+                )}
               </select>
             </div>
 
             {servicesLoading ? (
-              <div style={styles.centerText}>
+              <div
+                style={styles.centerText}
+              >
                 Cargando servicios...
               </div>
-            ) : filteredServices.length === 0 ? (
-              <div style={styles.emptyCard}>
-                <div style={styles.emptyIcon}>🔎</div>
-                <h3>No encontramos servicios</h3>
-                <p>Prueba con otra búsqueda o categoría.</p>
+            ) : filteredServices.length ===
+              0 ? (
+              <div
+                style={styles.emptyCard}
+              >
+                <div
+                  style={styles.emptyIcon}
+                >
+                  🔎
+                </div>
+
+                <h3>
+                  No encontramos servicios
+                </h3>
+
+                <p>
+                  Prueba con otra búsqueda o
+                  categoría.
+                </p>
               </div>
             ) : (
-              <div style={styles.serviceGrid}>
-                {filteredServices.map((service) => (
-                  <article
-                    key={`${service.demo ? "demo" : "real"}-${service.id}`}
-                    style={styles.serviceCard}
-                  >
-                    <div style={styles.serviceTop}>
-                      <span style={styles.serviceCategory}>
-                        {service.category}
-                      </span>
-
-                      {service.demo && (
-                        <span style={styles.demoBadge}>
-                          Demo
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 style={styles.serviceTitle}>
-                      {service.service}
-                    </h3>
-
-                    <p style={styles.serviceDescription}>
-                      {service.description}
-                    </p>
-
-                    <div style={styles.providerInfo}>
-                      <div style={styles.avatar}>
-                        {service.name.charAt(0).toUpperCase()}
-                      </div>
-
-                      <div>
-                        <strong>{service.name}</strong>
-                        <small>{service.profession}</small>
-                      </div>
-                    </div>
-
-                    <div style={styles.serviceBottom}>
-                      <div>
-                        <small>Desde</small>
-                        <strong>${service.price}</strong>
-                      </div>
-
-                      <button
-                        style={styles.viewButton}
-                        onClick={() => openProfile(service)}
+              <div
+                style={styles.serviceGrid}
+              >
+                {filteredServices.map(
+                  (service) => (
+                    <article
+                      key={`${
+                        service.demo
+                          ? "demo"
+                          : "real"
+                      }-${service.id}`}
+                      style={
+                        styles.serviceCard
+                      }
+                    >
+                      <div
+                        style={
+                          styles.serviceTop
+                        }
                       >
-                        Ver servicio
-                      </button>
-                    </div>
-                  </article>
-                ))}
+                        <span
+                          style={
+                            styles.serviceCategory
+                          }
+                        >
+                          {service.category}
+                        </span>
+
+                        {service.demo && (
+                          <span
+                            style={
+                              styles.demoBadge
+                            }
+                          >
+                            Demo
+                          </span>
+                        )}
+                      </div>
+
+                      <h3
+                        style={
+                          styles.serviceTitle
+                        }
+                      >
+                        {service.service}
+                      </h3>
+
+                      <p
+                        style={
+                          styles.serviceDescription
+                        }
+                      >
+                        {service.description}
+                      </p>
+
+                      <div
+                        style={
+                          styles.providerInfo
+                        }
+                      >
+                        <div
+                          style={
+                            styles.avatar
+                          }
+                        >
+                          {service.name
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+
+                        <div>
+                          <strong>
+                            {service.name}
+                          </strong>
+
+                          <small>
+                            {service.profession}
+                          </small>
+                        </div>
+                      </div>
+
+                      <div
+                        style={
+                          styles.serviceBottom
+                        }
+                      >
+                        <div>
+                          <small>
+                            Desde
+                          </small>
+
+                          <strong>
+                            ${service.price}
+                          </strong>
+                        </div>
+
+                        <button
+                          style={
+                            styles.viewButton
+                          }
+                          onClick={() =>
+                            openProfile(
+                              service
+                            )
+                          }
+                        >
+                          Ver servicio
+                        </button>
+                      </div>
+                    </article>
+                  )
+                )}
               </div>
             )}
           </section>
         )}
 
-        {page === "profile" && selectedService && (
-          <section style={styles.pageSection}>
-            <button
-              style={styles.backButton}
-              onClick={() => setPage("services")}
+        {page === "profile" &&
+          selectedService && (
+            <section
+              style={styles.pageSection}
             >
-              ← Volver a servicios
-            </button>
+              <button
+                style={styles.backButton}
+                onClick={() =>
+                  setPage("services")
+                }
+              >
+                ← Volver a servicios
+              </button>
 
-            <div style={styles.profileLayout}>
-              <div style={styles.profileMain}>
-                <div style={styles.profileCategory}>
-                  {selectedService.category}
+              <div
+                style={
+                  styles.profileLayout
+                }
+              >
+                <div
+                  style={
+                    styles.profileMain
+                  }
+                >
+                  <div
+                    style={
+                      styles.profileCategory
+                    }
+                  >
+                    {selectedService.category}
+                  </div>
+
+                  <h1
+                    style={
+                      styles.profileTitle
+                    }
+                  >
+                    {selectedService.service}
+                  </h1>
+
+                  <div
+                    style={
+                      styles.profileProvider
+                    }
+                  >
+                    <div
+                      style={
+                        styles.bigAvatar
+                      }
+                    >
+                      {selectedService.name
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+
+                    <div>
+                      <h3>
+                        {selectedService.name}
+                      </h3>
+
+                      <p>
+                        {
+                          selectedService.profession
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    style={
+                      styles.profileBlock
+                    }
+                  >
+                    <h2>
+                      Descripción del servicio
+                    </h2>
+
+                    <p>
+                      {
+                        selectedService.description
+                      }
+                    </p>
+                  </div>
+
+                  <button
+                    style={
+                      styles.contactButton
+                    }
+                    onClick={() =>
+                      openMessaging(
+                        selectedService
+                      )
+                    }
+                  >
+                    💬 Contactar
+                  </button>
                 </div>
 
-                <h1 style={styles.profileTitle}>
-                  {selectedService.service}
-                </h1>
+                <aside
+                  style={styles.hireCard}
+                >
+                  <span
+                    style={styles.priceLabel}
+                  >
+                    Precio desde
+                  </span>
 
-                <div style={styles.profileProvider}>
-                  <div style={styles.bigAvatar}>
-                    {selectedService.name.charAt(0).toUpperCase()}
+                  <div
+                    style={styles.price}
+                  >
+                    ${selectedService.price}
+                  </div>
+
+                  {selectedService.demo ? (
+                    <div
+                      style={
+                        styles.demoNotice
+                      }
+                    >
+                      Este es un servicio de
+                      demostración. Los
+                      servicios reales podrán
+                      contratarse cuando estén
+                      publicados por un
+                      profesional registrado.
+                    </div>
+                  ) : (
+                    <>
+                      <label
+                        style={
+                          styles.textareaLabel
+                        }
+                      >
+                        Mensaje para el
+                        profesional
+                      </label>
+
+                      <textarea
+                        style={
+                          styles.textarea
+                        }
+                        placeholder="Cuéntale al profesional qué necesitas..."
+                        value={requestMessage}
+                        onChange={(event) =>
+                          setRequestMessage(
+                            event.target.value
+                          )
+                        }
+                      />
+
+                      <button
+                        style={
+                          styles.hireButton
+                        }
+                        onClick={
+                          requestService
+                        }
+                        disabled={
+                          sendingRequest
+                        }
+                      >
+                        {sendingRequest
+                          ? "Enviando..."
+                          : "🤝 Contratar servicio"}
+                      </button>
+                    </>
+                  )}
+                </aside>
+              </div>
+            </section>
+          )}
+
+        {page === "messages" &&
+          loggedUser && (
+            <section
+              style={styles.pageSection}
+            >
+              <button
+                style={styles.backButton}
+                onClick={() =>
+                  setPage("requests")
+                }
+              >
+                ← Volver a solicitudes
+              </button>
+
+              <div
+                style={styles.messagesLayout}
+              >
+                <div
+                  style={
+                    styles.messagesHeader
+                  }
+                >
+                  <div
+                    style={
+                      styles.messageAvatar
+                    }
+                  >
+                    {selectedContact?.name
+                      ?.charAt(0)
+                      .toUpperCase() || "?"}
                   </div>
 
                   <div>
-                    <h3>{selectedService.name}</h3>
-                    <p>{selectedService.profession}</p>
+                    <h1
+                      style={
+                        styles.messageTitle
+                      }
+                    >
+                      {selectedContact?.name ||
+                        "Conversación"}
+                    </h1>
+
+                    <p
+                      style={
+                        styles.messageSubtitle
+                      }
+                    >
+                      {selectedContact?.profession ||
+                        "Usuario de RobLoren"}
+                    </p>
                   </div>
                 </div>
 
-                <div style={styles.profileBlock}>
-                  <h2>Descripción del servicio</h2>
-                  <p>{selectedService.description}</p>
-                </div>
-
-                <button
-                  style={styles.contactButton}
-                  onClick={() =>
-                    alert(
-                      "La mensajería estará disponible próximamente."
-                    )
+                <div
+                  style={
+                    styles.messagesBox
                   }
                 >
-                  💬 Contactar
-                </button>
-              </div>
+                  {loadingMessages ? (
+                    <div
+                      style={
+                        styles.centerText
+                      }
+                    >
+                      Cargando mensajes...
+                    </div>
+                  ) : messages.length ===
+                    0 ? (
+                    <div
+                      style={
+                        styles.emptyMessages
+                      }
+                    >
+                      <div
+                        style={
+                          styles.emptyIcon
+                        }
+                      >
+                        💬
+                      </div>
 
-              <aside style={styles.hireCard}>
-                <span style={styles.priceLabel}>
-                  Precio desde
-                </span>
+                      <h3>
+                        Inicia la conversación
+                      </h3>
 
-                <div style={styles.price}>
-                  ${selectedService.price}
+                      <p>
+                        Envía tu primer mensaje
+                        a{" "}
+                        {selectedContact?.name ||
+                          "este usuario"}.
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      style={
+                        styles.messageList
+                      }
+                    >
+                      {messages.map(
+                        (item) => {
+                          const mine =
+                            item.sender_id ===
+                            loggedUser.id;
+
+                          return (
+                            <div
+                              key={item.id}
+                              style={{
+                                ...styles.messageRow,
+                                justifyContent:
+                                  mine
+                                    ? "flex-end"
+                                    : "flex-start",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  ...styles.messageBubble,
+                                  ...(mine
+                                    ? styles.myMessage
+                                    : styles.theirMessage),
+                                }}
+                              >
+                                <p>
+                                  {
+                                    item.message
+                                  }
+                                </p>
+
+                                <small
+                                  style={{
+                                    ...styles.messageTime,
+                                    color: mine
+                                      ? "#d8f5e4"
+                                      : "#718078",
+                                  }}
+                                >
+                                  {formatMessageDate(
+                                    item.created_at
+                                  )}
+                                </small>
+                              </div>
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {selectedService.demo ? (
-                  <div style={styles.demoNotice}>
-                    Este es un servicio de demostración. Los
-                    servicios reales podrán contratarse cuando estén
-                    publicados por un profesional registrado.
-                  </div>
-                ) : (
-                  <>
-                    <label style={styles.textareaLabel}>
-                      Mensaje para el profesional
-                    </label>
+                <form
+                  style={
+                    styles.messageForm
+                  }
+                  onSubmit={sendMessage}
+                >
+                  <textarea
+                    style={
+                      styles.messageInput
+                    }
+                    placeholder="Escribe tu mensaje..."
+                    value={messageText}
+                    onChange={(event) =>
+                      setMessageText(
+                        event.target.value
+                      )
+                    }
+                    disabled={
+                      sendingMessage
+                    }
+                  />
 
-                    <textarea
-                      style={styles.textarea}
-                      placeholder="Cuéntale al profesional qué necesitas..."
-                      value={requestMessage}
-                      onChange={(event) =>
-                        setRequestMessage(event.target.value)
-                      }
-                    />
-
-                    <button
-                      style={styles.hireButton}
-                      onClick={requestService}
-                      disabled={sendingRequest}
-                    >
-                      {sendingRequest
-                        ? "Enviando..."
-                        : "🤝 Contratar servicio"}
-                    </button>
-                  </>
-                )}
-              </aside>
-            </div>
-          </section>
-        )}
+                  <button
+                    type="submit"
+                    style={
+                      styles.sendMessageButton
+                    }
+                    disabled={
+                      sendingMessage ||
+                      !messageText.trim()
+                    }
+                  >
+                    {sendingMessage
+                      ? "Enviando..."
+                      : "Enviar 💬"}
+                  </button>
+                </form>
+              </div>
+            </section>
+          )}
 
         {page === "offer" && (
-          <section style={styles.pageSection}>
-            <div style={styles.pageHeader}>
-              <h1 style={styles.pageTitle}>
+          <section
+            style={styles.pageSection}
+          >
+            <div
+              style={styles.pageHeader}
+            >
+              <h1
+                style={styles.pageTitle}
+              >
                 Publica tu servicio
               </h1>
 
-              <p style={styles.pageSubtitle}>
-                Conecta tu talento con nuevos clientes.
+              <p
+                style={styles.pageSubtitle}
+              >
+                Conecta tu talento con nuevos
+                clientes.
               </p>
             </div>
 
@@ -1051,7 +1776,9 @@ function App() {
               style={styles.offerForm}
               onSubmit={publishService}
             >
-              <label style={styles.formLabel}>
+              <label
+                style={styles.formLabel}
+              >
                 Título del servicio
               </label>
 
@@ -1061,7 +1788,9 @@ function App() {
                 placeholder="Ej. Creación de páginas web"
               />
 
-              <label style={styles.formLabel}>
+              <label
+                style={styles.formLabel}
+              >
                 Categoría
               </label>
 
@@ -1074,14 +1803,21 @@ function App() {
                   Selecciona una categoría
                 </option>
 
-                {categories.map(([, name]) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
+                {categories.map(
+                  ([, name]) => (
+                    <option
+                      key={name}
+                      value={name}
+                    >
+                      {name}
+                    </option>
+                  )
+                )}
               </select>
 
-              <label style={styles.formLabel}>
+              <label
+                style={styles.formLabel}
+              >
                 Descripción
               </label>
 
@@ -1091,7 +1827,9 @@ function App() {
                 placeholder="Describe claramente lo que ofreces..."
               />
 
-              <label style={styles.formLabel}>
+              <label
+                style={styles.formLabel}
+              >
                 Precio
               </label>
 
@@ -1114,198 +1852,381 @@ function App() {
           </section>
         )}
 
-        {page === "requests" && loggedUser && (
-          <section style={styles.pageSection}>
-            <div style={styles.pageHeader}>
-              <h1 style={styles.pageTitle}>
-                Solicitudes
-              </h1>
+        {page === "requests" &&
+          loggedUser && (
+            <section
+              style={styles.pageSection}
+            >
+              <div
+                style={styles.pageHeader}
+              >
+                <h1
+                  style={styles.pageTitle}
+                >
+                  Solicitudes
+                </h1>
 
-              <p style={styles.pageSubtitle}>
-                Gestiona las solicitudes de tus servicios y consulta
-                las que has enviado.
-              </p>
-            </div>
-
-            {loadingRequests ? (
-              <div style={styles.centerText}>
-                Cargando solicitudes...
+                <p
+                  style={styles.pageSubtitle}
+                >
+                  Gestiona las solicitudes de
+                  tus servicios y consulta las
+                  que has enviado.
+                </p>
               </div>
-            ) : (
-              <>
-                <div style={styles.requestSection}>
-                  <h2 style={styles.sectionTitle}>
-                    📥 Solicitudes recibidas
-                  </h2>
 
-                  {receivedRequests.length === 0 ? (
-                    <div style={styles.emptyCard}>
-                      <div style={styles.emptyIcon}>📭</div>
-                      <h3>
-                        No tienes solicitudes recibidas
-                      </h3>
-                      <p>
-                        Cuando un cliente solicite uno de tus
-                        servicios, aparecerá aquí.
-                      </p>
-                    </div>
-                  ) : (
-                    <div style={styles.requestGrid}>
-                      {receivedRequests.map((request) => (
-                        <article
-                          key={request.id}
-                          style={styles.requestCard}
+              {loadingRequests ? (
+                <div
+                  style={styles.centerText}
+                >
+                  Cargando solicitudes...
+                </div>
+              ) : (
+                <>
+                  <div
+                    style={
+                      styles.requestSection
+                    }
+                  >
+                    <h2
+                      style={
+                        styles.sectionTitle
+                      }
+                    >
+                      📥 Solicitudes recibidas
+                    </h2>
+
+                    {receivedRequests.length ===
+                    0 ? (
+                      <div
+                        style={
+                          styles.emptyCard
+                        }
+                      >
+                        <div
+                          style={
+                            styles.emptyIcon
+                          }
                         >
-                          <div style={styles.requestTop}>
-                            <span style={styles.serviceCategory}>
-                              {request.serviceCategory}
-                            </span>
+                          📭
+                        </div>
 
-                            <span
-                              style={{
-                                ...styles.status,
-                                ...(request.status === "accepted"
-                                  ? styles.statusAccepted
-                                  : request.status === "rejected"
-                                  ? styles.statusRejected
-                                  : styles.statusPending),
-                              }}
+                        <h3>
+                          No tienes solicitudes
+                          recibidas
+                        </h3>
+
+                        <p>
+                          Cuando un cliente
+                          solicite uno de tus
+                          servicios, aparecerá
+                          aquí.
+                        </p>
+                      </div>
+                    ) : (
+                      <div
+                        style={
+                          styles.requestGrid
+                        }
+                      >
+                        {receivedRequests.map(
+                          (request) => (
+                            <article
+                              key={request.id}
+                              style={
+                                styles.requestCard
+                              }
                             >
-                              {statusLabel(request.status)}
-                            </span>
-                          </div>
-
-                          <h3 style={styles.requestTitle}>
-                            {request.serviceTitle}
-                          </h3>
-
-                          <p>
-                            <strong>Cliente:</strong>{" "}
-                            {request.clientName}
-                          </p>
-
-                          <div style={styles.messageBox}>
-                            <strong>Mensaje:</strong>
-
-                            <p>
-                              {request.message ||
-                                "El cliente no dejó un mensaje."}
-                            </p>
-                          </div>
-
-                          {request.status === "pending" && (
-                            <div style={styles.requestActions}>
-                              <button
-                                style={styles.acceptButton}
-                                disabled={
-                                  updatingRequestId === request.id
+                              <div
+                                style={
+                                  styles.requestTop
                                 }
-                                onClick={() =>
-                                  updateRequestStatus(
-                                    request.id,
+                              >
+                                <span
+                                  style={
+                                    styles.serviceCategory
+                                  }
+                                >
+                                  {
+                                    request.serviceCategory
+                                  }
+                                </span>
+
+                                <span
+                                  style={{
+                                    ...styles.status,
+                                    ...(request.status ===
                                     "accepted"
-                                  )
+                                      ? styles.statusAccepted
+                                      : request.status ===
+                                        "rejected"
+                                      ? styles.statusRejected
+                                      : styles.statusPending),
+                                  }}
+                                >
+                                  {statusLabel(
+                                    request.status
+                                  )}
+                                </span>
+                              </div>
+
+                              <h3
+                                style={
+                                  styles.requestTitle
                                 }
                               >
-                                ✓ Aceptar
-                              </button>
+                                {
+                                  request.serviceTitle
+                                }
+                              </h3>
+
+                              <p>
+                                <strong>
+                                  Cliente:
+                                </strong>{" "}
+                                {
+                                  request.clientName
+                                }
+                              </p>
+
+                              <div
+                                style={
+                                  styles.messageBox
+                                }
+                              >
+                                <strong>
+                                  Mensaje:
+                                </strong>
+
+                                <p>
+                                  {request.message ||
+                                    "El cliente no dejó un mensaje."}
+                                </p>
+                              </div>
+
+                              {request.status ===
+                                "pending" && (
+                                <div
+                                  style={
+                                    styles.requestActions
+                                  }
+                                >
+                                  <button
+                                    style={
+                                      styles.acceptButton
+                                    }
+                                    disabled={
+                                      updatingRequestId ===
+                                      request.id
+                                    }
+                                    onClick={() =>
+                                      updateRequestStatus(
+                                        request.id,
+                                        "accepted"
+                                      )
+                                    }
+                                  >
+                                    ✓ Aceptar
+                                  </button>
+
+                                  <button
+                                    style={
+                                      styles.rejectButton
+                                    }
+                                    disabled={
+                                      updatingRequestId ===
+                                      request.id
+                                    }
+                                    onClick={() =>
+                                      updateRequestStatus(
+                                        request.id,
+                                        "rejected"
+                                      )
+                                    }
+                                  >
+                                    ✕ Rechazar
+                                  </button>
+                                </div>
+                              )}
 
                               <button
-                                style={styles.rejectButton}
-                                disabled={
-                                  updatingRequestId === request.id
+                                style={
+                                  styles.requestMessageButton
                                 }
                                 onClick={() =>
-                                  updateRequestStatus(
-                                    request.id,
-                                    "rejected"
+                                  openMessagingFromRequest(
+                                    request
                                   )
                                 }
                               >
-                                ✕ Rechazar
+                                💬 Mensajear
                               </button>
-                            </div>
-                          )}
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                            </article>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                <div style={styles.requestSection}>
-                  <h2 style={styles.sectionTitle}>
-                    📤 Mis solicitudes
-                  </h2>
+                  <div
+                    style={
+                      styles.requestSection
+                    }
+                  >
+                    <h2
+                      style={
+                        styles.sectionTitle
+                      }
+                    >
+                      📤 Mis solicitudes
+                    </h2>
 
-                  {sentRequests.length === 0 ? (
-                    <div style={styles.emptyCard}>
-                      <div style={styles.emptyIcon}>📨</div>
-                      <h3>
-                        No has enviado solicitudes
-                      </h3>
-                      <p>
-                        Cuando contrates un servicio, podrás ver aquí
-                        el estado de tu solicitud.
-                      </p>
-                    </div>
-                  ) : (
-                    <div style={styles.requestGrid}>
-                      {sentRequests.map((request) => (
-                        <article
-                          key={request.id}
-                          style={styles.requestCard}
+                    {sentRequests.length ===
+                    0 ? (
+                      <div
+                        style={
+                          styles.emptyCard
+                        }
+                      >
+                        <div
+                          style={
+                            styles.emptyIcon
+                          }
                         >
-                          <div style={styles.requestTop}>
-                            <span style={styles.serviceCategory}>
-                              {request.serviceCategory}
-                            </span>
+                          📨
+                        </div>
 
-                            <span
-                              style={{
-                                ...styles.status,
-                                ...(request.status === "accepted"
-                                  ? styles.statusAccepted
-                                  : request.status === "rejected"
-                                  ? styles.statusRejected
-                                  : styles.statusPending),
-                              }}
+                        <h3>
+                          No has enviado
+                          solicitudes
+                        </h3>
+
+                        <p>
+                          Cuando contrates un
+                          servicio, podrás ver
+                          aquí el estado de tu
+                          solicitud.
+                        </p>
+                      </div>
+                    ) : (
+                      <div
+                        style={
+                          styles.requestGrid
+                        }
+                      >
+                        {sentRequests.map(
+                          (request) => (
+                            <article
+                              key={request.id}
+                              style={
+                                styles.requestCard
+                              }
                             >
-                              {statusLabel(request.status)}
-                            </span>
-                          </div>
+                              <div
+                                style={
+                                  styles.requestTop
+                                }
+                              >
+                                <span
+                                  style={
+                                    styles.serviceCategory
+                                  }
+                                >
+                                  {
+                                    request.serviceCategory
+                                  }
+                                </span>
 
-                          <h3 style={styles.requestTitle}>
-                            {request.serviceTitle}
-                          </h3>
+                                <span
+                                  style={{
+                                    ...styles.status,
+                                    ...(request.status ===
+                                    "accepted"
+                                      ? styles.statusAccepted
+                                      : request.status ===
+                                        "rejected"
+                                      ? styles.statusRejected
+                                      : styles.statusPending),
+                                  }}
+                                >
+                                  {statusLabel(
+                                    request.status
+                                  )}
+                                </span>
+                              </div>
 
-                          <p>
-                            <strong>Profesional:</strong>{" "}
-                            {request.providerName}
-                          </p>
+                              <h3
+                                style={
+                                  styles.requestTitle
+                                }
+                              >
+                                {
+                                  request.serviceTitle
+                                }
+                              </h3>
 
-                          <div style={styles.messageBox}>
-                            <strong>Tu mensaje:</strong>
+                              <p>
+                                <strong>
+                                  Profesional:
+                                </strong>{" "}
+                                {
+                                  request.providerName
+                                }
+                              </p>
 
-                            <p>
-                              {request.message ||
-                                "No enviaste un mensaje."}
-                            </p>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </section>
-        )}
+                              <div
+                                style={
+                                  styles.messageBox
+                                }
+                              >
+                                <strong>
+                                  Tu mensaje:
+                                </strong>
+
+                                <p>
+                                  {request.message ||
+                                    "No enviaste un mensaje."}
+                                </p>
+                              </div>
+
+                              <button
+                                style={
+                                  styles.requestMessageButton
+                                }
+                                onClick={() =>
+                                  openMessagingFromRequest(
+                                    request
+                                  )
+                                }
+                              >
+                                💬 Mensajear
+                              </button>
+                            </article>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </section>
+          )}
 
         {page === "account" && (
-          <section style={styles.pageSection}>
-            <div style={styles.accountCard}>
-              <div style={styles.accountHeader}>
-                <div style={styles.accountLogo}>R</div>
+          <section
+            style={styles.pageSection}
+          >
+            <div
+              style={styles.accountCard}
+            >
+              <div
+                style={styles.accountHeader}
+              >
+                <div
+                  style={styles.accountLogo}
+                >
+                  R
+                </div>
 
                 <h1>
                   {loggedUser
@@ -1324,40 +2245,77 @@ function App() {
 
               {loggedUser ? (
                 <div>
-                  <div style={styles.accountInfo}>
+                  <div
+                    style={
+                      styles.accountInfo
+                    }
+                  >
                     <div>
                       <span>Nombre</span>
-                      <strong>{loggedUser.name}</strong>
+                      <strong>
+                        {loggedUser.name}
+                      </strong>
                     </div>
 
                     <div>
                       <span>Correo</span>
-                      <strong>{loggedUser.email}</strong>
+                      <strong>
+                        {loggedUser.email}
+                      </strong>
                     </div>
 
                     <div>
-                      <span>Profesión</span>
-                      <strong>{loggedUser.profession}</strong>
+                      <span>
+                        Profesión
+                      </span>
+                      <strong>
+                        {
+                          loggedUser.profession
+                        }
+                      </strong>
                     </div>
                   </div>
 
-                  <div style={styles.accountButtons}>
+                  <div
+                    style={
+                      styles.accountButtons
+                    }
+                  >
                     <button
-                      style={styles.primaryButton}
-                      onClick={() => setPage("offer")}
+                      style={
+                        styles.primaryButton
+                      }
+                      onClick={() =>
+                        setPage("offer")
+                      }
                     >
                       ➕ Publicar servicio
                     </button>
 
                     <button
-                      style={styles.secondaryButton}
+                      style={
+                        styles.secondaryButton
+                      }
                       onClick={openRequests}
                     >
                       📋 Mis solicitudes
                     </button>
 
                     <button
-                      style={styles.logoutButton}
+                      style={
+                        styles.secondaryButton
+                      }
+                      onClick={() =>
+                        setPage("messages")
+                      }
+                    >
+                      💬 Mensajes
+                    </button>
+
+                    <button
+                      style={
+                        styles.logoutButton
+                      }
                       onClick={logout}
                     >
                       Cerrar sesión
@@ -1366,48 +2324,83 @@ function App() {
                 </div>
               ) : (
                 <>
-                  <form onSubmit={handleAccountSubmit}>
-                    {accountMode === "register" && (
+                  <form
+                    onSubmit={
+                      handleAccountSubmit
+                    }
+                  >
+                    {accountMode ===
+                      "register" && (
                       <>
-                        <label style={styles.formLabel}>
+                        <label
+                          style={
+                            styles.formLabel
+                          }
+                        >
                           Nombre
                         </label>
 
                         <input
                           name="name"
                           value={form.name}
-                          onChange={handleFormChange}
-                          style={styles.formInput}
+                          onChange={
+                            handleFormChange
+                          }
+                          style={
+                            styles.formInput
+                          }
                           placeholder="Tu nombre"
                         />
 
-                        <label style={styles.formLabel}>
+                        <label
+                          style={
+                            styles.formLabel
+                          }
+                        >
                           Profesión
                         </label>
 
                         <input
                           name="profession"
-                          value={form.profession}
-                          onChange={handleFormChange}
-                          style={styles.formInput}
+                          value={
+                            form.profession
+                          }
+                          onChange={
+                            handleFormChange
+                          }
+                          style={
+                            styles.formInput
+                          }
                           placeholder="Ej. Diseñador gráfico"
                         />
 
-                        <label style={styles.formLabel}>
+                        <label
+                          style={
+                            styles.formLabel
+                          }
+                        >
                           Biografía
                         </label>
 
                         <textarea
                           name="bio"
                           value={form.bio}
-                          onChange={handleFormChange}
-                          style={styles.formTextarea}
+                          onChange={
+                            handleFormChange
+                          }
+                          style={
+                            styles.formTextarea
+                          }
                           placeholder="Cuéntanos sobre ti..."
                         />
                       </>
                     )}
 
-                    <label style={styles.formLabel}>
+                    <label
+                      style={
+                        styles.formLabel
+                      }
+                    >
                       Correo electrónico
                     </label>
 
@@ -1415,12 +2408,20 @@ function App() {
                       name="email"
                       type="email"
                       value={form.email}
-                      onChange={handleFormChange}
-                      style={styles.formInput}
+                      onChange={
+                        handleFormChange
+                      }
+                      style={
+                        styles.formInput
+                      }
                       placeholder="correo@ejemplo.com"
                     />
 
-                    <label style={styles.formLabel}>
+                    <label
+                      style={
+                        styles.formLabel
+                      }
+                    >
                       Contraseña
                     </label>
 
@@ -1428,30 +2429,46 @@ function App() {
                       name="password"
                       type="password"
                       value={form.password}
-                      onChange={handleFormChange}
-                      style={styles.formInput}
+                      onChange={
+                        handleFormChange
+                      }
+                      style={
+                        styles.formInput
+                      }
                       placeholder="Tu contraseña"
                     />
 
                     <button
                       type="submit"
-                      style={styles.primaryButton}
+                      style={
+                        styles.primaryButton
+                      }
                     >
-                      {accountMode === "login"
+                      {accountMode ===
+                      "login"
                         ? "Iniciar sesión"
                         : "Crear cuenta"}
                     </button>
                   </form>
 
-                  <div style={styles.switchAccount}>
-                    {accountMode === "login" ? (
+                  <div
+                    style={
+                      styles.switchAccount
+                    }
+                  >
+                    {accountMode ===
+                    "login" ? (
                       <>
                         ¿No tienes cuenta?{" "}
                         <button
                           onClick={() =>
-                            setAccountMode("register")
+                            setAccountMode(
+                              "register"
+                            )
                           }
-                          style={styles.linkButton}
+                          style={
+                            styles.linkButton
+                          }
                         >
                           Crear cuenta
                         </button>
@@ -1461,9 +2478,13 @@ function App() {
                         ¿Ya tienes cuenta?{" "}
                         <button
                           onClick={() =>
-                            setAccountMode("login")
+                            setAccountMode(
+                              "login"
+                            )
                           }
-                          style={styles.linkButton}
+                          style={
+                            styles.linkButton
+                          }
                         >
                           Iniciar sesión
                         </button>
@@ -1479,7 +2500,10 @@ function App() {
 
       <footer style={styles.footer}>
         <strong>RobLoren</strong>
-        <span>Conecta talento con oportunidades.</span>
+
+        <span>
+          Conecta talento con oportunidades.
+        </span>
       </footer>
     </div>
   );
@@ -1518,7 +2542,8 @@ const styles = {
     alignItems: "center",
     padding: "16px 6%",
     background: "rgba(255,255,255,.96)",
-    borderBottom: "1px solid #e7eee9",
+    borderBottom:
+      "1px solid #e7eee9",
     backdropFilter: "blur(10px)",
   },
 
@@ -1548,6 +2573,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 8,
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
   },
 
   navButton: {
@@ -1570,7 +2597,8 @@ const styles = {
   },
 
   accountButton: {
-    border: "1px solid #d7e4db",
+    border:
+      "1px solid #d7e4db",
     background: "#fff",
     color: "#183022",
     borderRadius: 10,
@@ -1601,7 +2629,8 @@ const styles = {
   },
 
   heroTitle: {
-    fontSize: "clamp(45px, 7vw, 82px)",
+    fontSize:
+      "clamp(45px, 7vw, 82px)",
     lineHeight: 1.02,
     margin: "0 0 24px",
     letterSpacing: -3,
@@ -1637,7 +2666,8 @@ const styles = {
   },
 
   secondaryButton: {
-    border: "1px solid #cfe0d5",
+    border:
+      "1px solid #cfe0d5",
     background: "#fff",
     color: "#163022",
     borderRadius: 12,
@@ -1654,7 +2684,8 @@ const styles = {
     borderRadius: 24,
     padding: 28,
     maxWidth: 850,
-    boxShadow: "0 20px 50px rgba(16,32,24,.15)",
+    boxShadow:
+      "0 20px 50px rgba(16,32,24,.15)",
   },
 
   heroCardTop: {
@@ -1699,7 +2730,8 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     gap: 10,
-    border: "1px solid #dfe9e2",
+    border:
+      "1px solid #dfe9e2",
     background: "#fff",
     borderRadius: 16,
     padding: 20,
@@ -1723,7 +2755,8 @@ const styles = {
   },
 
   pageTitle: {
-    fontSize: "clamp(32px,5vw,52px)",
+    fontSize:
+      "clamp(32px,5vw,52px)",
     margin: "0 0 10px",
     letterSpacing: -1.5,
   },
@@ -1743,7 +2776,8 @@ const styles = {
   searchInput: {
     flex: 1,
     minWidth: 250,
-    border: "1px solid #d5e2d9",
+    border:
+      "1px solid #d5e2d9",
     borderRadius: 12,
     padding: "14px 16px",
     fontSize: 16,
@@ -1751,7 +2785,8 @@ const styles = {
   },
 
   categorySelect: {
-    border: "1px solid #d5e2d9",
+    border:
+      "1px solid #d5e2d9",
     borderRadius: 12,
     padding: "14px 16px",
     background: "#fff",
@@ -1767,10 +2802,12 @@ const styles = {
 
   serviceCard: {
     background: "#fff",
-    border: "1px solid #e1eae4",
+    border:
+      "1px solid #e1eae4",
     borderRadius: 20,
     padding: 22,
-    boxShadow: "0 8px 25px rgba(16,32,24,.05)",
+    boxShadow:
+      "0 8px 25px rgba(16,32,24,.05)",
   },
 
   serviceTop: {
@@ -1814,7 +2851,8 @@ const styles = {
     gap: 12,
     marginTop: 20,
     paddingTop: 18,
-    borderTop: "1px solid #edf1ee",
+    borderTop:
+      "1px solid #edf1ee",
   },
 
   avatar: {
@@ -1865,7 +2903,8 @@ const styles = {
 
   profileMain: {
     background: "#fff",
-    border: "1px solid #e1eae4",
+    border:
+      "1px solid #e1eae4",
     borderRadius: 22,
     padding: 30,
   },
@@ -1877,7 +2916,8 @@ const styles = {
   },
 
   profileTitle: {
-    fontSize: "clamp(30px,5vw,48px)",
+    fontSize:
+      "clamp(30px,5vw,48px)",
     margin: "0 0 25px",
   },
 
@@ -1886,8 +2926,10 @@ const styles = {
     alignItems: "center",
     gap: 15,
     padding: "20px 0",
-    borderTop: "1px solid #edf1ee",
-    borderBottom: "1px solid #edf1ee",
+    borderTop:
+      "1px solid #edf1ee",
+    borderBottom:
+      "1px solid #edf1ee",
   },
 
   bigAvatar: {
@@ -1914,7 +2956,8 @@ const styles = {
     width: "100%",
     padding: 14,
     borderRadius: 12,
-    border: "1px solid #d2e1d7",
+    border:
+      "1px solid #d2e1d7",
     background: "#fff",
     cursor: "pointer",
     fontWeight: 800,
@@ -1922,7 +2965,8 @@ const styles = {
 
   hireCard: {
     background: "#fff",
-    border: "1px solid #e1eae4",
+    border:
+      "1px solid #e1eae4",
     borderRadius: 22,
     padding: 25,
     height: "fit-content",
@@ -1952,7 +2996,8 @@ const styles = {
     minHeight: 120,
     boxSizing: "border-box",
     resize: "vertical",
-    border: "1px solid #d5e2d9",
+    border:
+      "1px solid #d5e2d9",
     borderRadius: 12,
     padding: 12,
     fontFamily: "inherit",
@@ -1980,10 +3025,161 @@ const styles = {
     fontSize: 14,
   },
 
+  messagesLayout: {
+    maxWidth: 850,
+    margin: "0 auto",
+  },
+
+  messagesHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: 15,
+    background: "#fff",
+    border:
+      "1px solid #e1eae4",
+    borderRadius: "20px 20px 0 0",
+    padding: 22,
+  },
+
+  messageAvatar: {
+    width: 55,
+    height: 55,
+    borderRadius: "50%",
+    background: "#dff4e7",
+    color: "#148447",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 22,
+    fontWeight: 900,
+  },
+
+  messageTitle: {
+    margin: 0,
+    fontSize: 24,
+  },
+
+  messageSubtitle: {
+    margin: "5px 0 0",
+    color: "#68766e",
+  },
+
+  messagesBox: {
+    minHeight: 430,
+    maxHeight: 520,
+    overflowY: "auto",
+    background: "#f0f5f2",
+    borderLeft:
+      "1px solid #e1eae4",
+    borderRight:
+      "1px solid #e1eae4",
+    padding: 20,
+  },
+
+  emptyMessages: {
+    minHeight: 380,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center",
+    color: "#65736b",
+  },
+
+  messageList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
+  },
+
+  messageRow: {
+    display: "flex",
+    width: "100%",
+  },
+
+  messageBubble: {
+    maxWidth: "75%",
+    padding: "12px 15px",
+    borderRadius: 16,
+    boxShadow:
+      "0 3px 10px rgba(16,32,24,.06)",
+  },
+
+  myMessage: {
+    background: "#18a957",
+    color: "#fff",
+    borderBottomRightRadius: 4,
+  },
+
+  theirMessage: {
+    background: "#fff",
+    color: "#24372c",
+    borderBottomLeftRadius: 4,
+  },
+
+  messageBubbleText: {
+    margin: 0,
+  },
+
+  messageTime: {
+    display: "block",
+    marginTop: 6,
+    fontSize: 11,
+  },
+
+  messageForm: {
+    display: "flex",
+    gap: 10,
+    alignItems: "flex-end",
+    background: "#fff",
+    border:
+      "1px solid #e1eae4",
+    borderRadius: "0 0 20px 20px",
+    padding: 15,
+  },
+
+  messageInput: {
+    flex: 1,
+    minHeight: 55,
+    maxHeight: 140,
+    resize: "vertical",
+    boxSizing: "border-box",
+    border:
+      "1px solid #d5e2d9",
+    borderRadius: 12,
+    padding: 13,
+    fontFamily: "inherit",
+    fontSize: 15,
+  },
+
+  sendMessageButton: {
+    border: "none",
+    background: "#18a957",
+    color: "#fff",
+    borderRadius: 12,
+    padding: "14px 18px",
+    cursor: "pointer",
+    fontWeight: 800,
+  },
+
+  requestMessageButton: {
+    width: "100%",
+    border:
+      "1px solid #cfe0d5",
+    background: "#fff",
+    color: "#168548",
+    borderRadius: 10,
+    padding: 11,
+    cursor: "pointer",
+    fontWeight: 800,
+    marginTop: 15,
+  },
+
   offerForm: {
     maxWidth: 650,
     background: "#fff",
-    border: "1px solid #e1eae4",
+    border:
+      "1px solid #e1eae4",
     borderRadius: 22,
     padding: 28,
   },
@@ -1998,7 +3194,8 @@ const styles = {
   formInput: {
     width: "100%",
     boxSizing: "border-box",
-    border: "1px solid #d5e2d9",
+    border:
+      "1px solid #d5e2d9",
     borderRadius: 12,
     padding: "13px 14px",
     fontSize: 15,
@@ -2009,7 +3206,8 @@ const styles = {
     width: "100%",
     boxSizing: "border-box",
     minHeight: 140,
-    border: "1px solid #d5e2d9",
+    border:
+      "1px solid #d5e2d9",
     borderRadius: 12,
     padding: "13px 14px",
     fontSize: 15,
@@ -2030,10 +3228,12 @@ const styles = {
 
   requestCard: {
     background: "#fff",
-    border: "1px solid #e1eae4",
+    border:
+      "1px solid #e1eae4",
     borderRadius: 18,
     padding: 22,
-    boxShadow: "0 7px 22px rgba(16,32,24,.05)",
+    boxShadow:
+      "0 7px 22px rgba(16,32,24,.05)",
   },
 
   requestTop: {
@@ -2099,7 +3299,8 @@ const styles = {
 
   rejectButton: {
     flex: 1,
-    border: "1px solid #e1caca",
+    border:
+      "1px solid #e1caca",
     background: "#fff",
     color: "#a43d3d",
     borderRadius: 10,
@@ -2110,7 +3311,8 @@ const styles = {
 
   emptyCard: {
     background: "#fff",
-    border: "1px dashed #d4e1d8",
+    border:
+      "1px dashed #d4e1d8",
     borderRadius: 18,
     padding: 35,
     textAlign: "center",
@@ -2132,7 +3334,8 @@ const styles = {
     maxWidth: 600,
     margin: "0 auto",
     background: "#fff",
-    border: "1px solid #e1eae4",
+    border:
+      "1px solid #e1eae4",
     borderRadius: 22,
     padding: 30,
   },
@@ -2171,7 +3374,8 @@ const styles = {
   },
 
   logoutButton: {
-    border: "1px solid #efcccc",
+    border:
+      "1px solid #efcccc",
     background: "#fff",
     color: "#a33c3c",
     borderRadius: 12,
@@ -2195,7 +3399,8 @@ const styles = {
   },
 
   footer: {
-    borderTop: "1px solid #e1eae4",
+    borderTop:
+      "1px solid #e1eae4",
     padding: "30px 6%",
     display: "flex",
     justifyContent: "space-between",
@@ -2206,7 +3411,9 @@ const styles = {
   },
 };
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
