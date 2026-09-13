@@ -2,51 +2,47 @@ import React, { useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { supabase } from "./supabaseClient";
 
-/* =========================================================
-   DATOS
-========================================================= */
-
 const categories = [
-  ["💻", "Tecnología"],
-  ["🎨", "Diseño"],
-  ["📣", "Marketing"],
-  ["✍️", "Redacción"],
-  ["📚", "Educación"],
-  ["📷", "Fotografía"],
-  ["🎬", "Video"],
-  ["🎵", "Música"],
-  ["🌐", "Traducción"],
-  ["🔧", "Otros"],
+  ["ðŸ’»", "TecnologÃ­a"],
+  ["ðŸŽ¨", "DiseÃ±o"],
+  ["ðŸ“£", "Marketing"],
+  ["âœï¸", "RedacciÃ³n"],
+  ["ðŸ“š", "EducaciÃ³n"],
+  ["ðŸ“·", "FotografÃ­a"],
+  ["ðŸŽ¬", "Video"],
+  ["ðŸŽµ", "MÃºsica"],
+  ["ðŸŒ", "TraducciÃ³n"],
+  ["ðŸ”§", "Otros"],
 ];
 
 const demoServices = [
   {
     id: 1,
-    name: "Carlos Rodríguez",
+    name: "Carlos RodrÃ­guez",
     profession: "Desarrollador Web",
-    service: "Creación de sitios web profesionales",
-    category: "Tecnología",
+    service: "CreaciÃ³n de sitios web profesionales",
+    category: "TecnologÃ­a",
     description:
-      "Creo sitios web modernos, rápidos y adaptados a móviles para negocios y profesionales.",
+      "Creo sitios web modernos, rÃ¡pidos y adaptados a mÃ³viles para negocios y profesionales.",
     price: 80,
     userId: null,
     demo: true,
   },
   {
     id: 2,
-    name: "Ana Martínez",
-    profession: "Diseñadora Gráfica",
-    service: "Diseño de logotipos",
-    category: "Diseño",
+    name: "Ana MartÃ­nez",
+    profession: "DiseÃ±adora GrÃ¡fica",
+    service: "DiseÃ±o de logotipos",
+    category: "DiseÃ±o",
     description:
-      "Diseño logotipos modernos y profesionales para marcas y emprendimientos.",
+      "DiseÃ±o logotipos modernos y profesionales para marcas y emprendimientos.",
     price: 35,
     userId: null,
     demo: true,
   },
   {
     id: 3,
-    name: "Luis Gómez",
+    name: "Luis GÃ³mez",
     profession: "Especialista en Marketing",
     service: "Marketing para redes sociales",
     category: "Marketing",
@@ -57,10 +53,6 @@ const demoServices = [
     demo: true,
   },
 ];
-
-/* =========================================================
-   FUNCIONES AUXILIARES
-========================================================= */
 
 function mapService(row, profile) {
   return {
@@ -99,12 +91,6 @@ function statusText(status) {
   return "Pendiente";
 }
 
-function statusClass(status) {
-  if (status === "accepted") return "status accepted";
-  if (status === "rejected") return "status rejected";
-  return "status pending";
-}
-
 function dateText(value) {
   if (!value) return "";
   return new Date(value).toLocaleString("es-ES", {
@@ -115,71 +101,8 @@ function dateText(value) {
   });
 }
 
-/* =========================================================
-   COMPONENTES ESTABLES
-   IMPORTANTE: están fuera de App para evitar perder el foco
-   de inputs en iPhone.
-========================================================= */
-
-function Avatar({ name = "Usuario", large = false }) {
-  const letter = name.trim().charAt(0).toUpperCase() || "U";
-
-  return (
-    <div className={large ? "avatar avatar-large" : "avatar"}>
-      {letter}
-    </div>
-  );
-}
-
-function ServiceCard({ service, onOpen }) {
-  return (
-    <article className="service-card">
-      <span className="service-category">{service.category}</span>
-
-      <h3>{service.service}</h3>
-
-      <div className="service-professional">
-        <Avatar name={service.name} />
-
-        <div>
-          <strong>{service.name}</strong>
-          <span>{service.profession}</span>
-        </div>
-      </div>
-
-      <p className="service-description">{service.description}</p>
-
-      <div className="service-bottom">
-        <div className="price">
-          <small>Desde</small>
-          ${service.price}
-        </div>
-
-        <button className="primary" onClick={() => onOpen(service)}>
-          Ver servicio
-        </button>
-      </div>
-    </article>
-  );
-}
-
-function StatCard({ icon, value, label }) {
-  return (
-    <div className="stat-card">
-      <span>{icon}</span>
-      <strong>{value}</strong>
-      <small>{label}</small>
-    </div>
-  );
-}
-
-/* =========================================================
-   APP
-========================================================= */
-
 function App() {
   const [page, setPage] = useState("home");
-
   const [services, setServices] = useState(demoServices);
   const [selectedService, setSelectedService] = useState(null);
 
@@ -221,16 +144,12 @@ function App() {
 
   const [offer, setOffer] = useState({
     serviceTitle: "",
-    category: "Tecnología",
+    category: "TecnologÃ­a",
     description: "",
     price: "",
   });
 
   const [publishing, setPublishing] = useState(false);
-
-  /* =======================================================
-     PERFIL
-  ======================================================= */
 
   async function ensureProfile(user) {
     if (!user) return null;
@@ -239,16 +158,14 @@ function App() {
       .from("profiles")
       .select("id,name,profession,bio")
       .eq("id", user.id)
-      .limit(1);
+      .maybeSingle();
 
     if (error) {
-      console.error("Error leyendo perfil:", error);
+      console.error(error);
       return null;
     }
 
-    if (data?.length) {
-      return data[0];
-    }
+    if (data) return data;
 
     const profile = {
       id: user.id,
@@ -256,31 +173,29 @@ function App() {
         user.user_metadata?.name ||
         user.user_metadata?.full_name ||
         "Usuario",
-      profession: user.user_metadata?.profession || "Profesional",
+      profession:
+        user.user_metadata?.profession || "Profesional",
       bio: user.user_metadata?.bio || "",
     };
 
-    const { data: created, error: createError } = await supabase
-      .from("profiles")
-      .insert(profile)
-      .select("id,name,profession,bio");
+    const { data: created, error: createError } =
+      await supabase
+        .from("profiles")
+        .insert(profile)
+        .select()
+        .single();
 
     if (createError) {
-      console.error("Error creando perfil:", createError);
-      return profile;
+      console.error(createError);
+      return null;
     }
 
-    return created?.[0] || profile;
+    return created;
   }
 
   async function refreshUser(user) {
     if (!user) {
       setLoggedUser(null);
-      setProfileForm({
-        name: "",
-        profession: "",
-        bio: "",
-      });
       return;
     }
 
@@ -288,17 +203,12 @@ function App() {
     const next = makeUser(user, profile);
 
     setLoggedUser(next);
-
     setProfileForm({
       name: next.name,
       profession: next.profession,
       bio: next.bio,
     });
   }
-
-  /* =======================================================
-     SERVICIOS
-  ======================================================= */
 
   async function loadServices() {
     setServicesLoading(true);
@@ -311,7 +221,7 @@ function App() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error cargando servicios:", error);
+      console.error(error);
       setServices(demoServices);
       setServicesLoading(false);
       return;
@@ -320,7 +230,7 @@ function App() {
     const rows = data || [];
 
     const ids = [
-      ...new Set(rows.map((item) => item.user_id).filter(Boolean)),
+      ...new Set(rows.map((x) => x.user_id).filter(Boolean)),
     ];
 
     let profiles = {};
@@ -332,10 +242,7 @@ function App() {
         .in("id", ids);
 
       profiles = Object.fromEntries(
-        (profileRows || []).map((profile) => [
-          profile.id,
-          profile,
-        ])
+        (profileRows || []).map((p) => [p.id, p])
       );
     }
 
@@ -346,10 +253,6 @@ function App() {
     setServices([...real, ...demoServices]);
     setServicesLoading(false);
   }
-
-  /* =======================================================
-     SOLICITUDES
-  ======================================================= */
 
   async function loadRequests() {
     if (!loggedUser?.id) {
@@ -368,7 +271,7 @@ function App() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error cargando solicitudes:", error);
+      console.error(error);
       setRequests([]);
       setLoadingRequests(false);
       return;
@@ -379,39 +282,31 @@ function App() {
     const profileIds = [
       ...new Set(
         rows
-          .flatMap((row) => [
-            row.client_id,
-            row.provider_id,
-          ])
+          .flatMap((r) => [r.client_id, r.provider_id])
           .filter(Boolean)
       ),
     ];
 
     const serviceIds = [
-      ...new Set(
-        rows.map((row) => row.service_id).filter(Boolean)
-      ),
+      ...new Set(rows.map((r) => r.service_id).filter(Boolean)),
     ];
 
     let profiles = {};
     let serviceRows = {};
 
     if (profileIds.length) {
-      const { data: profileData } = await supabase
+      const { data: ps } = await supabase
         .from("profiles")
         .select("id,name,profession,bio")
         .in("id", profileIds);
 
       profiles = Object.fromEntries(
-        (profileData || []).map((profile) => [
-          profile.id,
-          profile,
-        ])
+        (ps || []).map((p) => [p.id, p])
       );
     }
 
     if (serviceIds.length) {
-      const { data: serviceData } = await supabase
+      const { data: ss } = await supabase
         .from("services")
         .select(
           "id,service_title,category,description,price,user_id"
@@ -419,56 +314,38 @@ function App() {
         .in("id", serviceIds);
 
       serviceRows = Object.fromEntries(
-        (serviceData || []).map((service) => [
-          service.id,
-          service,
-        ])
+        (ss || []).map((s) => [s.id, s])
       );
     }
 
     setRequests(
-      rows.map((row) => {
-        const service = serviceRows[row.service_id];
-        const client = profiles[row.client_id];
-        const provider = profiles[row.provider_id];
+      rows.map((r) => {
+        const service = serviceRows[r.service_id];
+        const client = profiles[r.client_id];
+        const provider = profiles[r.provider_id];
 
         return {
-          ...row,
-
+          ...r,
           clientName:
             client?.name ||
-            (row.client_id === loggedUser.id
+            (r.client_id === loggedUser.id
               ? loggedUser.name
               : "Cliente"),
-
           providerName:
             provider?.name ||
-            (row.provider_id === loggedUser.id
+            (r.provider_id === loggedUser.id
               ? loggedUser.name
               : "Profesional"),
-
           serviceTitle:
-            service?.service_title ||
-            "Servicio profesional",
-
-          serviceCategory:
-            service?.category || "Otros",
-
-          servicePrice:
-            Number(service?.price) || 0,
-
-          providerId: row.provider_id,
-          clientId: row.client_id,
+            service?.service_title || "Servicio profesional",
+          serviceCategory: service?.category || "Otros",
+          servicePrice: Number(service?.price) || 0,
         };
       })
     );
 
     setLoadingRequests(false);
   }
-
-  /* =======================================================
-     MENSAJES
-  ======================================================= */
 
   async function loadMessages(contactId) {
     if (!loggedUser?.id || !contactId) {
@@ -489,13 +366,45 @@ function App() {
       .order("created_at", { ascending: true });
 
     if (error) {
-      console.error("Error cargando mensajes:", error);
+      console.error(error);
       setMessages([]);
     } else {
       setMessages(data || []);
     }
 
     setLoadingMessages(false);
+  }
+
+  async function sendMessage(event) {
+    event.preventDefault();
+
+    if (!loggedUser || !selectedContact) return;
+
+    const text = messageText.trim();
+    if (!text) return;
+
+    setSendingMessage(true);
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        sender_id: loggedUser.id,
+        receiver_id: selectedContact.id,
+        request_id: selectedContact.requestId || null,
+        message: text,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      alert(error.message);
+      setSendingMessage(false);
+      return;
+    }
+
+    setMessages((current) => [...current, data]);
+    setMessageText("");
+    setSendingMessage(false);
   }
 
   async function openMessaging(contact) {
@@ -506,16 +415,12 @@ function App() {
     }
 
     if (!contact?.userId) {
-      alert(
-        "Este profesional todavía no tiene mensajería disponible."
-      );
+      alert("Este profesional todavÃ­a no tiene mensajerÃ­a disponible.");
       return;
     }
 
     if (contact.userId === loggedUser.id) {
-      alert(
-        "No puedes iniciar una conversación contigo mismo."
-      );
+      alert("No puedes iniciar una conversaciÃ³n contigo mismo.");
       return;
     }
 
@@ -534,47 +439,6 @@ function App() {
     await loadMessages(contactData.id);
   }
 
-  async function sendMessage(event) {
-    event.preventDefault();
-
-    if (!loggedUser || !selectedContact) return;
-
-    const text = messageText.trim();
-
-    if (!text) return;
-
-    setSendingMessage(true);
-
-    const { data, error } = await supabase
-      .from("messages")
-      .insert({
-        sender_id: loggedUser.id,
-        receiver_id: selectedContact.id,
-        request_id: selectedContact.requestId || null,
-        message: text,
-      })
-      .select(
-        "id,created_at,sender_id,receiver_id,request_id,message"
-      );
-
-    if (error) {
-      alert(error.message);
-      setSendingMessage(false);
-      return;
-    }
-
-    if (data?.[0]) {
-      setMessages((current) => [...current, data[0]]);
-    }
-
-    setMessageText("");
-    setSendingMessage(false);
-  }
-
-  /* =======================================================
-     SOLICITAR SERVICIO
-  ======================================================= */
-
   async function sendRequest() {
     if (!loggedUser) {
       setAccountMode("login");
@@ -584,7 +448,7 @@ function App() {
 
     if (!selectedService?.userId) {
       alert(
-        "Este servicio de demostración todavía no puede recibir solicitudes."
+        "Este servicio de demostraciÃ³n todavÃ­a no puede recibir solicitudes."
       );
       return;
     }
@@ -643,10 +507,6 @@ function App() {
     setUpdatingRequest(null);
   }
 
-  /* =======================================================
-     GUARDAR PERFIL
-  ======================================================= */
-
   async function saveProfile(event) {
     event.preventDefault();
 
@@ -659,40 +519,32 @@ function App() {
 
     setSavingProfile(true);
 
-    const newProfile = {
-      name: profileForm.name.trim(),
-      profession:
-        profileForm.profession.trim() || "Profesional",
-      bio: profileForm.bio.trim(),
-    };
-
     const { data, error } = await supabase
       .from("profiles")
-      .update(newProfile)
+      .update({
+        name: profileForm.name.trim(),
+        profession:
+          profileForm.profession.trim() || "Profesional",
+        bio: profileForm.bio.trim(),
+      })
       .eq("id", loggedUser.id)
-      .select("id,name,profession,bio");
+      .select()
+      .single();
 
     if (error) {
-      console.error(error);
       alert(error.message);
       setSavingProfile(false);
       return;
     }
 
-    const saved = data?.[0] || {
-      id: loggedUser.id,
-      ...newProfile,
-    };
-
     const updated = {
       ...loggedUser,
-      name: saved.name,
-      profession: saved.profession,
-      bio: saved.bio,
+      name: data.name,
+      profession: data.profession,
+      bio: data.bio,
     };
 
     setLoggedUser(updated);
-
     setProfileForm({
       name: updated.name,
       profession: updated.profession,
@@ -700,96 +552,21 @@ function App() {
     });
 
     setSavingProfile(false);
-
     alert("Perfil actualizado correctamente.");
 
     await loadServices();
   }
 
-  /* =======================================================
-     PUBLICAR SERVICIO
-  ======================================================= */
-
-  async function publishService(event) {
-    event.preventDefault();
-
-    if (!loggedUser) {
-      setAccountMode("login");
-      setPage("account");
-      return;
-    }
-
-    if (!offer.serviceTitle.trim()) {
-      alert("Escribe el nombre del servicio.");
-      return;
-    }
-
-    if (!offer.description.trim()) {
-      alert("Escribe una descripción.");
-      return;
-    }
-
-    if (!offer.price || Number(offer.price) <= 0) {
-      alert("Escribe un precio válido.");
-      return;
-    }
-
-    setPublishing(true);
-
-    const { error } = await supabase
-      .from("services")
-      .insert({
-        name: loggedUser.name,
-        profession: loggedUser.profession,
-        service_title: offer.serviceTitle.trim(),
-        category: offer.category,
-        description: offer.description.trim(),
-        price: Number(offer.price),
-        user_id: loggedUser.id,
-      });
-
-    if (error) {
-      alert(error.message);
-      setPublishing(false);
-      return;
-    }
-
-    setOffer({
-      serviceTitle: "",
-      category: "Tecnología",
-      description: "",
-      price: "",
-    });
-
-    await loadServices();
-
-    setPublishing(false);
-
-    alert("Servicio publicado correctamente.");
-    setPage("services");
-  }
-
-  /* =======================================================
-     REGISTRO
-  ======================================================= */
-
   async function register(event) {
     event.preventDefault();
 
-    if (!form.name.trim()) {
-      alert("Escribe tu nombre.");
-      return;
-    }
-
-    if (!form.email.trim()) {
-      alert("Escribe tu correo.");
+    if (!form.name.trim() || !form.email.trim() || !form.password) {
+      alert("Completa nombre, correo y contraseÃ±a.");
       return;
     }
 
     if (form.password.length < 6) {
-      alert(
-        "La contraseña debe tener al menos 6 caracteres."
-      );
+      alert("La contraseÃ±a debe tener al menos 6 caracteres.");
       return;
     }
 
@@ -798,7 +575,6 @@ function App() {
     const { data, error } = await supabase.auth.signUp({
       email: form.email.trim(),
       password: form.password,
-
       options: {
         data: {
           name: form.name.trim(),
@@ -815,25 +591,13 @@ function App() {
       return;
     }
 
-    if (data?.user) {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert(
-          {
-            id: data.user.id,
-            name: form.name.trim(),
-            profession:
-              form.profession.trim() || "Profesional",
-            bio: form.bio.trim(),
-          },
-          {
-            onConflict: "id",
-          }
-        );
-
-      if (profileError) {
-        console.error(profileError);
-      }
+    if (data.user && !data.session) {
+      alert(
+        "Cuenta creada. Revisa tu correo para confirmar tu cuenta."
+      );
+    } else if (data.user) {
+      await refreshUser(data.user);
+      setPage("account");
     }
 
     setForm({
@@ -844,23 +608,14 @@ function App() {
       bio: "",
     });
 
-    alert(
-      "Cuenta creada correctamente. Si Supabase solicita confirmación por correo, confirma tu cuenta antes de iniciar sesión."
-    );
-
-    setAccountMode("login");
     setAuthLoading(false);
   }
-
-  /* =======================================================
-     LOGIN
-  ======================================================= */
 
   async function login(event) {
     event.preventDefault();
 
     if (!form.email.trim() || !form.password) {
-      alert("Escribe tu correo y contraseña.");
+      alert("Escribe tu correo y contraseÃ±a.");
       return;
     }
 
@@ -879,109 +634,166 @@ function App() {
     }
 
     await refreshUser(data.user);
+    setPage("account");
 
     setForm({
       name: "",
-      email: "",
+      email: form.email,
       password: "",
       profession: "",
       bio: "",
     });
 
     setAuthLoading(false);
-    setPage("account");
   }
 
-  /* =======================================================
-     LOGOUT
-  ======================================================= */
-
   async function logout() {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     setLoggedUser(null);
     setRequests([]);
     setMessages([]);
     setSelectedContact(null);
     setPage("home");
-    setAccountMode("login");
   }
 
-  /* =======================================================
-     AUTH
-  ======================================================= */
+  async function publishService(event) {
+    event.preventDefault();
 
-  useEffect(() => {
-    let mounted = true;
-
-    async function start() {
-      const { data } =
-        await supabase.auth.getSession();
-
-      if (!mounted) return;
-
-      if (data?.session?.user) {
-        await refreshUser(data.session.user);
-      }
-
-      if (mounted) {
-        setAuthLoading(false);
-      }
+    if (!loggedUser) {
+      setAccountMode("login");
+      setPage("account");
+      return;
     }
 
-    start();
+    if (
+      !offer.serviceTitle.trim() ||
+      !offer.description.trim() ||
+      !offer.price
+    ) {
+      alert("Completa tÃ­tulo, descripciÃ³n y precio.");
+      return;
+    }
+
+    setPublishing(true);
+
+    const { error } = await supabase
+      .from("services")
+      .insert({
+        name: loggedUser.name,
+        profession: loggedUser.profession || "Profesional",
+        service_title: offer.serviceTitle.trim(),
+        category: offer.category,
+        description: offer.description.trim(),
+        price: Number(offer.price),
+        user_id: loggedUser.id,
+      });
+
+    if (error) {
+      alert(error.message);
+      setPublishing(false);
+      return;
+    }
+
+    setPublishing(false);
+
+    setOffer({
+      serviceTitle: "",
+      category: "TecnologÃ­a",
+      description: "",
+      price: "",
+    });
+
+    await loadServices();
+
+    alert("Â¡Servicio publicado correctamente!");
+
+    setPage("home");
+  }
+
+  function openAccount() {
+    setPage("account");
+
+    if (loggedUser) {
+      setProfileForm({
+        name: loggedUser.name || "",
+        profession: loggedUser.profession || "",
+        bio: loggedUser.bio || "",
+      });
+    }
+  }
+
+  function openRequests() {
+    if (!loggedUser) {
+      setAccountMode("login");
+      setPage("account");
+      return;
+    }
+
+    loadRequests();
+    setPage("requests");
+  }
+
+  function openService(service) {
+    setSelectedService(service);
+    setRequestMessage("");
+    setPage("service");
+  }
+
+  useEffect(() => {
+    async function startAuth() {
+      setAuthLoading(true);
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        await refreshUser(session.user);
+      }
+
+      setAuthLoading(false);
+    }
+
+    startAuth();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        if (!mounted) return;
-
         if (session?.user) {
           await refreshUser(session.user);
         } else {
           setLoggedUser(null);
         }
-
-        setAuthLoading(false);
       }
     );
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
-
-  /* =======================================================
-     CARGA INICIAL
-  ======================================================= */
 
   useEffect(() => {
     loadServices();
   }, []);
 
   useEffect(() => {
-    if (loggedUser) {
-      loadRequests();
-    }
-  }, [loggedUser]);
-
-  /* =======================================================
-     DATOS DERIVADOS
-  ======================================================= */
+    if (loggedUser?.id) loadRequests();
+  }, [loggedUser?.id]);
 
   const filteredServices = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const q = search.trim().toLowerCase();
 
     return services.filter((service) => {
-      const matchesCategory =
-        category === "Todas" ||
-        service.category === category;
+      const categoryMatch =
+        category === "Todas" || service.category === category;
 
-      if (!matchesCategory) return false;
-
-      if (!term) return true;
+      if (!categoryMatch) return false;
+      if (!q) return true;
 
       return [
         service.name,
@@ -990,1851 +802,820 @@ function App() {
         service.category,
         service.description,
       ]
-        .join(" ")
-        .toLowerCase()
-        .includes(term);
+        .filter(Boolean)
+        .some((value) =>
+          String(value).toLowerCase().includes(q)
+        );
     });
   }, [services, search, category]);
 
-  const myServices = useMemo(() => {
-    if (!loggedUser) return [];
-
-    return services.filter(
-      (service) =>
-        !service.demo &&
-        service.userId === loggedUser.id
-    );
-  }, [services, loggedUser]);
-
-  const myRequests = useMemo(() => {
-    if (!loggedUser) return [];
-
-    return requests.filter(
-      (request) =>
-        request.clientId === loggedUser.id ||
-        request.providerId === loggedUser.id
-    );
-  }, [requests, loggedUser]);
-
-  const pendingRequests = myRequests.filter(
-    (request) =>
-      request.status === "pending" &&
-      request.providerId === loggedUser?.id
+  const received = requests.filter(
+    (r) => r.provider_id === loggedUser?.id
   );
 
-  const acceptedRequests = myRequests.filter(
-    (request) => request.status === "accepted"
+  const sent = requests.filter(
+    (r) => r.client_id === loggedUser?.id
   );
 
-  const recentActivity = myRequests.slice(0, 4);
+  const pending = requests.filter(
+    (r) => r.status === "pending"
+  ).length;
 
-  function go(nextPage) {
-    setPage(nextPage);
+  const accepted = requests.filter(
+    (r) => r.status === "accepted"
+  ).length;
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }
+  const published = services.filter(
+    (s) =>
+      !s.demo &&
+      s.userId === loggedUser?.id
+  ).length;
 
-  function openService(service) {
-    setSelectedService(service);
-    setRequestMessage("");
-    go("service");
-  }
-
-  /* =======================================================
-     RENDER
-  ======================================================= */
-
-  if (
-    authLoading &&
-    page === "home" &&
-    !loggedUser
-  ) {
+  function Header() {
     return (
-      <div className="loading-screen">
-        <div className="brand-mark">RL</div>
-        <p>Cargando RobLoren...</p>
-      </div>
-    );
-  }
+      <header className="header">
+        <div className="headerInner">
+          <button
+            className="logoButton"
+            onClick={() => setPage("home")}
+          >
+            <span className="logoMark">R</span>
+            <span className="logoText">
+              Rob<span>Loren</span>
+            </span>
+          </button>
 
-  return (
-    <>
-      <style>{`
-        :root {
-          font-family:
-            Inter,
-            ui-sans-serif,
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            sans-serif;
-
-          color: #172033;
-          background: #f7f9fc;
-          font-synthesis: none;
-          text-rendering: optimizeLegibility;
-        }
-
-        * {
-          box-sizing: border-box;
-        }
-
-        html {
-          scroll-behavior: smooth;
-        }
-
-        body {
-          margin: 0;
-          min-width: 320px;
-          background: #f7f9fc;
-        }
-
-        button,
-        input,
-        textarea,
-        select {
-          font: inherit;
-        }
-
-        button {
-          cursor: pointer;
-          -webkit-tap-highlight-color: transparent;
-        }
-
-        button:disabled {
-          cursor: not-allowed;
-          opacity: .65;
-        }
-
-        input,
-        textarea,
-        select {
-          width: 100%;
-          border: 1px solid #dce3ed;
-          border-radius: 14px;
-          padding: 13px 15px;
-          background: #fff;
-          color: #172033;
-          outline: none;
-          font-size: 16px;
-          transition:
-            border .15s ease,
-            box-shadow .15s ease;
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-          border-color: #315efb;
-          box-shadow:
-            0 0 0 3px rgba(49,94,251,.10);
-        }
-
-        textarea {
-          resize: vertical;
-        }
-
-        label {
-          display: grid;
-          gap: 8px;
-          margin-bottom: 16px;
-          font-weight: 700;
-          color: #273247;
-          font-size: 14px;
-        }
-
-        label input,
-        label textarea,
-        label select {
-          font-weight: 400;
-        }
-
-        .app {
-          min-height: 100vh;
-        }
-
-        .topbar {
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          background: rgba(255,255,255,.96);
-          backdrop-filter: blur(14px);
-          border-bottom: 1px solid #e9edf3;
-        }
-
-        .nav {
-          max-width: 1180px;
-          margin: 0 auto;
-          padding: 13px 20px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 20px;
-        }
-
-        .brand {
-          border: 0;
-          background: transparent;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          color: #172033;
-          padding: 0;
-        }
-
-        .brand-name {
-          font-size: 19px;
-          font-weight: 900;
-          letter-spacing: -.5px;
-        }
-
-        .brand-mark {
-          width: 38px;
-          height: 38px;
-          border-radius: 12px;
-          display: grid;
-          place-items: center;
-          background: #315efb;
-          color: #fff;
-          font-weight: 900;
-          box-shadow:
-            0 8px 20px rgba(49,94,251,.22);
-        }
-
-        .nav-links {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .nav-links button {
-          border: 0;
-          background: transparent;
-          padding: 9px 12px;
-          border-radius: 10px;
-          color: #536075;
-          font-weight: 700;
-        }
-
-        .nav-links button:hover {
-          background: #f1f4f9;
-          color: #172033;
-        }
-
-        .nav-account {
-          border: 1px solid #dbe3ef !important;
-          color: #172033 !important;
-        }
-
-        .mobile-menu {
-          display: none;
-        }
-
-        .hero {
-          background:
-            radial-gradient(
-              circle at 80% 20%,
-              rgba(49,94,251,.18),
-              transparent 32%
-            ),
-            linear-gradient(
-              135deg,
-              #101a31 0%,
-              #1b2d55 100%
-            );
-          color: white;
-        }
-
-        .hero-content {
-          max-width: 1180px;
-          margin: 0 auto;
-          padding: 100px 20px 110px;
-        }
-
-        .eyebrow {
-          color: #315efb;
-          font-size: 11px;
-          letter-spacing: 1.5px;
-          font-weight: 900;
-        }
-
-        .hero .eyebrow {
-          color: #aebfff;
-        }
-
-        .hero h1 {
-          max-width: 800px;
-          margin: 15px 0;
-          font-size: clamp(42px, 7vw, 76px);
-          line-height: .98;
-          letter-spacing: -3px;
-        }
-
-        .hero p {
-          max-width: 650px;
-          margin: 24px 0;
-          font-size: 18px;
-          line-height: 1.7;
-          color: #d8e0ef;
-        }
-
-        .hero-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px;
-          margin-top: 28px;
-        }
-
-        .primary,
-        .secondary,
-        .danger-button {
-          border: 0;
-          border-radius: 12px;
-          padding: 12px 17px;
-          font-weight: 800;
-          transition:
-            transform .15s ease,
-            box-shadow .15s ease;
-        }
-
-        .primary {
-          background: #315efb;
-          color: #fff;
-          box-shadow:
-            0 8px 18px rgba(49,94,251,.20);
-        }
-
-        .primary:hover {
-          transform: translateY(-1px);
-          box-shadow:
-            0 11px 23px rgba(49,94,251,.26);
-        }
-
-        .secondary {
-          background: #fff;
-          color: #24304a;
-          border: 1px solid #dbe2ec;
-        }
-
-        .secondary:hover {
-          transform: translateY(-1px);
-        }
-
-        .hero .secondary {
-          background: rgba(255,255,255,.10);
-          color: #fff;
-          border-color: rgba(255,255,255,.22);
-        }
-
-        .danger-button {
-          background: #fff0f0;
-          color: #c43333;
-          border: 1px solid #ffd2d2;
-        }
-
-        .full {
-          width: 100%;
-        }
-
-        .section {
-          max-width: 1180px;
-          margin: 0 auto;
-          padding: 70px 20px;
-        }
-
-        .page-section {
-          min-height: calc(100vh - 70px);
-        }
-
-        .soft-section {
-          max-width: none;
-          padding-left:
-            max(20px, calc((100vw - 1140px) / 2));
-          padding-right:
-            max(20px, calc((100vw - 1140px) / 2));
-          background: #eef3fa;
-        }
-
-        .section-heading {
-          display: flex;
-          align-items: flex-end;
-          justify-content: space-between;
-          gap: 20px;
-          margin-bottom: 28px;
-        }
-
-        h2 {
-          margin: 5px 0 0;
-          font-size: clamp(28px, 4vw, 42px);
-          line-height: 1.08;
-          letter-spacing: -1.5px;
-        }
-
-        h3 {
-          margin: 4px 0 0;
-        }
-
-        .section-heading p,
-        .dashboard-header p {
-          margin: 8px 0 0;
-          color: #68758b;
-          line-height: 1.6;
-        }
-
-        .text-button,
-        .link-button {
-          border: 0;
-          background: transparent;
-          color: #315efb;
-          font-weight: 800;
-          padding: 8px;
-        }
-
-        .category-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 14px;
-        }
-
-        .category-grid-large {
-          grid-template-columns: repeat(4, 1fr);
-          margin-top: 30px;
-        }
-
-        .category-card {
-          min-height: 130px;
-          border: 1px solid #e0e6ef;
-          background: #fff;
-          border-radius: 18px;
-          padding: 22px;
-          text-align: left;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 10px;
-          box-shadow:
-            0 8px 25px rgba(24,40,72,.04);
-        }
-
-        .category-card:hover {
-          border-color: #b8c8f9;
-          transform: translateY(-2px);
-        }
-
-        .category-card span {
-          font-size: 30px;
-        }
-
-        .category-card strong {
-          font-size: 16px;
-        }
-
-        .category-card small {
-          color: #77849a;
-        }
-
-        .service-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 18px;
-        }
-
-        .service-card {
-          background: #fff;
-          border: 1px solid #e1e7ef;
-          border-radius: 20px;
-          padding: 22px;
-          display: flex;
-          flex-direction: column;
-          min-height: 300px;
-          box-shadow:
-            0 10px 30px rgba(25,42,74,.05);
-        }
-
-        .service-card:hover {
-          border-color: #c2cff1;
-          box-shadow:
-            0 15px 35px rgba(25,42,74,.08);
-        }
-
-        .service-category {
-          display: inline-flex;
-          width: fit-content;
-          padding: 6px 9px;
-          border-radius: 999px;
-          background: #eef2ff;
-          color: #315efb;
-          font-size: 11px;
-          font-weight: 900;
-        }
-
-        .service-card h3 {
-          font-size: 21px;
-          line-height: 1.25;
-          margin: 15px 0 8px;
-        }
-
-        .service-professional {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin: 8px 0 15px;
-        }
-
-        .service-professional div:last-child {
-          display: grid;
-          gap: 2px;
-        }
-
-        .service-professional span,
-        .professional-row span,
-        .account-mini span,
-        .account-mini small {
-          color: #738096;
-          font-size: 13px;
-        }
-
-        .service-description {
-          color: #657288;
-          line-height: 1.6;
-          margin: 0;
-          flex: 1;
-        }
-
-        .service-bottom {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 12px;
-          margin-top: 20px;
-        }
-
-        .price {
-          font-size: 22px;
-          font-weight: 900;
-        }
-
-        .price small {
-          display: block;
-          color: #8390a3;
-          font-size: 11px;
-          font-weight: 600;
-        }
-
-        .avatar {
-          width: 38px;
-          height: 38px;
-          min-width: 38px;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          background: #e8edff;
-          color: #315efb;
-          font-weight: 900;
-        }
-
-        .avatar-large {
-          width: 58px;
-          height: 58px;
-          min-width: 58px;
-          font-size: 21px;
-        }
-
-        .search-panel {
-          display: grid;
-          grid-template-columns: 2fr 1fr;
-          gap: 12px;
-          margin-bottom: 28px;
-        }
-
-        .back-button {
-          border: 0;
-          background: transparent;
-          color: #315efb;
-          font-weight: 800;
-          padding: 0;
-          margin-bottom: 25px;
-        }
-
-        .service-detail {
-          display: grid;
-          grid-template-columns: 1.6fr .8fr;
-          gap: 24px;
-        }
-
-        .service-detail-main,
-        .request-box,
-        .panel,
-        .auth-card,
-        .chat,
-        .request-card {
-          background: #fff;
-          border: 1px solid #e0e6ef;
-          border-radius: 22px;
-          box-shadow:
-            0 10px 35px rgba(25,42,74,.05);
-        }
-
-        .service-detail-main {
-          padding: 35px;
-        }
-
-        .service-detail-main h2 {
-          margin: 20px 0;
-        }
-
-        .professional-row {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin: 25px 0;
-        }
-
-        .professional-row div:last-child {
-          display: grid;
-          gap: 4px;
-        }
-
-        .detail-description {
-          color: #59677e;
-          line-height: 1.8;
-          font-size: 16px;
-        }
-
-        .detail-price {
-          margin-top: 35px;
-          display: grid;
-        }
-
-        .detail-price small {
-          color: #7c899c;
-        }
-
-        .detail-price strong {
-          font-size: 35px;
-        }
-
-        .request-box {
-          padding: 25px;
-          height: fit-content;
-        }
-
-        .request-box h3 {
-          margin-bottom: 10px;
-        }
-
-        .request-box p {
-          color: #68758b;
-          line-height: 1.6;
-        }
-
-        .request-box .secondary {
-          margin-top: 10px;
-        }
-
-        .dashboard-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 30px;
-          margin-bottom: 30px;
-        }
-
-        .account-mini {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 15px;
-          background: #fff;
-          border: 1px solid #e1e7ef;
-          border-radius: 16px;
-        }
-
-        .account-mini div:last-child {
-          display: grid;
-          gap: 3px;
-        }
-
-        .account-mini small {
-          color: #23925a;
-          font-weight: 800;
-        }
-
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 14px;
-          margin-bottom: 20px;
-        }
-
-        .stat-card {
-          background: #fff;
-          border: 1px solid #e0e6ef;
-          border-radius: 18px;
-          padding: 20px;
-        }
-
-        .stat-card span {
-          font-size: 25px;
-        }
-
-        .stat-card strong {
-          display: block;
-          font-size: 30px;
-          margin-top: 8px;
-        }
-
-        .stat-card small {
-          color: #78859a;
-        }
-
-        .dashboard-grid {
-          display: grid;
-          grid-template-columns: 1.3fr .7fr;
-          gap: 20px;
-          margin-bottom: 20px;
-        }
-
-        .panel {
-          padding: 25px;
-        }
-
-        .panel-heading {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 20px;
-          margin-bottom: 22px;
-        }
-
-        .quick-actions {
-          display: grid;
-          gap: 9px;
-        }
-
-        .quick-actions button {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          gap: 13px;
-          text-align: left;
-          border: 1px solid #e6ebf2;
-          background: #f9fbfd;
-          border-radius: 14px;
-          padding: 15px;
-        }
-
-        .quick-actions button:hover {
-          border-color: #c8d3ee;
-          background: #fff;
-        }
-
-        .quick-actions button > span {
-          font-size: 22px;
-        }
-
-        .quick-actions button div {
-          display: grid;
-          gap: 3px;
-        }
-
-        .quick-actions small {
-          color: #7b879a;
-        }
-
-        .activity-list {
-          display: grid;
-        }
-
-        .activity-item {
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          align-items: center;
-          gap: 15px;
-          padding: 15px 0;
-          border-bottom: 1px solid #edf0f4;
-        }
-
-        .activity-item:last-child {
-          border-bottom: 0;
-        }
-
-        .activity-item div {
-          display: grid;
-          gap: 3px;
-        }
-
-        .activity-item small,
-        .activity-item time {
-          color: #7a879a;
-          font-size: 12px;
-        }
-
-        .status {
-          display: inline-flex;
-          width: fit-content;
-          padding: 6px 9px;
-          border-radius: 999px;
-          font-size: 11px;
-          font-weight: 900;
-        }
-
-        .status.pending {
-          background: #fff6dd;
-          color: #9a6b00;
-        }
-
-        .status.accepted {
-          background: #e7f8ef;
-          color: #16814b;
-        }
-
-        .status.rejected {
-          background: #ffeded;
-          color: #ba3636;
-        }
-
-        .empty-small,
-        .empty-state {
-          color: #718097;
-          text-align: center;
-          padding: 30px;
-        }
-
-        .empty-state {
-          min-height: 250px;
-          display: grid;
-          place-items: center;
-          align-content: center;
-          gap: 8px;
-          border: 1px dashed #d6deea;
-          border-radius: 20px;
-          background: #fff;
-        }
-
-        .empty-state span {
-          font-size: 35px;
-        }
-
-        .empty-state h3,
-        .empty-state p {
-          margin: 0;
-        }
-
-        .request-list {
-          display: grid;
-          gap: 15px;
-        }
-
-        .request-card {
-          padding: 23px;
-        }
-
-        .request-top {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 15px;
-        }
-
-        .request-top h3 {
-          margin-top: 10px;
-        }
-
-        .request-info {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 15px;
-          padding: 18px 0;
-          margin-top: 18px;
-          border-top: 1px solid #edf0f4;
-          border-bottom: 1px solid #edf0f4;
-        }
-
-        .request-info div {
-          display: grid;
-          gap: 4px;
-        }
-
-        .request-info small {
-          color: #7b879a;
-        }
-
-        .request-message {
-          color: #68758b;
-          line-height: 1.6;
-        }
-
-        .request-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 9px;
-        }
-
-        .publish-form {
-          max-width: 760px;
-          margin: 0 auto;
-        }
-
-        .publish-note {
-          background: #f1f5ff;
-          border: 1px solid #d8e1ff;
-          border-radius: 14px;
-          padding: 15px;
-          margin-bottom: 18px;
-        }
-
-        .publish-note strong {
-          color: #315efb;
-        }
-
-        .publish-note p {
-          margin: 5px 0 0;
-          color: #62708a;
-          line-height: 1.5;
-        }
-
-        .auth-page {
-          display: grid;
-          place-items: center;
-        }
-
-        .auth-card {
-          width: min(100%, 500px);
-          padding: 32px;
-        }
-
-        .auth-heading {
-          text-align: center;
-          margin-bottom: 28px;
-        }
-
-        .auth-heading .brand-mark {
-          margin: 0 auto 15px;
-        }
-
-        .auth-heading h2 {
-          margin-top: 9px;
-        }
-
-        .auth-heading p {
-          color: #738096;
-          line-height: 1.6;
-        }
-
-        .link-button {
-          width: 100%;
-          margin-top: 12px;
-        }
-
-        .chat {
-          max-width: 850px;
-          margin: 0 auto;
-          overflow: hidden;
-        }
-
-        .chat-header {
-          padding: 20px;
-          display: flex;
-          align-items: center;
-          gap: 13px;
-          border-bottom: 1px solid #e8edf3;
-        }
-
-        .chat-header h3 {
-          font-size: 20px;
-        }
-
-        .chat-header div:last-child {
-          display: grid;
-          gap: 2px;
-        }
-
-        .chat-header small {
-          color: #7b879a;
-        }
-
-        .chat-body {
-          min-height: 430px;
-          max-height: 60vh;
-          overflow-y: auto;
-          padding: 20px;
-          background: #f8fafc;
-        }
-
-        .chat-empty {
-          min-height: 350px;
-          display: grid;
-          place-items: center;
-          align-content: center;
-          gap: 8px;
-          color: #748198;
-          text-align: center;
-        }
-
-        .chat-empty span {
-          font-size: 35px;
-        }
-
-        .message-row {
-          display: flex;
-          justify-content: flex-start;
-          margin-bottom: 10px;
-        }
-
-        .message-row.mine {
-          justify-content: flex-end;
-        }
-
-        .message-bubble {
-          max-width: min(75%, 520px);
-          padding: 11px 14px;
-          border-radius: 16px 16px 16px 5px;
-          background: #fff;
-          border: 1px solid #e1e7ef;
-        }
-
-        .message-row.mine .message-bubble {
-          border-radius: 16px 16px 5px 16px;
-          background: #315efb;
-          border-color: #315efb;
-          color: #fff;
-        }
-
-        .message-bubble p {
-          margin: 0 0 5px;
-          line-height: 1.5;
-        }
-
-        .message-bubble small {
-          font-size: 10px;
-          opacity: .7;
-        }
-
-        .chat-form {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 10px;
-          padding: 15px;
-          border-top: 1px solid #e8edf3;
-          background: #fff;
-        }
-
-        .loading-screen {
-          min-height: 100vh;
-          display: grid;
-          place-items: center;
-          align-content: center;
-          gap: 15px;
-          color: #718097;
-        }
-
-        @media (max-width: 850px) {
-          .nav {
-            padding: 11px 14px;
-          }
-
-          .nav-links {
-            display: none;
-          }
-
-          .mobile-menu {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-
-          .mobile-menu button {
-            border: 1px solid #dbe3ef;
-            background: #fff;
-            color: #172033;
-            border-radius: 11px;
-            padding: 9px 11px;
-            font-weight: 800;
-          }
-
-          .mobile-menu .mobile-account {
-            background: #315efb;
-            color: #fff;
-            border-color: #315efb;
-          }
-
-          .hero-content {
-            padding: 70px 20px 80px;
-          }
-
-          .hero h1 {
-            letter-spacing: -2px;
-          }
-
-          .category-grid,
-          .category-grid-large,
-          .service-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .service-detail,
-          .dashboard-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .dashboard-header {
-            align-items: flex-start;
-            flex-direction: column;
-          }
-        }
-
-        @media (max-width: 600px) {
-          .section {
-            padding: 45px 15px;
-          }
-
-          .section-heading {
-            align-items: flex-start;
-            flex-direction: column;
-          }
-
-          .category-grid,
-          .category-grid-large,
-          .service-grid,
-          .stats-grid,
-          .search-panel,
-          .request-info {
-            grid-template-columns: 1fr;
-          }
-
-          .hero h1 {
-            font-size: 43px;
-          }
-
-          .hero p {
-            font-size: 16px;
-          }
-
-          .hero-actions {
-            display: grid;
-          }
-
-          .hero-actions button {
-            width: 100%;
-          }
-
-          .service-detail-main,
-          .request-box,
-          .panel,
-          .auth-card {
-            padding: 20px;
-          }
-
-          .request-top {
-            flex-direction: column;
-          }
-
-          .request-info {
-            gap: 10px;
-          }
-
-          .activity-item {
-            grid-template-columns: auto 1fr;
-          }
-
-          .activity-item time {
-            grid-column: 2;
-          }
-
-          .chat-form {
-            grid-template-columns: 1fr;
-          }
-
-          .chat-body {
-            min-height: 400px;
-          }
-
-          .message-bubble {
-            max-width: 88%;
-          }
-
-          .brand-name {
-            font-size: 17px;
-          }
-        }
-      `}</style>
-
-      <div className="app">
-
-        {/* =================================================
-            NAVBAR
-        ================================================= */}
-
-        <header className="topbar">
           <nav className="nav">
-
             <button
-              className="brand"
-              onClick={() => go("home")}
+              className="navButton"
+              onClick={() => setPage("home")}
             >
-              <span className="brand-mark">RL</span>
-              <span className="brand-name">RobLoren</span>
-            </button>
-
-            <div className="nav-links">
-
-              <button onClick={() => go("home")}>
-                Inicio
-              </button>
-
-              <button onClick={() => go("services")}>
-                Servicios
-              </button>
-
-              <button onClick={() => go("categories")}>
-                Categorías
-              </button>
-
-              {loggedUser && (
-                <>
-                  <button
-                    onClick={() => go("requests")}
-                  >
-                    Solicitudes
-                  </button>
-
-                  <button
-                    onClick={() => go("messages")}
-                  >
-                    Mensajes
-                  </button>
-                </>
-              )}
-
-              <button
-                className="nav-account"
-                onClick={() => go("account")}
-              >
-                {loggedUser ? "Mi cuenta" : "Entrar"}
-              </button>
-
-            </div>
-
-            {/* MENÚ MÓVIL */}
-            <div className="mobile-menu">
-
-              {loggedUser && (
-                <>
-                  <button
-                    onClick={() => go("requests")}
-                  >
-                    📋
-                  </button>
-
-                  <button
-                    onClick={() => go("messages")}
-                  >
-                    💬
-                  </button>
-                </>
-              )}
-
-              <button
-                className="mobile-account"
-                onClick={() => go("account")}
-              >
-                {loggedUser ? "Mi cuenta" : "Entrar"}
-              </button>
-
-            </div>
-
-          </nav>
-        </header>
-
-        {/* =================================================
-            CONTENIDO
-        ================================================= */}
-
-        <main>
-
-          {page === "home" && (
-            <HomePage
-              loggedUser={loggedUser}
-              services={services}
-              go={go}
-              setCategory={setCategory}
-              openService={openService}
-            />
-          )}
-
-          {page === "services" && (
-            <ServicesPage
-              servicesLoading={servicesLoading}
-              filteredServices={filteredServices}
-              search={search}
-              setSearch={setSearch}
-              category={category}
-              setCategory={setCategory}
-              openService={openService}
-            />
-          )}
-
-          {page === "categories" && (
-            <CategoriesPage
-              setCategory={setCategory}
-              go={go}
-            />
-          )}
-
-          {page === "service" && (
-            <ServicePage
-              selectedService={selectedService}
-              requestMessage={requestMessage}
-              setRequestMessage={setRequestMessage}
-              sendingRequest={sendingRequest}
-              loggedUser={loggedUser}
-              sendRequest={sendRequest}
-              openMessaging={openMessaging}
-              go={go}
-            />
-          )}
-
-          {page === "account" && (
-            loggedUser ? (
-              <DashboardPage
-                loggedUser={loggedUser}
-                profileForm={profileForm}
-                setProfileForm={setProfileForm}
-                savingProfile={savingProfile}
-                saveProfile={saveProfile}
-                myRequests={myRequests}
-                pendingRequests={pendingRequests}
-                acceptedRequests={acceptedRequests}
-                myServices={myServices}
-                recentActivity={recentActivity}
-                go={go}
-                logout={logout}
-              />
-            ) : (
-              <AccountPage
-                accountMode={accountMode}
-                setAccountMode={setAccountMode}
-                form={form}
-                setForm={setForm}
-                authLoading={authLoading}
-                login={login}
-                register={register}
-              />
-            )
-          )}
-
-          {page === "requests" && (
-            loggedUser ? (
-              <RequestsPage
-                loggedUser={loggedUser}
-                myRequests={myRequests}
-                loadingRequests={loadingRequests}
-                updatingRequest={updatingRequest}
-                changeRequestStatus={changeRequestStatus}
-                openMessaging={openMessaging}
-                go={go}
-              />
-            ) : (
-              <AccountPage
-                accountMode="login"
-                setAccountMode={setAccountMode}
-                form={form}
-                setForm={setForm}
-                authLoading={authLoading}
-                login={login}
-                register={register}
-              />
-            )
-          )}
-
-          {page === "messages" && (
-            loggedUser ? (
-              <MessagesPage
-                loggedUser={loggedUser}
-                selectedContact={selectedContact}
-                messages={messages}
-                messageText={messageText}
-                setMessageText={setMessageText}
-                loadingMessages={loadingMessages}
-                sendingMessage={sendingMessage}
-                sendMessage={sendMessage}
-                setSelectedContact={setSelectedContact}
-                go={go}
-              />
-            ) : (
-              <AccountPage
-                accountMode="login"
-                setAccountMode={setAccountMode}
-                form={form}
-                setForm={setForm}
-                authLoading={authLoading}
-                login={login}
-                register={register}
-              />
-            )
-          )}
-
-          {page === "publish" && (
-            loggedUser ? (
-              <PublishPage
-                offer={offer}
-                setOffer={setOffer}
-                publishing={publishing}
-                publishService={publishService}
-              />
-            ) : (
-              <AccountPage
-                accountMode="login"
-                setAccountMode={setAccountMode}
-                form={form}
-                setForm={setForm}
-                authLoading={authLoading}
-                login={login}
-                register={register}
-              />
-            )
-          )}
-
-        </main>
-
-        <footer
-          style={{
-            borderTop: "1px solid #e5eaf1",
-            background: "#fff",
-            padding: "28px 20px",
-            textAlign: "center",
-            color: "#77849a",
-            fontSize: "13px",
-          }}
-        >
-          <strong style={{ color: "#172033" }}>
-            RobLoren
-          </strong>{" "}
-          · Conecta talento con oportunidades.
-        </footer>
-
-      </div>
-    </>
-  );
-}
-
-/* =========================================================
-   PÁGINA INICIO
-========================================================= */
-
-function HomePage({
-  loggedUser,
-  services,
-  go,
-  setCategory,
-  openService,
-}) {
-  return (
-    <>
-      <section className="hero">
-        <div className="hero-content">
-
-          <span className="eyebrow">
-            MARKETPLACE PROFESIONAL
-          </span>
-
-          <h1>
-            Conecta talento
-            <br />
-            con oportunidades.
-          </h1>
-
-          <p>
-            Encuentra profesionales, descubre servicios y
-            conecta directamente con personas que pueden
-            ayudarte a llevar tus proyectos más lejos.
-          </p>
-
-          <div className="hero-actions">
-
-            <button
-              className="primary"
-              onClick={() => go("services")}
-            >
-              Explorar servicios
+              Inicio
             </button>
 
             <button
-              className="secondary"
-              onClick={() =>
-                loggedUser
-                  ? go("publish")
-                  : go("account")
-              }
-            >
-              Ofrecer mis servicios
-            </button>
-
-          </div>
-
-        </div>
-      </section>
-
-      <section className="section">
-
-        <div className="section-heading">
-
-          <div>
-            <span className="eyebrow">
-              CATEGORÍAS
-            </span>
-
-            <h2>
-              Encuentra el talento que necesitas
-            </h2>
-          </div>
-
-          <button
-            className="text-button"
-            onClick={() => go("categories")}
-          >
-            Ver todas →
-          </button>
-
-        </div>
-
-        <div className="category-grid">
-
-          {categories.slice(0, 6).map(
-            ([icon, name]) => (
-              <button
-                className="category-card"
-                key={name}
-                onClick={() => {
-                  setCategory(name);
-                  go("services");
-                }}
-              >
-                <span>{icon}</span>
-                <strong>{name}</strong>
-              </button>
-            )
-          )}
-
-        </div>
-
-      </section>
-
-      <section className="section soft-section">
-
-        <div className="section-heading">
-
-          <div>
-            <span className="eyebrow">
-              DESTACADOS
-            </span>
-
-            <h2>
-              Servicios profesionales
-            </h2>
-          </div>
-
-          <button
-            className="text-button"
-            onClick={() => go("services")}
-          >
-            Ver todos →
-          </button>
-
-        </div>
-
-        <div className="service-grid">
-
-          {services.slice(0, 3).map(
-            (service) => (
-              <ServiceCard
-                key={`${service.demo ? "demo" : "real"}-${service.id}`}
-                service={service}
-                onOpen={openService}
-              />
-            )
-          )}
-
-        </div>
-
-      </section>
-    </>
-  );
-}
-
-/* =========================================================
-   SERVICIOS
-========================================================= */
-
-function ServicesPage({
-  servicesLoading,
-  filteredServices,
-  search,
-  setSearch,
-  category,
-  setCategory,
-  openService,
-}) {
-  return (
-    <section className="section page-section">
-
-      <div className="section-heading">
-
-        <div>
-          <span className="eyebrow">
-            MARKETPLACE
-          </span>
-
-          <h2>Servicios</h2>
-        </div>
-
-      </div>
-
-      <div className="search-panel">
-
-        <input
-          value={search}
-          onChange={(event) =>
-            setSearch(event.target.value)
-          }
-          placeholder="Buscar servicios..."
-        />
-
-        <select
-          value={category}
-          onChange={(event) =>
-            setCategory(event.target.value)
-          }
-        >
-          <option value="Todas">
-            Todas las categorías
-          </option>
-
-          {categories.map(
-            ([, name]) => (
-              <option
-                value={name}
-                key={name}
-              >
-                {name}
-              </option>
-            )
-          )}
-        </select>
-
-      </div>
-
-      {servicesLoading ? (
-        <div className="empty-state">
-          Cargando servicios...
-        </div>
-      ) : filteredServices.length === 0 ? (
-        <div className="empty-state">
-          No encontramos servicios con esos criterios.
-        </div>
-      ) : (
-        <div className="service-grid">
-
-          {filteredServices.map(
-            (service) => (
-              <ServiceCard
-                key={`${service.demo ? "demo" : "real"}-${service.id}`}
-                service={service}
-                onOpen={openService}
-              />
-            )
-          )}
-
-        </div>
-      )}
-
-    </section>
-  );
-}
-
-/* =========================================================
-   CATEGORÍAS
-========================================================= */
-
-function CategoriesPage({
-  setCategory,
-  go,
-}) {
-  return (
-    <section className="section page-section">
-
-      <span className="eyebrow">
-        EXPLORAR
-      </span>
-
-      <h2>Categorías</h2>
-
-      <div className="category-grid category-grid-large">
-
-        {categories.map(
-          ([icon, name]) => (
-            <button
-              className="category-card"
-              key={name}
+              className="navButton"
               onClick={() => {
-                setCategory(name);
-                go("services");
+                setPage("home");
+                setTimeout(() => {
+                  document
+                    .getElementById("services")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                    });
+                }, 100);
               }}
             >
-              <span>{icon}</span>
-
-              <strong>{name}</strong>
-
-              <small>
-                Explorar servicios de{" "}
-                {name.toLowerCase()}
-              </small>
+              Servicios
             </button>
-          )
-        )}
 
-      </div>
+            {loggedUser && (
+              <button
+                className="navButton"
+                onClick={openRequests}
+              >
+                Solicitudes
+              </button>
+            )}
 
-    </section>
-  );
-}
+            <button
+              className="navAccount"
+              onClick={openAccount}
+            >
+              {loggedUser ? "Mi cuenta" : "Entrar"}
+            </button>
+          </nav>
+        </div>
+      </header>
+    );
+  }
 
-/* =========================================================
-   DETALLE SERVICIO
-========================================================= */
-
-function ServicePage({
-  selectedService,
-  requestMessage,
-  setRequestMessage,
-  sendingRequest,
-  loggedUser,
-  sendRequest,
-  openMessaging,
-  go,
-}) {
-  if (!selectedService) {
+  function HomePage() {
     return (
-      <section className="section page-section">
-        <button
-          className="back-button"
-          onClick={() => go("services")}
+      <>
+        <section className="hero">
+          <div className="heroInner">
+            <div className="heroCopy">
+              <span className="badge">
+                âœ¦ Marketplace profesional
+              </span>
+
+              <h1>
+                Conecta talento
+                <br />
+                <span>con oportunidades.</span>
+              </h1>
+
+              <p>
+                Encuentra profesionales, publica tus servicios
+                y conecta con clientes dentro de una plataforma
+                creada para crecer.
+              </p>
+
+              <div className="heroActions">
+                <button
+                  className="primary"
+                  onClick={() =>
+                    document
+                      .getElementById("services")
+                      ?.scrollIntoView({
+                        behavior: "smooth",
+                      })
+                  }
+                >
+                  Explorar servicios
+                </button>
+
+                <button
+                  className="secondary"
+                  onClick={() => {
+                    if (!loggedUser) {
+                      setAccountMode("register");
+                      setPage("account");
+                    } else {
+                      setPage("offer");
+                    }
+                  }}
+                >
+                  Ofrecer mis servicios
+                </button>
+              </div>
+            </div>
+
+            <div className="heroCard">
+              <div className="heroCardTitle">
+                ðŸ”Ž Encuentra talento
+              </div>
+
+              <div className="heroSearch">
+                Â¿QuÃ© servicio buscas?
+              </div>
+
+              <div className="tags">
+                <span>ðŸ’» TecnologÃ­a</span>
+                <span>ðŸŽ¨ DiseÃ±o</span>
+                <span>ðŸ“£ Marketing</span>
+              </div>
+
+              <div className="miniStats">
+                <div>
+                  <strong>+100</strong>
+                  <span>Servicios</span>
+                </div>
+                <div>
+                  <strong>+50</strong>
+                  <span>Profesionales</span>
+                </div>
+                <div>
+                  <strong>24/7</strong>
+                  <span>Conexiones</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="categories">
+          <div className="container">
+            <span className="eyebrow">EXPLORA</span>
+
+            <h2>
+              Encuentra el servicio que necesitas
+            </h2>
+
+            <p className="muted">
+              Profesionales listos para ayudarte.
+            </p>
+
+            <div className="categoryGrid">
+              <button
+                className={
+                  category === "Todas"
+                    ? "category active"
+                    : "category"
+                }
+                onClick={() => setCategory("Todas")}
+              >
+                <span>âœ¨</span>
+                Todas
+              </button>
+
+              {categories.map(([icon, name]) => (
+                <button
+                  key={name}
+                  className={
+                    category === name
+                      ? "category active"
+                      : "category"
+                  }
+                  onClick={() => setCategory(name)}
+                >
+                  <span>{icon}</span>
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="services"
+          className="services"
         >
-          ← Volver
-        </button>
+          <div className="container">
+            <div className="sectionTop">
+              <div>
+                <span className="eyebrow">
+                  SERVICIOS
+                </span>
+                <h2>Profesionales disponibles</h2>
+              </div>
+
+              <div className="searchBox">
+                ðŸ”Ž
+                <input
+                  value={search}
+                  onChange={(e) =>
+                    setSearch(e.target.value)
+                  }
+                  placeholder="Buscar servicios..."
+                />
+              </div>
+            </div>
+
+            {servicesLoading ? (
+              <div className="empty">
+                Cargando servicios...
+              </div>
+            ) : filteredServices.length === 0 ? (
+              <div className="empty">
+                <strong>
+                  No encontramos servicios
+                </strong>
+                <p>
+                  Prueba con otra bÃºsqueda o categorÃ­a.
+                </p>
+              </div>
+            ) : (
+              <div className="serviceGrid">
+                {filteredServices.map((service) => (
+                  <article
+                    key={`${service.demo ? "demo" : "real"}-${service.id}`}
+                    className="serviceCard"
+                  >
+                    <div className="provider">
+                      <div className="avatar">
+                        {service.name
+                          ?.charAt(0)
+                          ?.toUpperCase() || "R"}
+                      </div>
+
+                      <div>
+                        <strong>{service.name}</strong>
+                        <span>
+                          {service.profession}
+                        </span>
+                      </div>
+
+                      <small>
+                        {service.category}
+                      </small>
+                    </div>
+
+                    <h3>{service.service}</h3>
+
+                    <p>
+                      {service.description}
+                    </p>
+
+                    <div className="serviceBottom">
+                      <div>
+                        <small>Desde</small>
+                        <strong>
+                          ${service.price}
+                        </strong>
+                      </div>
+
+                      <button
+                        className="view"
+                        onClick={() =>
+                          openService(service)
+                        }
+                      >
+                        Ver servicio â†’
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="cta">
+          <div>
+            <span className="eyebrow">
+              ROBLOREN
+            </span>
+
+            <h2>
+              Tu talento merece nuevas oportunidades.
+            </h2>
+
+            <p>
+              Crea tu perfil y comienza a ofrecer tus
+              servicios.
+            </p>
+          </div>
+
+          <button
+            className="ctaButton"
+            onClick={() => {
+              if (!loggedUser) {
+                setAccountMode("register");
+                setPage("account");
+              } else {
+                setPage("offer");
+              }
+            }}
+          >
+            Comenzar ahora â†’
+          </button>
+        </section>
+      </>
+    );
+  }
+
+  function AccountPage() {
+    if (!loggedUser) {
+      return (
+        <section className="page">
+          <div className="authCard">
+            <div className="accountLogo">
+              R
+            </div>
+
+            <span className="eyebrow">
+              ROBLOREN
+            </span>
+
+            <h1>
+              {accountMode === "login"
+                ? "Bienvenido a RobLoren"
+                : "Crea tu cuenta"}
+            </h1>
+
+            <p className="muted">
+              Conecta talento con oportunidades.
+            </p>
+
+            <div className="tabs">
+              <button
+                className={
+                  accountMode === "login"
+                    ? "tab active"
+                    : "tab"
+                }
+                onClick={() =>
+                  setAccountMode("login")
+                }
+              >
+                Iniciar sesiÃ³n
+              </button>
+
+              <button
+                className={
+                  accountMode === "register"
+                    ? "tab active"
+                    : "tab"
+                }
+                onClick={() =>
+                  setAccountMode("register")
+                }
+              >
+                Crear cuenta
+              </button>
+            </div>
+
+            {accountMode === "login" ? (
+              <form
+                onSubmit={login}
+                className="form"
+              >
+                <label>
+                  Correo electrÃ³nico
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        email: e.target.value,
+                      })
+                    }
+                    placeholder="tu@email.com"
+                  />
+                </label>
+
+                <label>
+                  ContraseÃ±a
+                  <input
+                    type="password"
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        password: e.target.value,
+                      })
+                    }
+                    placeholder="Tu contraseÃ±a"
+                  />
+                </label>
+
+                <button
+                  className="primary full"
+                  disabled={authLoading}
+                >
+                  {authLoading
+                    ? "Procesando..."
+                    : "Entrar a RobLoren"}
+                </button>
+              </form>
+            ) : (
+              <form
+                onSubmit={register}
+                className="form"
+              >
+                <label>
+                  Nombre
+                  <input
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Tu nombre"
+                  />
+                </label>
+
+                <label>
+                  Correo electrÃ³nico
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        email: e.target.value,
+                      })
+                    }
+                    placeholder="tu@email.com"
+                  />
+                </label>
+
+                <label>
+                  ContraseÃ±a
+                  <input
+                    type="password"
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        password: e.target.value,
+                      })
+                    }
+                    placeholder="MÃ­nimo 6 caracteres"
+                  />
+                </label>
+
+                <label>
+                  ProfesiÃ³n
+                  <input
+                    value={form.profession}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        profession: e.target.value,
+                      })
+                    }
+                    placeholder="Ej. DiseÃ±ador grÃ¡fico"
+                  />
+                </label>
+
+                <label>
+                  BiografÃ­a
+                  <textarea
+                    value={form.bio}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        bio: e.target.value,
+                      })
+                    }
+                    placeholder="CuÃ©ntanos sobre ti..."
+                  />
+                </label>
+
+                <button
+                  className="primary full"
+                  disabled={authLoading}
+                >
+                  {authLoading
+                    ? "Creando..."
+                    : "Crear mi cuenta"}
+                </button>
+              </form>
+            )}
+          </div>
+        </section>
+      );
+    }
+
+    return (
+      <section className="page">
+        <div className="dashboard">
+          <div className="dashboardHeader">
+            <div>
+              <span className="eyebrow">
+                CUENTA PROFESIONAL
+              </span>
+
+              <h1>
+                Hola, {loggedUser.name}
+              </h1>
+
+              <p>
+                Gestiona tu perfil, servicios y
+                oportunidades desde un solo lugar.
+              </p>
+            </div>
+
+            <div className="bigAvatar">
+              {loggedUser.name
+                ?.charAt(0)
+                ?.toUpperCase() || "R"}
+            </div>
+          </div>
+
+          <div className="stats">
+            <div className="stat">
+              <span>ðŸ“‹</span>
+              <strong>{requests.length}</strong>
+              <small>Solicitudes</small>
+            </div>
+
+            <div className="stat">
+              <span>â³</span>
+              <strong>{pending}</strong>
+              <small>Pendientes</small>
+            </div>
+
+            <div className="stat">
+              <span>âœ“</span>
+              <strong>{accepted}</strong>
+              <small>Aceptadas</small>
+            </div>
+
+            <div className="stat">
+              <span>ðŸ› ï¸</span>
+              <strong>{published}</strong>
+              <small>Servicios publicados</small>
+            </div>
+          </div>
+
+          <div className="dashboardGrid">
+            <div className="panel">
+              <span className="eyebrow">
+                PERFIL
+              </span>
+
+              <h2>Tu informaciÃ³n</h2>
+
+              <form
+                onSubmit={saveProfile}
+                className="form"
+              >
+                <label>
+                  Nombre
+                  <input
+                    value={profileForm.name}
+                    onChange={(e) =>
+                      setProfileForm({
+                        ...profileForm,
+                        name: e.target.value,
+                      })
+                    }
+                  />
+                </label>
+
+                <label>
+                  ProfesiÃ³n
+                  <input
+                    value={profileForm.profession}
+                    onChange={(e) =>
+                      setProfileForm({
+                        ...profileForm,
+                        profession: e.target.value,
+                      })
+                    }
+                  />
+                </label>
+
+                <label>
+                  BiografÃ­a
+                  <textarea
+                    value={profileForm.bio}
+                    onChange={(e) =>
+                      setProfileForm({
+                        ...profileForm,
+                        bio: e.target.value,
+                      })
+                    }
+                  />
+                </label>
+
+                <button
+                  className="primary"
+                  disabled={savingProfile}
+                >
+                  {savingProfile
+                    ? "Guardando..."
+                    : "Guardar cambios"}
+                </button>
+              </form>
+            </div>
+
+            <aside>
+              <div className="profileBox">
+                <div className="profileAvatar">
+                  {loggedUser.name
+                    ?.charAt(0)
+                    ?.toUpperCase() || "R"}
+                </div>
+
+                <h3>{loggedUser.name}</h3>
+
+                <p>{loggedUser.profession}</p>
+
+                <span>âœ“ Cuenta activa</span>
+              </div>
+
+              <div className="quick">
+                <h3>Acciones rÃ¡pidas</h3>
+
+                <button
+                  onClick={() => setPage("offer")}
+                >
+                  âž• Publicar servicio
+                </button>
+
+                <button onClick={openRequests}>
+                  ðŸ“‹ Ver solicitudes
+                </button>
+
+                <button
+                  onClick={() =>
+                    setPage("messages")
+                  }
+                >
+                  ðŸ’¬ Abrir mensajes
+                </button>
+
+                <button
+                  className="logout"
+                  onClick={logout}
+                >
+                  ðŸšª Cerrar sesiÃ³n
+                </button>
+              </div>
+            </aside>
+          </div>
+        </div>
       </section>
     );
   }
 
-  return (
-    <section className="section page-section">
+  function ServicePage() {
+    if (!selectedService) return null;
 
-      <button
-        className="back-button"
-        onClick={() => go("services")}
-      >
-        ← Volver a servicios
-      </button>
+    return (
+      <section className="page">
+        <div className="detail">
+          <button
+            className="back"
+            onClick={() => setPage("home")}
+          >
+            â† Volver a servicios
+          </button>
 
-      <div className="service-detail">
-
-        <div className="service-detail-main">
-
-          <span className="service-category">
-            {selectedService.category}
-          </span>
-
-          <h2>
-            {selectedService.service}
-          </h2>
-
-          <div className="professional-row">
-
-            <Avatar
-              name={selectedService.name}
-            />
-
-            <div>
-              <strong>
-                {selectedService.name}
-              </strong>
-
-              <span>
-                {selectedService.profession}
+          <div className="detailGrid">
+            <div className="panel">
+              <span className="eyebrow">
+                {selectedService.category}
               </span>
-            </div>
 
-          </div>
+              <h1>
+                {selectedService.service}
+              </h1>
 
-          <p className="detail-description">
-            {selectedService.description}
-          </p>
+              <div className="provider">
+                <div className="avatar">
+                  {selectedService.name
+                    ?.charAt(0)
+                    ?.toUpperCase() || "R"}
+                </div>
 
-          <div className="detail-price">
-            <small>Desde</small>
-            <strong>
-              ${selectedService.price}
-            </strong>
-          </div>
+                <div>
+                  <strong>
+                    {selectedService.name}
+                  </strong>
+                  <span>
+                    {selectedService.profession}
+                  </span>
+                </div>
+              </div>
 
-        </div>
+              <hr />
 
-        <div className="request-box">
+              <h2>Sobre este servicio</h2>
 
-          <h3>
-            ¿Te interesa este servicio?
-          </h3>
-
-          {selectedService.demo ? (
-            <>
               <p>
-                Este es un servicio de demostración.
-                Los servicios reales pueden recibir
-                solicitudes.
+                {selectedService.description}
               </p>
 
-              <button
-                className="secondary full"
-                onClick={() => go("services")}
-              >
-                Seguir explorando
-              </button>
-            </>
-          ) : (
-            <>
-              <textarea
-                value={requestMessage}
-                onChange={(event) =>
-                  setRequestMessage(
-                    event.target.value
-                  )
-                }
-                placeholder="Escribe un mensaje para el profesional..."
-                rows="5"
-              />
+              <div className="infoGrid">
+                <div>
+                  <small>Precio inicial</small>
+                  <strong>
+                    ${selectedService.price}
+                  </strong>
+                </div>
 
-              <button
-                className="primary full"
-                disabled={sendingRequest}
-                onClick={sendRequest}
-              >
-                {sendingRequest
-                  ? "Enviando..."
-                  : "Solicitar servicio"}
-              </button>
+                <div>
+                  <small>CategorÃ­a</small>
+                  <strong>
+                    {selectedService.category}
+                  </strong>
+                </div>
 
-              {loggedUser &&
-                selectedService.userId !==
-                  loggedUser.id && (
+                <div>
+                  <small>Modalidad</small>
+                  <strong>Online</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="panel requestPanel">
+              <span className="eyebrow">
+                CONTRATAR
+              </span>
+
+              <h2>
+                Solicita este servicio
+              </h2>
+
+              <div className="requestPrice">
+                Desde ${selectedService.price}
+              </div>
+
+              {selectedService.demo ? (
+                <div className="notice">
+                  <strong>
+                    Servicio de demostraciÃ³n
+                  </strong>
+                  <p>
+                    Los servicios publicados por
+                    usuarios sÃ­ pueden recibir
+                    solicitudes.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <label>
+                    Mensaje para el profesional
+                    <textarea
+                      value={requestMessage}
+                      onChange={(e) =>
+                        setRequestMessage(
+                          e.target.value
+                        )
+                      }
+                      placeholder="CuÃ©ntale quÃ© necesitas..."
+                    />
+                  </label>
+
+                  <button
+                    className="primary full"
+                    onClick={sendRequest}
+                    disabled={sendingRequest}
+                  >
+                    {sendingRequest
+                      ? "Enviando..."
+                      : "Solicitar servicio"}
+                  </button>
+
                   <button
                     className="secondary full"
                     onClick={() =>
@@ -2848,1158 +1629,1630 @@ function ServicePage({
                       })
                     }
                   >
-                    💬 Contactar profesional
+                    ðŸ’¬ Contactar
                   </button>
-                )}
-            </>
-          )}
-
+                </>
+              )}
+            </div>
+          </div>
         </div>
+      </section>
+    );
+  }
 
-      </div>
+  function RequestsPage() {
+    return (
+      <section className="page">
+        <div className="dashboard">
+          <button
+            className="back"
+            onClick={openAccount}
+          >
+            â† Volver a mi cuenta
+          </button>
 
-    </section>
-  );
-}
-
-/* =========================================================
-   DASHBOARD
-========================================================= */
-
-function DashboardPage({
-  loggedUser,
-  profileForm,
-  setProfileForm,
-  savingProfile,
-  saveProfile,
-  myRequests,
-  pendingRequests,
-  acceptedRequests,
-  myServices,
-  recentActivity,
-  go,
-  logout,
-}) {
-  return (
-    <section className="section page-section dashboard">
-
-      <div className="dashboard-header">
-
-        <div>
           <span className="eyebrow">
-            MI CUENTA
+            GESTIÃ“N
           </span>
 
-          <h2>
-            Hola, {loggedUser.name}
-          </h2>
+          <h1>Solicitudes</h1>
 
-          <p>
-            Gestiona tu perfil, servicios y
-            oportunidades desde un solo lugar.
+          <p className="muted">
+            Gestiona tus oportunidades y contrataciones.
           </p>
-        </div>
 
-        <div className="account-mini">
-
-          <Avatar name={loggedUser.name} />
-
-          <div>
-            <strong>
-              {loggedUser.name}
-            </strong>
-
-            <span>
-              {loggedUser.profession}
-            </span>
-
-            <small>
-              ✓ Cuenta activa
-            </small>
-          </div>
-
-        </div>
-
-      </div>
-
-      <div className="stats-grid">
-
-        <StatCard
-          icon="📋"
-          value={myRequests.length}
-          label="Solicitudes"
-        />
-
-        <StatCard
-          icon="⏳"
-          value={pendingRequests.length}
-          label="Pendientes"
-        />
-
-        <StatCard
-          icon="✓"
-          value={acceptedRequests.length}
-          label="Aceptadas"
-        />
-
-        <StatCard
-          icon="💼"
-          value={myServices.length}
-          label="Servicios publicados"
-        />
-
-      </div>
-
-      <div className="dashboard-grid">
-
-        <form
-          className="panel profile-panel"
-          onSubmit={saveProfile}
-        >
-
-          <div className="panel-heading">
-
-            <div>
-              <span className="eyebrow">
-                PERFIL
-              </span>
-
-              <h3>
-                Tu información
-              </h3>
+          {loadingRequests ? (
+            <div className="empty">
+              Cargando solicitudes...
             </div>
+          ) : (
+            <div className="requestColumns">
+              <RequestColumn
+                title="ðŸ“¥ Solicitudes recibidas"
+                items={received}
+                received
+              />
 
-            <Avatar
-              name={loggedUser.name}
-              large
-            />
-
-          </div>
-
-          <label>
-            Nombre
-
-            <input
-              value={profileForm.name}
-              onChange={(event) =>
-                setProfileForm({
-                  ...profileForm,
-                  name: event.target.value,
-                })
-              }
-              placeholder="Tu nombre"
-              autoComplete="name"
-            />
-          </label>
-
-          <label>
-            Profesión
-
-            <input
-              value={profileForm.profession}
-              onChange={(event) =>
-                setProfileForm({
-                  ...profileForm,
-                  profession:
-                    event.target.value,
-                })
-              }
-              placeholder="Tu profesión"
-            />
-          </label>
-
-          <label>
-            Biografía
-
-            <textarea
-              value={profileForm.bio}
-              onChange={(event) =>
-                setProfileForm({
-                  ...profileForm,
-                  bio: event.target.value,
-                })
-              }
-              rows="5"
-              placeholder="Cuéntale a los clientes quién eres..."
-            />
-          </label>
-
-          <button
-            className="primary full"
-            disabled={savingProfile}
-            type="submit"
-          >
-            {savingProfile
-              ? "Guardando..."
-              : "Guardar cambios"}
-          </button>
-
-        </form>
-
-        <div className="panel">
-
-          <div className="panel-heading">
-
-            <div>
-              <span className="eyebrow">
-                ACCIONES
-              </span>
-
-              <h3>
-                Accesos rápidos
-              </h3>
+              <RequestColumn
+                title="ðŸ“¤ Mis solicitudes"
+                items={sent}
+              />
             </div>
-
-          </div>
-
-          <div className="quick-actions">
-
-            <button
-              onClick={() => go("publish")}
-            >
-              <span>➕</span>
-
-              <div>
-                <strong>
-                  Publicar servicio
-                </strong>
-
-                <small>
-                  Ofrece tus habilidades
-                </small>
-              </div>
-            </button>
-
-            <button
-              onClick={() => go("requests")}
-            >
-              <span>📋</span>
-
-              <div>
-                <strong>
-                  Ver solicitudes
-                </strong>
-
-                <small>
-                  Gestiona tus oportunidades
-                </small>
-              </div>
-            </button>
-
-            <button
-              onClick={() => go("messages")}
-            >
-              <span>💬</span>
-
-              <div>
-                <strong>
-                  Abrir mensajes
-                </strong>
-
-                <small>
-                  Comunícate directamente
-                </small>
-              </div>
-            </button>
-
-            <button onClick={logout}>
-              <span>🚪</span>
-
-              <div>
-                <strong>
-                  Cerrar sesión
-                </strong>
-
-                <small>
-                  Salir de tu cuenta
-                </small>
-              </div>
-            </button>
-
-          </div>
-
+          )}
         </div>
+      </section>
+    );
+  }
 
-      </div>
-
+  function RequestColumn({
+    title,
+    items,
+    received = false,
+  }) {
+    return (
       <div className="panel">
+        <h2>{title}</h2>
 
-        <div className="panel-heading">
-
-          <div>
-            <span className="eyebrow">
-              ACTIVIDAD
-            </span>
-
-            <h3>
-              Actividad reciente
-            </h3>
-          </div>
-
-          <button
-            className="text-button"
-            onClick={() => go("requests")}
-          >
-            Ver solicitudes →
-          </button>
-
-        </div>
-
-        {recentActivity.length === 0 ? (
-          <div className="empty-small">
-            Todavía no tienes actividad reciente.
+        {items.length === 0 ? (
+          <div className="empty small">
+            <strong>
+              No hay solicitudes
+            </strong>
+            <p>
+              {received
+                ? "Las solicitudes de clientes aparecerÃ¡n aquÃ­."
+                : "Explora servicios para encontrar profesionales."}
+            </p>
           </div>
         ) : (
-          <div className="activity-list">
-
-            {recentActivity.map(
-              (request) => (
-                <div
-                  className="activity-item"
-                  key={request.id}
+          items.map((request) => (
+            <div
+              className="requestCard"
+              key={request.id}
+            >
+              <div className="requestTop">
+                <span
+                  className={
+                    request.status === "accepted"
+                      ? "status accepted"
+                      : request.status === "rejected"
+                      ? "status rejected"
+                      : "status"
+                  }
                 >
-                  <span
-                    className={statusClass(
-                      request.status
-                    )}
-                  >
-                    {statusText(
-                      request.status
-                    )}
-                  </span>
+                  {statusText(request.status)}
+                </span>
 
-                  <div>
+                <small>
+                  {dateText(request.created_at)}
+                </small>
+              </div>
 
-                    <strong>
-                      {request.serviceTitle}
-                    </strong>
+              <h3>
+                {request.serviceTitle}
+              </h3>
 
-                    <small>
-                      {request.providerId ===
-                      loggedUser.id
-                        ? `Solicitud de ${request.clientName}`
-                        : `Solicitud enviada a ${request.providerName}`}
-                    </small>
+              <p>
+                <strong>Cliente:</strong>{" "}
+                {request.clientName}
+              </p>
 
-                  </div>
+              <p>
+                <strong>Profesional:</strong>{" "}
+                {request.providerName}
+              </p>
 
-                  <time>
-                    {dateText(
-                      request.created_at
-                    )}
-                  </time>
+              <div className="messageQuote">
+                â€œ{request.message}â€
+              </div>
 
-                </div>
-              )
-            )}
+              <div className="requestActions">
+                {received &&
+                  request.status === "pending" && (
+                    <>
+                      <button
+                        className="accept"
+                        disabled={
+                          updatingRequest ===
+                          request.id
+                        }
+                        onClick={() =>
+                          changeRequestStatus(
+                            request.id,
+                            "accepted"
+                          )
+                        }
+                      >
+                        âœ“ Aceptar
+                      </button>
 
-          </div>
-        )}
-
-      </div>
-
-    </section>
-  );
-}
-
-/* =========================================================
-   SOLICITUDES
-========================================================= */
-
-function RequestsPage({
-  loggedUser,
-  myRequests,
-  loadingRequests,
-  updatingRequest,
-  changeRequestStatus,
-  openMessaging,
-  go,
-}) {
-  return (
-    <section className="section page-section">
-
-      <div className="section-heading">
-
-        <div>
-          <span className="eyebrow">
-            GESTIÓN
-          </span>
-
-          <h2>
-            Solicitudes
-          </h2>
-
-          <p>
-            Gestiona los servicios que has solicitado
-            o las solicitudes recibidas.
-          </p>
-        </div>
-
-      </div>
-
-      {loadingRequests ? (
-        <div className="empty-state">
-          Cargando solicitudes...
-        </div>
-      ) : myRequests.length === 0 ? (
-        <div className="empty-state">
-
-          <span>📋</span>
-
-          <h3>
-            Aún no tienes solicitudes
-          </h3>
-
-          <p>
-            Explora servicios y envía tu primera
-            solicitud.
-          </p>
-
-          <button
-            className="primary"
-            onClick={() => go("services")}
-          >
-            Explorar servicios
-          </button>
-
-        </div>
-      ) : (
-        <div className="request-list">
-
-          {myRequests.map(
-            (request) => {
-              const isProvider =
-                request.providerId ===
-                loggedUser.id;
-
-              return (
-                <div
-                  className="request-card"
-                  key={request.id}
-                >
-
-                  <div className="request-top">
-
-                    <div>
-
-                      <span className="service-category">
-                        {request.serviceCategory}
-                      </span>
-
-                      <h3>
-                        {request.serviceTitle}
-                      </h3>
-
-                    </div>
-
-                    <span
-                      className={statusClass(
-                        request.status
-                      )}
-                    >
-                      {statusText(
-                        request.status
-                      )}
-                    </span>
-
-                  </div>
-
-                  <div className="request-info">
-
-                    <div>
-                      <small>
-                        {isProvider
-                          ? "Cliente"
-                          : "Profesional"}
-                      </small>
-
-                      <strong>
-                        {isProvider
-                          ? request.clientName
-                          : request.providerName}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <small>
-                        Precio
-                      </small>
-
-                      <strong>
-                        ${request.servicePrice}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <small>
-                        Fecha
-                      </small>
-
-                      <strong>
-                        {dateText(
-                          request.created_at
-                        )}
-                      </strong>
-                    </div>
-
-                  </div>
-
-                  {request.message && (
-                    <p className="request-message">
-                      “{request.message}”
-                    </p>
+                      <button
+                        className="reject"
+                        disabled={
+                          updatingRequest ===
+                          request.id
+                        }
+                        onClick={() =>
+                          changeRequestStatus(
+                            request.id,
+                            "rejected"
+                          )
+                        }
+                      >
+                        âœ• Rechazar
+                      </button>
+                    </>
                   )}
 
-                  <div className="request-actions">
+                <button
+                  className="messageBtn"
+                  onClick={() =>
+                    openMessaging({
+                      userId:
+                        received
+                          ? request.client_id
+                          : request.provider_id,
+                      name:
+                        received
+                          ? request.clientName
+                          : request.providerName,
+                      profession:
+                        received
+                          ? "Cliente"
+                          : "Profesional",
+                      requestId: request.id,
+                    })
+                  }
+                >
+                  ðŸ’¬ Mensajear
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    );
+  }
 
-                    {isProvider &&
-                      request.status ===
-                        "pending" && (
-                        <>
-                          <button
-                            className="primary"
-                            disabled={
-                              updatingRequest ===
-                              request.id
-                            }
-                            onClick={() =>
-                              changeRequestStatus(
-                                request.id,
-                                "accepted"
-                              )
-                            }
-                          >
-                            ✓ Aceptar
-                          </button>
+  function MessagesPage() {
+    const contacts = requests.map((request) => {
+      const provider =
+        request.provider_id === loggedUser?.id;
 
-                          <button
-                            className="danger-button"
-                            disabled={
-                              updatingRequest ===
-                              request.id
-                            }
-                            onClick={() =>
-                              changeRequestStatus(
-                                request.id,
-                                "rejected"
-                              )
-                            }
-                          >
-                            Rechazar
-                          </button>
-                        </>
-                      )}
+      return {
+        id: request.id,
+        contactId: provider
+          ? request.client_id
+          : request.provider_id,
+        name: provider
+          ? request.clientName
+          : request.providerName,
+        profession: provider
+          ? "Cliente"
+          : "Profesional",
+        requestId: request.id,
+        serviceTitle: request.serviceTitle,
+      };
+    });
 
-                    {request.providerId !==
-                      loggedUser.id && (
-                      <button
-                        className="secondary"
-                        onClick={() =>
-                          openMessaging({
-                            userId:
-                              request.providerId,
-                            name:
-                              request.providerName,
-                            profession:
-                              "Profesional",
-                            requestId:
-                              request.id,
-                          })
-                        }
-                      >
-                        💬 Mensaje
-                      </button>
-                    )}
-
-                    {request.providerId ===
-                      loggedUser.id && (
-                      <button
-                        className="secondary"
-                        onClick={() =>
-                          openMessaging({
-                            userId:
-                              request.clientId,
-                            name:
-                              request.clientName,
-                            profession:
-                              "Cliente",
-                            requestId:
-                              request.id,
-                          })
-                        }
-                      >
-                        💬 Mensaje al cliente
-                      </button>
-                    )}
-
-                  </div>
-
-                </div>
-              );
-            }
-          )}
-
-        </div>
-      )}
-
-    </section>
-  );
-}
-
-/* =========================================================
-   MENSAJES
-========================================================= */
-
-function MessagesPage({
-  loggedUser,
-  selectedContact,
-  messages,
-  messageText,
-  setMessageText,
-  loadingMessages,
-  sendingMessage,
-  sendMessage,
-  setSelectedContact,
-  go,
-}) {
-  if (!selectedContact) {
     return (
-      <section className="section page-section">
-
-        <span className="eyebrow">
-          COMUNICACIÓN
-        </span>
-
-        <h2>
-          Mensajes
-        </h2>
-
-        <div className="empty-state">
-
-          <span>💬</span>
-
-          <h3>
-            Selecciona una conversación
-          </h3>
-
-          <p>
-            Puedes abrir una conversación desde una
-            solicitud o desde un servicio.
-          </p>
-
+      <section className="page">
+        <div className="dashboard">
           <button
-            className="primary"
-            onClick={() => go("requests")}
+            className="back"
+            onClick={openRequests}
           >
-            Ver solicitudes
+            â† Volver a solicitudes
           </button>
 
-        </div>
+          <div className="messagesLayout">
+            <aside className="contacts">
+              <span className="eyebrow">
+                COMUNICACIÃ“N
+              </span>
 
+              <h2>Mensajes</h2>
+
+              {contacts.length === 0 ? (
+                <div className="empty small">
+                  AÃºn no tienes conversaciones.
+                </div>
+              ) : (
+                contacts.map((contact) => (
+                  <button
+                    key={contact.id}
+                    className={
+                      selectedContact?.id ===
+                      contact.contactId
+                        ? "contact active"
+                        : "contact"
+                    }
+                    onClick={() =>
+                      openMessaging({
+                        userId:
+                          contact.contactId,
+                        name: contact.name,
+                        profession:
+                          contact.profession,
+                        requestId:
+                          contact.requestId,
+                      })
+                    }
+                  >
+                    <div className="avatar">
+                      {contact.name
+                        ?.charAt(0)
+                        ?.toUpperCase() || "R"}
+                    </div>
+
+                    <div>
+                      <strong>
+                        {contact.name}
+                      </strong>
+                      <span>
+                        {contact.serviceTitle}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </aside>
+
+            <main className="chat">
+              {!selectedContact ? (
+                <div className="chatEmpty">
+                  <span>ðŸ’¬</span>
+                  <h2>
+                    Selecciona una conversaciÃ³n
+                  </h2>
+                  <p>
+                    Elige un contacto para comenzar.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="chatHeader">
+                    <div className="avatar">
+                      {selectedContact.name
+                        ?.charAt(0)
+                        ?.toUpperCase() || "R"}
+                    </div>
+
+                    <div>
+                      <strong>
+                        {selectedContact.name}
+                      </strong>
+                      <span>
+                        {selectedContact.profession}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="chatMessages">
+                    {loadingMessages ? (
+                      <div className="empty small">
+                        Cargando mensajes...
+                      </div>
+                    ) : messages.length === 0 ? (
+                      <div className="chatEmpty">
+                        <span>ðŸ‘‹</span>
+                        <strong>
+                          Inicia la conversaciÃ³n
+                        </strong>
+                        <p>
+                          Escribe un mensaje para comenzar.
+                        </p>
+                      </div>
+                    ) : (
+                      messages.map((message) => {
+                        const mine =
+                          message.sender_id ===
+                          loggedUser?.id;
+
+                        return (
+                          <div
+                            key={message.id}
+                            className={
+                              mine
+                                ? "bubbleRow mine"
+                                : "bubbleRow"
+                            }
+                          >
+                            <div
+                              className={
+                                mine
+                                  ? "bubble mine"
+                                  : "bubble"
+                              }
+                            >
+                              <p>
+                                {message.message}
+                              </p>
+                              <small>
+                                {dateText(
+                                  message.created_at
+                                )}
+                              </small>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <form
+                    onSubmit={sendMessage}
+                    className="messageForm"
+                  >
+                    <textarea
+                      value={messageText}
+                      onChange={(e) =>
+                        setMessageText(
+                          e.target.value
+                        )
+                      }
+                      placeholder="Escribe tu mensaje..."
+                      rows={2}
+                    />
+
+                    <button
+                      className="primary"
+                      disabled={sendingMessage}
+                    >
+                      {sendingMessage
+                        ? "..."
+                        : "Enviar ðŸ’¬"}
+                    </button>
+                  </form>
+                </>
+              )}
+            </main>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  function OfferPage() {
+    return (
+      <section className="page">
+        <div className="formContainer">
+          <button
+            className="back"
+            onClick={openAccount}
+          >
+            â† Volver a mi cuenta
+          </button>
+
+          <span className="eyebrow">
+            NUEVA OFERTA
+          </span>
+
+          <h1>Publica tu servicio</h1>
+
+          <p className="muted">
+            Presenta tu talento de forma profesional
+            y conecta con nuevos clientes.
+          </p>
+
+          <form
+            className="panel form"
+            onSubmit={publishService}
+          >
+            <div className="offerUser">
+              <div className="avatar">
+                {loggedUser?.name
+                  ?.charAt(0)
+                  ?.toUpperCase() || "R"}
+              </div>
+
+              <div>
+                <strong>
+                  {loggedUser?.name}
+                </strong>
+                <span>
+                  {loggedUser?.profession}
+                </span>
+              </div>
+            </div>
+
+            <label>
+              TÃ­tulo del servicio
+              <input
+                value={offer.serviceTitle}
+                onChange={(e) =>
+                  setOffer({
+                    ...offer,
+                    serviceTitle:
+                      e.target.value,
+                  })
+                }
+                placeholder="Ej. DiseÃ±o de logotipo profesional"
+              />
+            </label>
+
+            <label>
+              CategorÃ­a
+              <select
+                value={offer.category}
+                onChange={(e) =>
+                  setOffer({
+                    ...offer,
+                    category: e.target.value,
+                  })
+                }
+              >
+                {categories.map(([, name]) => (
+                  <option
+                    key={name}
+                    value={name}
+                  >
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              DescripciÃ³n
+              <textarea
+                value={offer.description}
+                onChange={(e) =>
+                  setOffer({
+                    ...offer,
+                    description:
+                      e.target.value,
+                  })
+                }
+                placeholder="Describe quÃ© ofreces..."
+              />
+            </label>
+
+            <label>
+              Precio inicial
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={offer.price}
+                onChange={(e) =>
+                  setOffer({
+                    ...offer,
+                    price: e.target.value,
+                  })
+                }
+                placeholder="0"
+              />
+            </label>
+
+            <button
+              className="primary full"
+              disabled={publishing}
+            >
+              {publishing
+                ? "Publicando..."
+                : "Publicar servicio"}
+            </button>
+          </form>
+        </div>
       </section>
     );
   }
 
   return (
-    <section className="section page-section">
+    <>
+      <style>{`
+        * {
+          box-sizing: border-box;
+        }
 
-      <button
-        className="back-button"
-        onClick={() => {
-          setSelectedContact(null);
-          go("requests");
-        }}
-      >
-        ← Volver a solicitudes
-      </button>
+        body {
+          margin: 0;
+          background: #f7f9fc;
+          color: #17263a;
+          font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+        }
 
-      <div className="chat">
+        button,
+        input,
+        textarea,
+        select {
+          font: inherit;
+        }
 
-        <div className="chat-header">
+        button {
+          cursor: pointer;
+        }
 
-          <Avatar
-            name={selectedContact.name}
-          />
+        .header {
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          background: rgba(255,255,255,.97);
+          border-bottom: 1px solid #e5eaf0;
+          backdrop-filter: blur(12px);
+        }
 
-          <div>
+        .headerInner {
+          max-width: 1180px;
+          margin: auto;
+          padding: 13px 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+        }
 
-            <span className="eyebrow">
-              CONVERSACIÓN
-            </span>
+        .logoButton {
+          border: 0;
+          background: transparent;
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          padding: 0;
+        }
 
-            <h3>
-              {selectedContact.name}
-            </h3>
+        .logoMark,
+        .accountLogo {
+          display: grid;
+          place-items: center;
+          background: #132238;
+          color: white;
+          font-weight: 800;
+        }
 
-            <small>
-              {selectedContact.profession}
-            </small>
+        .logoMark {
+          width: 38px;
+          height: 38px;
+          border-radius: 11px;
+        }
 
-          </div>
+        .logoText {
+          font-size: 22px;
+          font-weight: 800;
+        }
 
+        .logoText span {
+          color: #58718c;
+        }
+
+        .nav {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .navButton,
+        .navAccount {
+          border: 0;
+          background: transparent;
+          padding: 10px 12px;
+          color: #56657a;
+          font-weight: 700;
+        }
+
+        .navAccount {
+          background: #132238;
+          color: white;
+          border-radius: 10px;
+        }
+
+        .hero {
+          background:
+            linear-gradient(
+              135deg,
+              #f0f5fa,
+              #fff 55%,
+              #edf3f9
+            );
+        }
+
+        .heroInner {
+          max-width: 1180px;
+          min-height: 570px;
+          margin: auto;
+          padding: 70px 24px;
+          display: grid;
+          grid-template-columns:
+            minmax(0,1.15fr)
+            minmax(300px,.85fr);
+          gap: 60px;
+          align-items: center;
+        }
+
+        .heroCopy {
+          max-width: 650px;
+        }
+
+        .badge {
+          display: inline-block;
+          padding: 8px 13px;
+          border-radius: 999px;
+          background: #e7eef6;
+          color: #38536e;
+          font-size: 13px;
+          font-weight: 800;
+          margin-bottom: 18px;
+        }
+
+        .hero h1 {
+          margin: 0;
+          font-size: clamp(42px,6vw,72px);
+          line-height: 1.02;
+          letter-spacing: -3px;
+        }
+
+        .hero h1 span {
+          color: #506b86;
+        }
+
+        .hero p {
+          max-width: 570px;
+          color: #64758a;
+          font-size: 18px;
+          line-height: 1.65;
+          margin: 25px 0;
+        }
+
+        .heroActions {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .primary,
+        .secondary {
+          border-radius: 10px;
+          padding: 13px 18px;
+          font-weight: 800;
+        }
+
+        .primary {
+          border: 0;
+          background: #132238;
+          color: white;
+        }
+
+        .secondary {
+          border: 1px solid #ccd7e2;
+          background: white;
+          color: #21364d;
+        }
+
+        .full {
+          width: 100%;
+        }
+
+        .heroCard {
+          background: white;
+          border: 1px solid #dfe7ef;
+          border-radius: 24px;
+          padding: 28px;
+          box-shadow:
+            0 25px 70px rgba(20,32,51,.1);
+        }
+
+        .heroCardTitle {
+          font-weight: 800;
+          margin-bottom: 18px;
+        }
+
+        .heroSearch {
+          border: 1px solid #dce4ed;
+          border-radius: 12px;
+          padding: 15px;
+          color: #8591a0;
+        }
+
+        .tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 14px;
+        }
+
+        .tags span {
+          background: #f0f4f8;
+          padding: 7px 9px;
+          border-radius: 999px;
+          font-size: 12px;
+        }
+
+        .miniStats {
+          display: grid;
+          grid-template-columns: repeat(3,1fr);
+          gap: 10px;
+          border-top: 1px solid #edf1f5;
+          margin-top: 24px;
+          padding-top: 20px;
+        }
+
+        .miniStats div,
+        .stat {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .miniStats strong {
+          font-size: 19px;
+        }
+
+        .miniStats span {
+          color: #8793a2;
+          font-size: 11px;
+        }
+
+        .categories,
+        .services {
+          padding: 65px 0;
+        }
+
+        .categories {
+          background: white;
+        }
+
+        .services {
+          background: #f7f9fc;
+        }
+
+        .container,
+        .dashboard,
+        .detail,
+        .formContainer {
+          max-width: 1180px;
+          margin: auto;
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+
+        .eyebrow {
+          display: block;
+          color: #718196;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 1.7px;
+          margin-bottom: 8px;
+        }
+
+        h1,
+        h2,
+        h3 {
+          color: #17263a;
+        }
+
+        h2 {
+          font-size: 30px;
+          letter-spacing: -1px;
+          margin: 0 0 10px;
+        }
+
+        .muted {
+          color: #718096;
+        }
+
+        .categoryGrid {
+          display: grid;
+          grid-template-columns:
+            repeat(auto-fit,minmax(125px,1fr));
+          gap: 11px;
+          margin-top: 25px;
+        }
+
+        .category {
+          border: 1px solid #dfe6ed;
+          background: white;
+          border-radius: 14px;
+          padding: 17px 10px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 7px;
+          font-weight: 700;
+          color: #405269;
+        }
+
+        .category span {
+          font-size: 24px;
+        }
+
+        .category.active {
+          background: #132238;
+          border-color: #132238;
+          color: white;
+        }
+
+        .sectionTop {
+          display: flex;
+          justify-content: space-between;
+          align-items: end;
+          gap: 20px;
+          margin-bottom: 28px;
+        }
+
+        .searchBox {
+          width: 330px;
+          max-width: 100%;
+          background: white;
+          border: 1px solid #dce4ed;
+          border-radius: 11px;
+          padding: 0 13px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .searchBox input {
+          border: 0;
+          outline: 0;
+          width: 100%;
+          padding: 13px 0;
+          background: transparent;
+        }
+
+        .serviceGrid {
+          display: grid;
+          grid-template-columns:
+            repeat(auto-fit,minmax(280px,1fr));
+          gap: 17px;
+        }
+
+        .serviceCard,
+        .panel,
+        .authCard {
+          background: white;
+          border: 1px solid #e0e7ef;
+          border-radius: 18px;
+          padding: 23px;
+          box-shadow:
+            0 10px 30px rgba(20,32,51,.035);
+        }
+
+        .provider {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .provider > div:nth-child(2) {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .provider span,
+        .offerUser span,
+        .contact span,
+        .chatHeader span {
+          color: #7a899b;
+          font-size: 12px;
+        }
+
+        .provider small {
+          background: #f0f4f8;
+          padding: 5px 8px;
+          border-radius: 999px;
+          color: #617287;
+        }
+
+        .avatar {
+          width: 43px;
+          height: 43px;
+          flex: 0 0 auto;
+          border-radius: 12px;
+          background: #eaf0f6;
+          display: grid;
+          place-items: center;
+          font-weight: 900;
+          color: #263b53;
+        }
+
+        .serviceCard h3 {
+          margin: 20px 0 8px;
+        }
+
+        .serviceCard p,
+        .panel p {
+          color: #6c7c90;
+          line-height: 1.6;
+        }
+
+        .serviceBottom {
+          border-top: 1px solid #edf1f5;
+          padding-top: 15px;
+          margin-top: 17px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .serviceBottom small {
+          display: block;
+          color: #8a96a5;
+          font-size: 10px;
+        }
+
+        .serviceBottom strong {
+          font-size: 21px;
+        }
+
+        .view {
+          border: 0;
+          background: #eef3f8;
+          color: #263c55;
+          border-radius: 9px;
+          padding: 9px 12px;
+          font-weight: 800;
+        }
+
+        .cta {
+          background: #132238;
+          color: white;
+          padding: 70px max(24px,calc((100% - 1120px)/2));
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 30px;
+        }
+
+        .cta h2 {
+          color: white;
+          font-size: 40px;
+          max-width: 650px;
+        }
+
+        .cta p {
+          color: #b9c4d2;
+        }
+
+        .ctaButton {
+          border: 0;
+          background: white;
+          color: #132238;
+          border-radius: 10px;
+          padding: 14px 20px;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .page {
+          min-height: calc(100vh - 70px);
+          padding: 45px 0 80px;
+        }
+
+        .authCard {
+          max-width: 520px;
+          margin: 20px auto;
+        }
+
+        .authCard > h1 {
+          margin-bottom: 5px;
+        }
+
+        .accountLogo {
+          width: 58px;
+          height: 58px;
+          border-radius: 17px;
+          margin: 0 auto 17px;
+        }
+
+        .authCard {
+          text-align: center;
+        }
+
+        .tabs {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          background: #f1f4f8;
+          padding: 4px;
+          border-radius: 10px;
+          margin: 25px 0;
+        }
+
+        .tab {
+          border: 0;
+          background: transparent;
+          padding: 10px;
+          border-radius: 8px;
+          font-weight: 700;
+          color: #718096;
+        }
+
+        .tab.active {
+          background: white;
+          color: #17263a;
+          box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+
+        .form {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          text-align: left;
+        }
+
+        label {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+          color: #405168;
+          font-size: 13px;
+          font-weight: 800;
+        }
+
+        input,
+        textarea,
+        select {
+          width: 100%;
+          border: 1px solid #d7e0e9;
+          border-radius: 10px;
+          padding: 12px 13px;
+          outline: 0;
+          background: white;
+          color: #17263a;
+        }
+
+        textarea {
+          min-height: 110px;
+          resize: vertical;
+        }
+
+        .dashboardHeader {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 25px;
+          margin-bottom: 28px;
+        }
+
+        .dashboardHeader h1 {
+          font-size: 39px;
+          margin: 0 0 8px;
+        }
+
+        .dashboardHeader p {
+          color: #718096;
+        }
+
+        .bigAvatar {
+          width: 72px;
+          height: 72px;
+          border-radius: 20px;
+          display: grid;
+          place-items: center;
+          background: #132238;
+          color: white;
+          font-size: 28px;
+          font-weight: 900;
+        }
+
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(4,1fr);
+          gap: 14px;
+          margin-bottom: 20px;
+        }
+
+        .stat {
+          background: white;
+          border: 1px solid #e0e7ef;
+          border-radius: 15px;
+          padding: 18px;
+        }
+
+        .stat span {
+          font-size: 20px;
+        }
+
+        .stat strong {
+          font-size: 25px;
+        }
+
+        .stat small {
+          color: #718096;
+        }
+
+        .dashboardGrid,
+        .detailGrid,
+        .requestColumns {
+          display: grid;
+          grid-template-columns:
+            minmax(0,1fr) 320px;
+          gap: 20px;
+        }
+
+        .requestColumns {
+          grid-template-columns: 1fr 1fr;
+          margin-top: 25px;
+        }
+
+        .profileBox {
+          background: #132238;
+          color: white;
+          border-radius: 18px;
+          padding: 25px;
+          text-align: center;
+        }
+
+        .profileBox h3 {
+          color: white;
+        }
+
+        .profileBox p {
+          color: #bdc8d5;
+        }
+
+        .profileBox > span {
+          background: rgba(255,255,255,.12);
+          padding: 6px 10px;
+          border-radius: 999px;
+          font-size: 11px;
+        }
+
+        .profileAvatar {
+          width: 68px;
+          height: 68px;
+          margin: auto;
+          border-radius: 19px;
+          background: white;
+          color: #132238;
+          display: grid;
+          place-items: center;
+          font-size: 26px;
+          font-weight: 900;
+        }
+
+        .quick {
+          margin-top: 15px;
+          background: white;
+          border: 1px solid #e0e7ef;
+          border-radius: 18px;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+
+        .quick button {
+          border: 1px solid #dce4ed;
+          background: white;
+          border-radius: 9px;
+          padding: 11px;
+          font-weight: 800;
+          text-align: left;
+        }
+
+        .quick .logout {
+          color: #a34d4d;
+        }
+
+        .back {
+          border: 0;
+          background: transparent;
+          color: #5c6e83;
+          font-weight: 800;
+          padding: 0;
+          margin-bottom: 25px;
+        }
+
+        .infoGrid {
+          display: grid;
+          grid-template-columns: repeat(3,1fr);
+          gap: 12px;
+          margin-top: 25px;
+        }
+
+        .infoGrid div {
+          background: #f6f8fa;
+          padding: 15px;
+          border-radius: 12px;
+        }
+
+        .infoGrid small,
+        .infoGrid strong {
+          display: block;
+        }
+
+        .infoGrid small {
+          color: #7b8999;
+        }
+
+        .requestPrice {
+          font-size: 25px;
+          font-weight: 900;
+          margin: 15px 0;
+        }
+
+        .notice {
+          background: #f1f5f8;
+          padding: 15px;
+          border-radius: 12px;
+        }
+
+        .notice p {
+          margin-bottom: 0;
+        }
+
+        .requestCard {
+          border-top: 1px solid #e9edf2;
+          padding: 18px 0;
+        }
+
+        .requestTop {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        .status {
+          background: #fff4d9;
+          color: #8a6510;
+          padding: 5px 9px;
+          border-radius: 999px;
+          font-size: 11px;
+          font-weight: 900;
+        }
+
+        .status.accepted {
+          background: #e4f5eb;
+          color: #267348;
+        }
+
+        .status.rejected {
+          background: #f9e5e5;
+          color: #a34848;
+        }
+
+        .messageQuote {
+          background: #f5f7fa;
+          padding: 12px;
+          border-radius: 10px;
+          color: #627287;
+          font-size: 13px;
+        }
+
+        .requestActions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        .requestActions button {
+          border: 0;
+          border-radius: 8px;
+          padding: 9px 11px;
+          font-weight: 800;
+        }
+
+        .accept {
+          background: #e5f5eb;
+          color: #267348;
+        }
+
+        .reject {
+          background: #fae7e7;
+          color: #a34848;
+        }
+
+        .messageBtn {
+          background: #edf2f7;
+          color: #29415b;
+        }
+
+        .messagesLayout {
+          display: grid;
+          grid-template-columns: 300px 1fr;
+          min-height: 580px;
+          background: white;
+          border: 1px solid #e0e7ef;
+          border-radius: 18px;
+          overflow: hidden;
+        }
+
+        .contacts {
+          border-right: 1px solid #e5eaf0;
+          padding: 20px;
+        }
+
+        .contact {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          text-align: left;
+          border: 0;
+          background: transparent;
+          padding: 11px;
+          border-radius: 10px;
+        }
+
+        .contact.active {
+          background: #edf2f7;
+        }
+
+        .contact div:last-child {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .chat {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .chatHeader {
+          padding: 17px;
+          border-bottom: 1px solid #e5eaf0;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .chatHeader div:last-child {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .chatMessages {
+          flex: 1;
+          padding: 20px;
+          overflow-y: auto;
+        }
+
+        .bubbleRow {
+          display: flex;
+          justify-content: flex-start;
+          margin-bottom: 9px;
+        }
+
+        .bubbleRow.mine {
+          justify-content: flex-end;
+        }
+
+        .bubble {
+          max-width: 75%;
+          background: #edf2f7;
+          padding: 10px 13px;
+          border-radius: 14px;
+        }
+
+        .bubble.mine {
+          background: #132238;
+          color: white;
+        }
+
+        .bubble p {
+          margin: 0 0 5px;
+        }
+
+        .bubble small {
+          font-size: 9px;
+          opacity: .65;
+        }
+
+        .messageForm {
+          border-top: 1px solid #e5eaf0;
+          padding: 13px;
+          display: flex;
+          gap: 10px;
+        }
+
+        .messageForm textarea {
+          min-height: 50px;
+        }
+
+        .chatEmpty {
+          min-height: 300px;
+          display: grid;
+          place-items: center;
+          align-content: center;
+          text-align: center;
+          color: #718096;
+          padding: 30px;
+        }
+
+        .chatEmpty span {
+          font-size: 35px;
+        }
+
+        .offerUser {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding-bottom: 5px;
+        }
+
+        .offerUser div:last-child {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .empty {
+          background: white;
+          border: 1px solid #e0e7ef;
+          border-radius: 16px;
+          padding: 45px;
+          text-align: center;
+          color: #718096;
+        }
+
+        .empty.small {
+          padding: 30px 15px;
+        }
+
+        @media (max-width: 760px) {
+          .headerInner {
+            padding: 10px 15px;
+          }
+
+          .logoText {
+            font-size: 19px;
+          }
+
+          .nav {
+            gap: 2px;
+          }
+
+          .navButton {
+            display: none;
+          }
+
+          .navAccount {
+            padding: 9px 12px;
+          }
+
+          .heroInner {
+            grid-template-columns: 1fr;
+            padding: 48px 17px;
+            min-height: auto;
+            gap: 35px;
+          }
+
+          .hero h1 {
+            font-size: 45px;
+            letter-spacing: -2px;
+          }
+
+          .hero p {
+            font-size: 16px;
+          }
+
+          .heroActions {
+            flex-direction: column;
+          }
+
+          .heroActions button {
+            width: 100%;
+          }
+
+          .heroCard {
+            padding: 20px;
+          }
+
+          .container,
+          .dashboard,
+          .detail,
+          .formContainer {
+            padding-left: 15px;
+            padding-right: 15px;
+          }
+
+          .categories,
+          .services {
+            padding: 45px 0;
+          }
+
+          .categoryGrid {
+            grid-template-columns: repeat(2,1fr);
+          }
+
+          .sectionTop,
+          .dashboardHeader,
+          .cta {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .searchBox {
+            width: 100%;
+          }
+
+          .serviceGrid {
+            grid-template-columns: 1fr;
+          }
+
+          .serviceCard {
+            width: 100%;
+          }
+
+          .stats {
+            grid-template-columns: repeat(2,1fr);
+          }
+
+          .dashboardGrid,
+          .detailGrid,
+          .requestColumns {
+            grid-template-columns: 1fr;
+          }
+
+          .bigAvatar {
+            display: none;
+          }
+
+          .dashboardHeader h1 {
+            font-size: 32px;
+          }
+
+          .infoGrid {
+            grid-template-columns: 1fr;
+          }
+
+          .messagesLayout {
+            grid-template-columns: 1fr;
+            min-height: 650px;
+          }
+
+          .contacts {
+            border-right: 0;
+            border-bottom: 1px solid #e5eaf0;
+            max-height: 220px;
+            overflow-y: auto;
+          }
+
+          .messageForm {
+            flex-direction: column;
+          }
+
+          .messageForm button {
+            width: 100%;
+          }
+
+          .cta {
+            padding: 50px 18px;
+          }
+
+          .cta h2 {
+            font-size: 32px;
+          }
+
+          .ctaButton {
+            width: 100%;
+          }
+        }
+      `}</style>
+
+      <Header />
+
+      {authLoading && !loggedUser ? (
+        <div className="empty">
+          Cargando RobLoren...
         </div>
-
-        <div className="chat-body">
-
-          {loadingMessages ? (
-            <div className="chat-empty">
-              Cargando mensajes...
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="chat-empty">
-
-              <span>💬</span>
-
-              <p>
-                Todavía no hay mensajes.
-                Escribe el primero.
-              </p>
-
-            </div>
-          ) : (
-            messages.map(
-              (message) => {
-                const mine =
-                  message.sender_id ===
-                  loggedUser.id;
-
-                return (
-                  <div
-                    key={message.id}
-                    className={
-                      mine
-                        ? "message-row mine"
-                        : "message-row"
-                    }
-                  >
-                    <div className="message-bubble">
-
-                      <p>
-                        {message.message}
-                      </p>
-
-                      <small>
-                        {dateText(
-                          message.created_at
-                        )}
-                      </small>
-
-                    </div>
-                  </div>
-                );
-              }
-            )
-          )}
-
-        </div>
-
-        <form
-          className="chat-form"
-          onSubmit={sendMessage}
-        >
-
-          <input
-            value={messageText}
-            onChange={(event) =>
-              setMessageText(
-                event.target.value
-              )
-            }
-            placeholder="Escribe un mensaje..."
-            autoComplete="off"
-          />
-
-          <button
-            className="primary"
-            disabled={sendingMessage}
-            type="submit"
-          >
-            {sendingMessage
-              ? "..."
-              : "Enviar"}
-          </button>
-
-        </form>
-
-      </div>
-
-    </section>
+      ) : (
+        <>
+          {page === "home" && <HomePage />}
+          {page === "account" && <AccountPage />}
+          {page === "service" && <ServicePage />}
+          {page === "requests" && <RequestsPage />}
+          {page === "messages" && <MessagesPage />}
+          {page === "offer" && <OfferPage />}
+        </>
+      )}
+    </>
   );
 }
-
-/* =========================================================
-   PUBLICAR
-========================================================= */
-
-function PublishPage({
-  offer,
-  setOffer,
-  publishing,
-  publishService,
-}) {
-  return (
-    <section className="section page-section">
-
-      <div className="section-heading">
-
-        <div>
-
-          <span className="eyebrow">
-            OPORTUNIDAD
-          </span>
-
-          <h2>
-            Publicar servicio
-          </h2>
-
-          <p>
-            Presenta tus habilidades y permite que
-            nuevos clientes te encuentren.
-          </p>
-
-        </div>
-
-      </div>
-
-      <form
-        className="publish-form panel"
-        onSubmit={publishService}
-      >
-
-        <label>
-          Nombre del servicio
-
-          <input
-            value={offer.serviceTitle}
-            onChange={(event) =>
-              setOffer({
-                ...offer,
-                serviceTitle:
-                  event.target.value,
-              })
-            }
-            placeholder="Ej. Diseño de logotipos"
-          />
-        </label>
-
-        <label>
-          Categoría
-
-          <select
-            value={offer.category}
-            onChange={(event) =>
-              setOffer({
-                ...offer,
-                category:
-                  event.target.value,
-              })
-            }
-          >
-            {categories.map(
-              ([, name]) => (
-                <option
-                  value={name}
-                  key={name}
-                >
-                  {name}
-                </option>
-              )
-            )}
-          </select>
-        </label>
-
-        <label>
-          Descripción
-
-          <textarea
-            value={offer.description}
-            onChange={(event) =>
-              setOffer({
-                ...offer,
-                description:
-                  event.target.value,
-              })
-            }
-            rows="7"
-            placeholder="Describe claramente qué ofreces..."
-          />
-        </label>
-
-        <label>
-          Precio inicial
-
-          <input
-            type="number"
-            min="1"
-            step="0.01"
-            value={offer.price}
-            onChange={(event) =>
-              setOffer({
-                ...offer,
-                price:
-                  event.target.value,
-              })
-            }
-            placeholder="Ej. 50"
-          />
-        </label>
-
-        <div className="publish-note">
-
-          <strong>
-            💡 Importante
-          </strong>
-
-          <p>
-            RobLoren todavía no procesa pagos reales.
-            El precio solamente informa al cliente
-            del valor del servicio.
-          </p>
-
-        </div>
-
-        <button
-          className="primary full"
-          disabled={publishing}
-          type="submit"
-        >
-          {publishing
-            ? "Publicando..."
-            : "Publicar servicio"}
-        </button>
-
-      </form>
-
-    </section>
-  );
-}
-
-/* =========================================================
-   AUTENTICACIÓN
-========================================================= */
-
-function AccountPage({
-  accountMode,
-  setAccountMode,
-  form,
-  setForm,
-  authLoading,
-  login,
-  register,
-}) {
-  return (
-    <section className="section page-section auth-page">
-
-      <div className="auth-card">
-
-        <div className="auth-heading">
-
-          <span className="brand-mark">
-            RL
-          </span>
-
-          <span className="eyebrow">
-            ROBLOREN
-          </span>
-
-          <h2>
-            {accountMode === "login"
-              ? "Bienvenido de nuevo"
-              : "Crea tu cuenta"}
-          </h2>
-
-          <p>
-            {accountMode === "login"
-              ? "Accede a tu cuenta para gestionar tus servicios y oportunidades."
-              : "Únete a RobLoren y conecta tu talento con nuevas oportunidades."}
-          </p>
-
-        </div>
-
-        {accountMode === "login" ? (
-          <form onSubmit={login}>
-
-            <label>
-              Correo electrónico
-
-              <input
-                type="email"
-                value={form.email}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    email:
-                      event.target.value,
-                  })
-                }
-                autoComplete="email"
-                placeholder="correo@ejemplo.com"
-              />
-            </label>
-
-            <label>
-              Contraseña
-
-              <input
-                type="password"
-                value={form.password}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    password:
-                      event.target.value,
-                  })
-                }
-                autoComplete="current-password"
-                placeholder="Tu contraseña"
-              />
-            </label>
-
-            <button
-              className="primary full"
-              disabled={authLoading}
-              type="submit"
-            >
-              {authLoading
-                ? "Entrando..."
-                : "Iniciar sesión"}
-            </button>
-
-            <button
-              type="button"
-              className="link-button"
-              onClick={() =>
-                setAccountMode("register")
-              }
-            >
-              ¿No tienes cuenta? Regístrate
-            </button>
-
-          </form>
-        ) : (
-          <form onSubmit={register}>
-
-            <label>
-              Nombre
-
-              <input
-                value={form.name}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    name:
-                      event.target.value,
-                  })
-                }
-                autoComplete="name"
-                placeholder="Tu nombre"
-              />
-            </label>
-
-            <label>
-              Correo electrónico
-
-              <input
-                type="email"
-                value={form.email}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    email:
-                      event.target.value,
-                  })
-                }
-                autoComplete="email"
-                placeholder="correo@ejemplo.com"
-              />
-            </label>
-
-            <label>
-              Contraseña
-
-              <input
-                type="password"
-                value={form.password}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    password:
-                      event.target.value,
-                  })
-                }
-                autoComplete="new-password"
-                placeholder="Mínimo 6 caracteres"
-              />
-            </label>
-
-            <label>
-              Profesión
-
-              <input
-                value={form.profession}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    profession:
-                      event.target.value,
-                  })
-                }
-                placeholder="Ej. Diseñador gráfico"
-              />
-            </label>
-
-            <label>
-              Biografía
-
-              <textarea
-                value={form.bio}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    bio:
-                      event.target.value,
-                  })
-                }
-                rows="4"
-                placeholder="Cuéntanos brevemente sobre ti..."
-              />
-            </label>
-
-            <button
-              className="primary full"
-              disabled={authLoading}
-              type="submit"
-            >
-              {authLoading
-                ? "Creando..."
-                : "Crear cuenta"}
-            </button>
-
-            <button
-              type="button"
-              className="link-button"
-              onClick={() =>
-                setAccountMode("login")
-              }
-            >
-              ← Ya tengo una cuenta
-            </button>
-
-          </form>
-        )}
-
-      </div>
-
-    </section>
-  );
-}
-
-/* =========================================================
-   INICIO REACT
-========================================================= */
 
 ReactDOM.createRoot(
   document.getElementById("root")
-).render(
-  <App />
-);
+).render(<App />);
