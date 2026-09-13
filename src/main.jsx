@@ -3,46 +3,46 @@ import ReactDOM from "react-dom/client";
 import { supabase } from "./supabaseClient";
 
 const categories = [
-  ["ðŸ’»", "TecnologÃ­a"],
-  ["ðŸŽ¨", "DiseÃ±o"],
-  ["ðŸ“£", "Marketing"],
-  ["âœï¸", "RedacciÃ³n"],
-  ["ðŸ“š", "EducaciÃ³n"],
-  ["ðŸ“·", "FotografÃ­a"],
-  ["ðŸŽ¬", "Video"],
-  ["ðŸŽµ", "MÃºsica"],
-  ["ðŸŒ", "TraducciÃ³n"],
-  ["ðŸ”§", "Otros"],
+  ["💻", "Tecnología"],
+  ["🎨", "Diseño"],
+  ["📣", "Marketing"],
+  ["✍️", "Redacción"],
+  ["📚", "Educación"],
+  ["📷", "Fotografía"],
+  ["🎬", "Video"],
+  ["🎵", "Música"],
+  ["🌐", "Traducción"],
+  ["🔧", "Otros"],
 ];
 
 const demoServices = [
   {
     id: 1,
-    name: "Carlos RodrÃ­guez",
+    name: "Carlos Rodríguez",
     profession: "Desarrollador Web",
-    service: "CreaciÃ³n de sitios web profesionales",
-    category: "TecnologÃ­a",
+    service: "Creación de sitios web profesionales",
+    category: "Tecnología",
     description:
-      "Creo sitios web modernos, rÃ¡pidos y adaptados a mÃ³viles para negocios y profesionales.",
+      "Creo sitios web modernos, rápidos y adaptados a móviles para negocios y profesionales.",
     price: 80,
     userId: null,
     demo: true,
   },
   {
     id: 2,
-    name: "Ana MartÃ­nez",
-    profession: "DiseÃ±adora GrÃ¡fica",
-    service: "DiseÃ±o de logotipos",
-    category: "DiseÃ±o",
+    name: "Ana Martínez",
+    profession: "Diseñadora Gráfica",
+    service: "Diseño de logotipos",
+    category: "Diseño",
     description:
-      "DiseÃ±o logotipos modernos y profesionales para marcas y emprendimientos.",
+      "Diseño logotipos modernos y profesionales para marcas y emprendimientos.",
     price: 35,
     userId: null,
     demo: true,
   },
   {
     id: 3,
-    name: "Luis GÃ³mez",
+    name: "Luis Gómez",
     profession: "Especialista en Marketing",
     service: "Marketing para redes sociales",
     category: "Marketing",
@@ -58,7 +58,8 @@ function mapService(row, profile) {
   return {
     id: row.id,
     name: profile?.name || row.name || "Profesional",
-    profession: profile?.profession || row.profession || "Profesional",
+    profession:
+      profile?.profession || row.profession || "Profesional",
     service: row.service_title || "Servicio profesional",
     category: row.category || "Otros",
     description: row.description || "",
@@ -93,6 +94,7 @@ function statusText(status) {
 
 function dateText(value) {
   if (!value) return "";
+
   return new Date(value).toLocaleString("es-ES", {
     day: "2-digit",
     month: "2-digit",
@@ -144,7 +146,7 @@ function App() {
 
   const [offer, setOffer] = useState({
     serviceTitle: "",
-    category: "TecnologÃ­a",
+    category: "Tecnología",
     description: "",
     price: "",
   });
@@ -203,6 +205,7 @@ function App() {
     const next = makeUser(user, profile);
 
     setLoggedUser(next);
+
     setProfileForm({
       name: next.name,
       profession: next.profession,
@@ -288,7 +291,9 @@ function App() {
     ];
 
     const serviceIds = [
-      ...new Set(rows.map((r) => r.service_id).filter(Boolean)),
+      ...new Set(
+        rows.map((r) => r.service_id).filter(Boolean)
+      ),
     ];
 
     let profiles = {};
@@ -338,7 +343,8 @@ function App() {
               : "Profesional"),
           serviceTitle:
             service?.service_title || "Servicio profesional",
-          serviceCategory: service?.category || "Otros",
+          serviceCategory:
+            service?.category || "Otros",
           servicePrice: Number(service?.price) || 0,
         };
       })
@@ -381,6 +387,7 @@ function App() {
     if (!loggedUser || !selectedContact) return;
 
     const text = messageText.trim();
+
     if (!text) return;
 
     setSendingMessage(true);
@@ -415,12 +422,16 @@ function App() {
     }
 
     if (!contact?.userId) {
-      alert("Este profesional todavÃ­a no tiene mensajerÃ­a disponible.");
+      alert(
+        "Este profesional todavía no tiene mensajería disponible."
+      );
       return;
     }
 
     if (contact.userId === loggedUser.id) {
-      alert("No puedes iniciar una conversaciÃ³n contigo mismo.");
+      alert(
+        "No puedes iniciar una conversación contigo mismo."
+      );
       return;
     }
 
@@ -448,7 +459,7 @@ function App() {
 
     if (!selectedService?.userId) {
       alert(
-        "Este servicio de demostraciÃ³n todavÃ­a no puede recibir solicitudes."
+        "Este servicio de demostración todavía no puede recibir solicitudes."
       );
       return;
     }
@@ -545,6 +556,7 @@ function App() {
     };
 
     setLoggedUser(updated);
+
     setProfileForm({
       name: updated.name,
       profession: updated.profession,
@@ -552,6 +564,7 @@ function App() {
     });
 
     setSavingProfile(false);
+
     alert("Perfil actualizado correctamente.");
 
     await loadServices();
@@ -561,12 +574,12 @@ function App() {
     event.preventDefault();
 
     if (!form.name.trim() || !form.email.trim() || !form.password) {
-      alert("Completa nombre, correo y contraseÃ±a.");
+      alert("Completa nombre, correo y contraseña.");
       return;
     }
 
     if (form.password.length < 6) {
-      alert("La contraseÃ±a debe tener al menos 6 caracteres.");
+      alert("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
 
@@ -615,7 +628,7 @@ function App() {
     event.preventDefault();
 
     if (!form.email.trim() || !form.password) {
-      alert("Escribe tu correo y contraseÃ±a.");
+      alert("Escribe tu correo y contraseña.");
       return;
     }
 
@@ -676,7 +689,7 @@ function App() {
       !offer.description.trim() ||
       !offer.price
     ) {
-      alert("Completa tÃ­tulo, descripciÃ³n y precio.");
+      alert("Completa título, descripción y precio.");
       return;
     }
 
@@ -704,14 +717,14 @@ function App() {
 
     setOffer({
       serviceTitle: "",
-      category: "TecnologÃ­a",
+      category: "Tecnología",
       description: "",
       price: "",
     });
 
     await loadServices();
 
-    alert("Â¡Servicio publicado correctamente!");
+    alert("¡Servicio publicado correctamente!");
 
     setPage("home");
   }
@@ -782,7 +795,9 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (loggedUser?.id) loadRequests();
+    if (loggedUser?.id) {
+      loadRequests();
+    }
   }, [loggedUser?.id]);
 
   const filteredServices = useMemo(() => {
@@ -790,9 +805,11 @@ function App() {
 
     return services.filter((service) => {
       const categoryMatch =
-        category === "Todas" || service.category === category;
+        category === "Todas" ||
+        service.category === category;
 
       if (!categoryMatch) return false;
+
       if (!q) return true;
 
       return [
@@ -840,6 +857,7 @@ function App() {
             onClick={() => setPage("home")}
           >
             <span className="logoMark">R</span>
+
             <span className="logoText">
               Rob<span>Loren</span>
             </span>
@@ -857,6 +875,7 @@ function App() {
               className="navButton"
               onClick={() => {
                 setPage("home");
+
                 setTimeout(() => {
                   document
                     .getElementById("services")
@@ -897,7 +916,7 @@ function App() {
           <div className="heroInner">
             <div className="heroCopy">
               <span className="badge">
-                âœ¦ Marketplace profesional
+                ✦ Marketplace profesional
               </span>
 
               <h1>
@@ -907,9 +926,9 @@ function App() {
               </h1>
 
               <p>
-                Encuentra profesionales, publica tus servicios
-                y conecta con clientes dentro de una plataforma
-                creada para crecer.
+                Encuentra profesionales, publica tus
+                servicios y conecta con clientes dentro de
+                una plataforma creada para crecer.
               </p>
 
               <div className="heroActions">
@@ -944,17 +963,17 @@ function App() {
 
             <div className="heroCard">
               <div className="heroCardTitle">
-                ðŸ”Ž Encuentra talento
+                🔎 Encuentra talento
               </div>
 
               <div className="heroSearch">
-                Â¿QuÃ© servicio buscas?
+                ¿Qué servicio buscas?
               </div>
 
               <div className="tags">
-                <span>ðŸ’» TecnologÃ­a</span>
-                <span>ðŸŽ¨ DiseÃ±o</span>
-                <span>ðŸ“£ Marketing</span>
+                <span>💻 Tecnología</span>
+                <span>🎨 Diseño</span>
+                <span>📣 Marketing</span>
               </div>
 
               <div className="miniStats">
@@ -962,10 +981,12 @@ function App() {
                   <strong>+100</strong>
                   <span>Servicios</span>
                 </div>
+
                 <div>
                   <strong>+50</strong>
                   <span>Profesionales</span>
                 </div>
+
                 <div>
                   <strong>24/7</strong>
                   <span>Conexiones</span>
@@ -977,7 +998,9 @@ function App() {
 
         <section className="categories">
           <div className="container">
-            <span className="eyebrow">EXPLORA</span>
+            <span className="eyebrow">
+              EXPLORA
+            </span>
 
             <h2>
               Encuentra el servicio que necesitas
@@ -996,7 +1019,7 @@ function App() {
                 }
                 onClick={() => setCategory("Todas")}
               >
-                <span>âœ¨</span>
+                <span>✨</span>
                 Todas
               </button>
 
@@ -1028,11 +1051,15 @@ function App() {
                 <span className="eyebrow">
                   SERVICIOS
                 </span>
-                <h2>Profesionales disponibles</h2>
+
+                <h2>
+                  Profesionales disponibles
+                </h2>
               </div>
 
               <div className="searchBox">
-                ðŸ”Ž
+                🔎
+
                 <input
                   value={search}
                   onChange={(e) =>
@@ -1052,8 +1079,9 @@ function App() {
                 <strong>
                   No encontramos servicios
                 </strong>
+
                 <p>
-                  Prueba con otra bÃºsqueda o categorÃ­a.
+                  Prueba con otra búsqueda o categoría.
                 </p>
               </div>
             ) : (
@@ -1071,7 +1099,10 @@ function App() {
                       </div>
 
                       <div>
-                        <strong>{service.name}</strong>
+                        <strong>
+                          {service.name}
+                        </strong>
+
                         <span>
                           {service.profession}
                         </span>
@@ -1091,6 +1122,7 @@ function App() {
                     <div className="serviceBottom">
                       <div>
                         <small>Desde</small>
+
                         <strong>
                           ${service.price}
                         </strong>
@@ -1102,7 +1134,7 @@ function App() {
                           openService(service)
                         }
                       >
-                        Ver servicio â†’
+                        Ver servicio →
                       </button>
                     </div>
                   </article>
@@ -1139,7 +1171,7 @@ function App() {
               }
             }}
           >
-            Comenzar ahora â†’
+            Comenzar ahora →
           </button>
         </section>
       </>
@@ -1180,7 +1212,7 @@ function App() {
                   setAccountMode("login")
                 }
               >
-                Iniciar sesiÃ³n
+                Iniciar sesión
               </button>
 
               <button
@@ -1203,7 +1235,8 @@ function App() {
                 className="form"
               >
                 <label>
-                  Correo electrÃ³nico
+                  Correo electrónico
+
                   <input
                     type="email"
                     value={form.email}
@@ -1218,7 +1251,8 @@ function App() {
                 </label>
 
                 <label>
-                  ContraseÃ±a
+                  Contraseña
+
                   <input
                     type="password"
                     value={form.password}
@@ -1228,7 +1262,7 @@ function App() {
                         password: e.target.value,
                       })
                     }
-                    placeholder="Tu contraseÃ±a"
+                    placeholder="Tu contraseña"
                   />
                 </label>
 
@@ -1248,6 +1282,7 @@ function App() {
               >
                 <label>
                   Nombre
+
                   <input
                     value={form.name}
                     onChange={(e) =>
@@ -1261,7 +1296,8 @@ function App() {
                 </label>
 
                 <label>
-                  Correo electrÃ³nico
+                  Correo electrónico
+
                   <input
                     type="email"
                     value={form.email}
@@ -1276,7 +1312,8 @@ function App() {
                 </label>
 
                 <label>
-                  ContraseÃ±a
+                  Contraseña
+
                   <input
                     type="password"
                     value={form.password}
@@ -1286,12 +1323,13 @@ function App() {
                         password: e.target.value,
                       })
                     }
-                    placeholder="MÃ­nimo 6 caracteres"
+                    placeholder="Mínimo 6 caracteres"
                   />
                 </label>
 
                 <label>
-                  ProfesiÃ³n
+                  Profesión
+
                   <input
                     value={form.profession}
                     onChange={(e) =>
@@ -1300,12 +1338,13 @@ function App() {
                         profession: e.target.value,
                       })
                     }
-                    placeholder="Ej. DiseÃ±ador grÃ¡fico"
+                    placeholder="Ej. Diseñador gráfico"
                   />
                 </label>
 
                 <label>
-                  BiografÃ­a
+                  Biografía
+
                   <textarea
                     value={form.bio}
                     onChange={(e) =>
@@ -1314,7 +1353,7 @@ function App() {
                         bio: e.target.value,
                       })
                     }
-                    placeholder="CuÃ©ntanos sobre ti..."
+                    placeholder="Cuéntanos sobre ti..."
                   />
                 </label>
 
@@ -1361,25 +1400,25 @@ function App() {
 
           <div className="stats">
             <div className="stat">
-              <span>ðŸ“‹</span>
+              <span>📋</span>
               <strong>{requests.length}</strong>
               <small>Solicitudes</small>
             </div>
 
             <div className="stat">
-              <span>â³</span>
+              <span>⏳</span>
               <strong>{pending}</strong>
               <small>Pendientes</small>
             </div>
 
             <div className="stat">
-              <span>âœ“</span>
+              <span>✓</span>
               <strong>{accepted}</strong>
               <small>Aceptadas</small>
             </div>
 
             <div className="stat">
-              <span>ðŸ› ï¸</span>
+              <span>🛠️</span>
               <strong>{published}</strong>
               <small>Servicios publicados</small>
             </div>
@@ -1391,7 +1430,7 @@ function App() {
                 PERFIL
               </span>
 
-              <h2>Tu informaciÃ³n</h2>
+              <h2>Tu información</h2>
 
               <form
                 onSubmit={saveProfile}
@@ -1399,6 +1438,7 @@ function App() {
               >
                 <label>
                   Nombre
+
                   <input
                     value={profileForm.name}
                     onChange={(e) =>
@@ -1411,7 +1451,8 @@ function App() {
                 </label>
 
                 <label>
-                  ProfesiÃ³n
+                  Profesión
+
                   <input
                     value={profileForm.profession}
                     onChange={(e) =>
@@ -1424,7 +1465,8 @@ function App() {
                 </label>
 
                 <label>
-                  BiografÃ­a
+                  Biografía
+
                   <textarea
                     value={profileForm.bio}
                     onChange={(e) =>
@@ -1457,22 +1499,28 @@ function App() {
 
                 <h3>{loggedUser.name}</h3>
 
-                <p>{loggedUser.profession}</p>
+                <p>
+                  {loggedUser.profession}
+                </p>
 
-                <span>âœ“ Cuenta activa</span>
+                <span>
+                  ✓ Cuenta activa
+                </span>
               </div>
 
               <div className="quick">
-                <h3>Acciones rÃ¡pidas</h3>
+                <h3>Acciones rápidas</h3>
 
                 <button
-                  onClick={() => setPage("offer")}
+                  onClick={() =>
+                    setPage("offer")
+                  }
                 >
-                  âž• Publicar servicio
+                  ➕ Publicar servicio
                 </button>
 
                 <button onClick={openRequests}>
-                  ðŸ“‹ Ver solicitudes
+                  📋 Ver solicitudes
                 </button>
 
                 <button
@@ -1480,14 +1528,14 @@ function App() {
                     setPage("messages")
                   }
                 >
-                  ðŸ’¬ Abrir mensajes
+                  💬 Abrir mensajes
                 </button>
 
                 <button
                   className="logout"
                   onClick={logout}
                 >
-                  ðŸšª Cerrar sesiÃ³n
+                  🚪 Cerrar sesión
                 </button>
               </div>
             </aside>
@@ -1507,7 +1555,7 @@ function App() {
             className="back"
             onClick={() => setPage("home")}
           >
-            â† Volver a servicios
+            ← Volver a servicios
           </button>
 
           <div className="detailGrid">
@@ -1531,6 +1579,7 @@ function App() {
                   <strong>
                     {selectedService.name}
                   </strong>
+
                   <span>
                     {selectedService.profession}
                   </span>
@@ -1548,13 +1597,15 @@ function App() {
               <div className="infoGrid">
                 <div>
                   <small>Precio inicial</small>
+
                   <strong>
                     ${selectedService.price}
                   </strong>
                 </div>
 
                 <div>
-                  <small>CategorÃ­a</small>
+                  <small>Categoría</small>
+
                   <strong>
                     {selectedService.category}
                   </strong>
@@ -1562,6 +1613,7 @@ function App() {
 
                 <div>
                   <small>Modalidad</small>
+
                   <strong>Online</strong>
                 </div>
               </div>
@@ -1583,11 +1635,12 @@ function App() {
               {selectedService.demo ? (
                 <div className="notice">
                   <strong>
-                    Servicio de demostraciÃ³n
+                    Servicio de demostración
                   </strong>
+
                   <p>
                     Los servicios publicados por
-                    usuarios sÃ­ pueden recibir
+                    usuarios sí pueden recibir
                     solicitudes.
                   </p>
                 </div>
@@ -1595,6 +1648,7 @@ function App() {
                 <>
                   <label>
                     Mensaje para el profesional
+
                     <textarea
                       value={requestMessage}
                       onChange={(e) =>
@@ -1602,7 +1656,7 @@ function App() {
                           e.target.value
                         )
                       }
-                      placeholder="CuÃ©ntale quÃ© necesitas..."
+                      placeholder="Cuéntale qué necesitas..."
                     />
                   </label>
 
@@ -1629,7 +1683,7 @@ function App() {
                       })
                     }
                   >
-                    ðŸ’¬ Contactar
+                    💬 Contactar
                   </button>
                 </>
               )}
@@ -1648,17 +1702,18 @@ function App() {
             className="back"
             onClick={openAccount}
           >
-            â† Volver a mi cuenta
+            ← Volver a mi cuenta
           </button>
 
           <span className="eyebrow">
-            GESTIÃ“N
+            GESTIÓN
           </span>
 
           <h1>Solicitudes</h1>
 
           <p className="muted">
-            Gestiona tus oportunidades y contrataciones.
+            Gestiona tus oportunidades y
+            contrataciones.
           </p>
 
           {loadingRequests ? (
@@ -1668,13 +1723,13 @@ function App() {
           ) : (
             <div className="requestColumns">
               <RequestColumn
-                title="ðŸ“¥ Solicitudes recibidas"
+                title="📥 Solicitudes recibidas"
                 items={received}
                 received
               />
 
               <RequestColumn
-                title="ðŸ“¤ Mis solicitudes"
+                title="📤 Mis solicitudes"
                 items={sent}
               />
             </div>
@@ -1698,9 +1753,10 @@ function App() {
             <strong>
               No hay solicitudes
             </strong>
+
             <p>
               {received
-                ? "Las solicitudes de clientes aparecerÃ¡n aquÃ­."
+                ? "Las solicitudes de clientes aparecerán aquí."
                 : "Explora servicios para encontrar profesionales."}
             </p>
           </div>
@@ -1743,7 +1799,7 @@ function App() {
               </p>
 
               <div className="messageQuote">
-                â€œ{request.message}â€
+                “{request.message}”
               </div>
 
               <div className="requestActions">
@@ -1763,7 +1819,7 @@ function App() {
                           )
                         }
                       >
-                        âœ“ Aceptar
+                        ✓ Aceptar
                       </button>
 
                       <button
@@ -1779,7 +1835,7 @@ function App() {
                           )
                         }
                       >
-                        âœ• Rechazar
+                        ✕ Rechazar
                       </button>
                     </>
                   )}
@@ -1804,7 +1860,7 @@ function App() {
                     })
                   }
                 >
-                  ðŸ’¬ Mensajear
+                  💬 Mensajear
                 </button>
               </div>
             </div>
@@ -1842,20 +1898,20 @@ function App() {
             className="back"
             onClick={openRequests}
           >
-            â† Volver a solicitudes
+            ← Volver a solicitudes
           </button>
 
           <div className="messagesLayout">
             <aside className="contacts">
               <span className="eyebrow">
-                COMUNICACIÃ“N
+                COMUNICACIÓN
               </span>
 
               <h2>Mensajes</h2>
 
               {contacts.length === 0 ? (
                 <div className="empty small">
-                  AÃºn no tienes conversaciones.
+                  Aún no tienes conversaciones.
                 </div>
               ) : (
                 contacts.map((contact) => (
@@ -1889,6 +1945,7 @@ function App() {
                       <strong>
                         {contact.name}
                       </strong>
+
                       <span>
                         {contact.serviceTitle}
                       </span>
@@ -1901,10 +1958,12 @@ function App() {
             <main className="chat">
               {!selectedContact ? (
                 <div className="chatEmpty">
-                  <span>ðŸ’¬</span>
+                  <span>💬</span>
+
                   <h2>
-                    Selecciona una conversaciÃ³n
+                    Selecciona una conversación
                   </h2>
+
                   <p>
                     Elige un contacto para comenzar.
                   </p>
@@ -1922,6 +1981,7 @@ function App() {
                       <strong>
                         {selectedContact.name}
                       </strong>
+
                       <span>
                         {selectedContact.profession}
                       </span>
@@ -1935,10 +1995,12 @@ function App() {
                       </div>
                     ) : messages.length === 0 ? (
                       <div className="chatEmpty">
-                        <span>ðŸ‘‹</span>
+                        <span>👋</span>
+
                         <strong>
-                          Inicia la conversaciÃ³n
+                          Inicia la conversación
                         </strong>
+
                         <p>
                           Escribe un mensaje para comenzar.
                         </p>
@@ -1968,6 +2030,7 @@ function App() {
                               <p>
                                 {message.message}
                               </p>
+
                               <small>
                                 {dateText(
                                   message.created_at
@@ -2001,7 +2064,7 @@ function App() {
                     >
                       {sendingMessage
                         ? "..."
-                        : "Enviar ðŸ’¬"}
+                        : "Enviar 💬"}
                     </button>
                   </form>
                 </>
@@ -2021,7 +2084,7 @@ function App() {
             className="back"
             onClick={openAccount}
           >
-            â† Volver a mi cuenta
+            ← Volver a mi cuenta
           </button>
 
           <span className="eyebrow">
@@ -2050,6 +2113,7 @@ function App() {
                 <strong>
                   {loggedUser?.name}
                 </strong>
+
                 <span>
                   {loggedUser?.profession}
                 </span>
@@ -2057,7 +2121,8 @@ function App() {
             </div>
 
             <label>
-              TÃ­tulo del servicio
+              Título del servicio
+
               <input
                 value={offer.serviceTitle}
                 onChange={(e) =>
@@ -2067,12 +2132,13 @@ function App() {
                       e.target.value,
                   })
                 }
-                placeholder="Ej. DiseÃ±o de logotipo profesional"
+                placeholder="Ej. Diseño de logotipo profesional"
               />
             </label>
 
             <label>
-              CategorÃ­a
+              Categoría
+
               <select
                 value={offer.category}
                 onChange={(e) =>
@@ -2094,7 +2160,8 @@ function App() {
             </label>
 
             <label>
-              DescripciÃ³n
+              Descripción
+
               <textarea
                 value={offer.description}
                 onChange={(e) =>
@@ -2104,12 +2171,13 @@ function App() {
                       e.target.value,
                   })
                 }
-                placeholder="Describe quÃ© ofreces..."
+                placeholder="Describe qué ofreces..."
               />
             </label>
 
             <label>
               Precio inicial
+
               <input
                 type="number"
                 min="0"
@@ -2338,6 +2406,8 @@ function App() {
         }
 
         .heroCardTitle {
+          font-size: 16px;
+          line-height: 1.35;
           font-weight: 800;
           margin-bottom: 18px;
         }
@@ -2347,6 +2417,7 @@ function App() {
           border-radius: 12px;
           padding: 15px;
           color: #8591a0;
+          font-size: 14px;
         }
 
         .tags {
@@ -2360,7 +2431,7 @@ function App() {
           background: #f0f4f8;
           padding: 7px 9px;
           border-radius: 999px;
-          font-size: 12px;
+          font-size: 11px;
         }
 
         .miniStats {
@@ -2448,17 +2519,18 @@ function App() {
           border: 1px solid #dfe6ed;
           background: white;
           border-radius: 14px;
-          padding: 17px 10px;
+          padding: 14px 8px;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 7px;
           font-weight: 700;
+          font-size: 13px;
           color: #405269;
         }
 
         .category span {
-          font-size: 24px;
+          font-size: 22px;
         }
 
         .category.active {
@@ -2485,6 +2557,7 @@ function App() {
           display: flex;
           align-items: center;
           gap: 8px;
+          font-size: 14px;
         }
 
         .searchBox input {
@@ -2540,6 +2613,7 @@ function App() {
           padding: 5px 8px;
           border-radius: 999px;
           color: #617287;
+          font-size: 10px;
         }
 
         .avatar {
@@ -2555,10 +2629,19 @@ function App() {
         }
 
         .serviceCard h3 {
-          margin: 20px 0 8px;
+          margin: 17px 0 8px;
+          font-size: 18px;
+          line-height: 1.3;
+          letter-spacing: -0.2px;
         }
 
-        .serviceCard p,
+        .serviceCard p {
+          color: #6c7c90;
+          font-size: 14px;
+          line-height: 1.55;
+          margin: 0;
+        }
+
         .panel p {
           color: #6c7c90;
           line-height: 1.6;
@@ -2591,6 +2674,7 @@ function App() {
           border-radius: 9px;
           padding: 9px 12px;
           font-weight: 800;
+          font-size: 12px;
         }
 
         .cta {
@@ -2669,7 +2753,8 @@ function App() {
         .tab.active {
           background: white;
           color: #17263a;
-          box-shadow: 0 2px 8px rgba(0,0,0,.06);
+          box-shadow:
+            0 2px 8px rgba(0,0,0,.06);
         }
 
         .form {
@@ -3141,6 +3226,14 @@ function App() {
             padding: 20px;
           }
 
+          .heroCardTitle {
+            font-size: 15px;
+          }
+
+          .heroSearch {
+            font-size: 13px;
+          }
+
           .container,
           .dashboard,
           .detail,
@@ -3156,6 +3249,15 @@ function App() {
 
           .categoryGrid {
             grid-template-columns: repeat(2,1fr);
+          }
+
+          .category {
+            font-size: 12px;
+            padding: 14px 8px;
+          }
+
+          .category span {
+            font-size: 21px;
           }
 
           .sectionTop,
@@ -3175,6 +3277,16 @@ function App() {
 
           .serviceCard {
             width: 100%;
+          }
+
+          .serviceCard h3 {
+            font-size: 17px;
+            line-height: 1.3;
+          }
+
+          .serviceCard p {
+            font-size: 13px;
+            line-height: 1.5;
           }
 
           .stats {
