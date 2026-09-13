@@ -15,7 +15,7 @@ const categories = [
   ["🔧", "Otros"],
 ];
 
-const initialServices = [
+const demoServices = [
   {
     id: 1,
     name: "Carlos Rodríguez",
@@ -54,27 +54,21 @@ const initialServices = [
   },
 ];
 
-function mapSupabaseService(service, profile = null) {
+function mapService(row, profile) {
   return {
-    id: service.id,
-    name: profile?.name || service.name || "Profesional",
-    profession:
-      profile?.profession || service.profession || "Profesional",
-    service:
-      service.service_title ||
-      service.service ||
-      "Servicio profesional",
-    category: service.category || "Otros",
-    description:
-      service.description ||
-      "Servicio profesional ofrecido en RobLoren.",
-    price: Number(service.price) || 0,
-    userId: service.user_id || null,
+    id: row.id,
+    name: profile?.name || row.name || "Profesional",
+    profession: profile?.profession || row.profession || "Profesional",
+    service: row.service_title || "Servicio profesional",
+    category: row.category || "Otros",
+    description: row.description || "",
+    price: Number(row.price) || 0,
+    userId: row.user_id || null,
     demo: false,
   };
 }
 
-function buildLoggedUser(user, profile = null) {
+function makeUser(user, profile) {
   return {
     id: user.id,
     email: user.email || "",
@@ -87,20 +81,19 @@ function buildLoggedUser(user, profile = null) {
       profile?.profession ||
       user.user_metadata?.profession ||
       "Profesional",
-    bio: profile?.bio || "",
+    bio: profile?.bio || user.user_metadata?.bio || "",
   };
 }
 
-function statusLabel(status) {
+function statusText(status) {
   if (status === "accepted") return "Aceptada";
   if (status === "rejected") return "Rechazada";
   return "Pendiente";
 }
 
-function formatMessageDate(date) {
-  if (!date) return "";
-
-  return new Date(date).toLocaleString("es-ES", {
+function dateText(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleString("es-ES", {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
@@ -110,31 +103,30 @@ function formatMessageDate(date) {
 
 function App() {
   const [page, setPage] = useState("home");
+  const [services, setServices] = useState(demoServices);
   const [selectedService, setSelectedService] = useState(null);
 
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Todas");
+  const [category, setCategory] = useState("Todas");
 
-  const [services, setServices] = useState(initialServices);
-
-  const [accountMode, setAccountMode] = useState("login");
   const [loggedUser, setLoggedUser] = useState(null);
-
+  const [accountMode, setAccountMode] = useState("login");
   const [authLoading, setAuthLoading] = useState(true);
-  const [servicesLoading, setServicesLoading] = useState(true);
-
-  const [requestMessage, setRequestMessage] = useState("");
-  const [sendingRequest, setSendingRequest] = useState(false);
 
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
-  const [updatingRequestId, setUpdatingRequestId] = useState(null);
+  const [updatingRequest, setUpdatingRequest] = useState(null);
+  const [requestMessage, setRequestMessage] = useState("");
+  const [sendingRequest, setSendingRequest] = useState(false);
 
   const [selectedContact, setSelectedContact] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
+
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -150,9 +142,16 @@ function App() {
     bio: "",
   });
 
-  const [savingProfile, setSavingProfile] = useState(false);
+  const [offer, setOffer] = useState({
+    serviceTitle: "",
+    category: "Tecnología",
+    description: "",
+    price: "",
+  });
 
-  async function ensureUserProfile(user) {
+  const [publishing, setPublishing] = useState(false);
+
+  async function ensureProfile(user) {
     if (!user) return null;
 
     const { data, error } = await supabase
@@ -162,7 +161,7 @@ function App() {
       .maybeSingle();
 
     if (error) {
-      console.error("Error buscando perfil:", error);
+      console.error(error);
       return null;
     }
 
@@ -179,38 +178,35 @@ function App() {
       bio: user.user_metadata?.bio || "",
     };
 
-    const {
-      data: createdProfile,
-      error: createError,
-    } = await supabase
-      .from("profiles")
-      .insert(profile)
-      .select()
-      .single();
+    const { data: created, error: createError } =
+      await supabase
+        .from("profiles")
+        .insert(profile)
+        .select()
+        .single();
 
     if (createError) {
-      console.error("Error creando perfil:", createError);
+      console.error(createError);
       return null;
     }
 
-    return createdProfile;
+    return created;
   }
 
-  async function refreshLoggedUser(user) {
+  async function refreshUser(user) {
     if (!user) {
       setLoggedUser(null);
       return;
     }
 
-    const profile = await ensureUserProfile(user);
-    const nextUser = buildLoggedUser(user, profile);
+    const profile = await ensureProfile(user);
+    const next = makeUser(user, profile);
 
-    setLoggedUser(nextUser);
-
+    setLoggedUser(next);
     setProfileForm({
-      name: nextUser.name || "",
-      profession: nextUser.profession || "",
-      bio: nextUser.bio || "",
+      name: next.name,
+      profession: next.profession,
+      bio: next.bio,
     });
   }
 
@@ -225,54 +221,36 @@ function App() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error cargando servicios:", error);
-      setServices(initialServices);
+      console.error(error);
+      setServices(demoServices);
       setServicesLoading(false);
       return;
     }
 
     const rows = data || [];
 
-    const userIds = [
-      ...new Set(
-        rows.map((service) => service.user_id).filter(Boolean)
-      ),
+    const ids = [
+      ...new Set(rows.map((x) => x.user_id).filter(Boolean)),
     ];
 
-    let profilesById = {};
+    let profiles = {};
 
-    if (userIds.length > 0) {
-      const {
-        data: profiles,
-        error: profilesError,
-      } = await supabase
+    if (ids.length) {
+      const { data: profileRows } = await supabase
         .from("profiles")
         .select("id,name,profession,bio")
-        .in("id", userIds);
+        .in("id", ids);
 
-      if (profilesError) {
-        console.error(
-          "Error cargando perfiles:",
-          profilesError
-        );
-      } else {
-        profilesById = Object.fromEntries(
-          (profiles || []).map((profile) => [
-            profile.id,
-            profile,
-          ])
-        );
-      }
+      profiles = Object.fromEntries(
+        (profileRows || []).map((p) => [p.id, p])
+      );
     }
 
-    const realServices = rows.map((service) =>
-      mapSupabaseService(
-        service,
-        profilesById[service.user_id]
-      )
+    const real = rows.map((row) =>
+      mapService(row, profiles[row.user_id])
     );
 
-    setServices([...realServices, ...initialServices]);
+    setServices([...real, ...demoServices]);
     setServicesLoading(false);
   }
 
@@ -284,21 +262,16 @@ function App() {
 
     setLoadingRequests(true);
 
-    const userId = loggedUser.id;
-
     const { data, error } = await supabase
       .from("service_requests")
       .select("*")
       .or(
-        `client_id.eq.${userId},provider_id.eq.${userId}`
+        `client_id.eq.${loggedUser.id},provider_id.eq.${loggedUser.id}`
       )
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(
-        "Error cargando solicitudes:",
-        error
-      );
+      console.error(error);
       setRequests([]);
       setLoadingRequests(false);
       return;
@@ -309,107 +282,68 @@ function App() {
     const profileIds = [
       ...new Set(
         rows
-          .flatMap((request) => [
-            request.client_id,
-            request.provider_id,
-          ])
+          .flatMap((r) => [r.client_id, r.provider_id])
           .filter(Boolean)
       ),
     ];
 
     const serviceIds = [
-      ...new Set(
-        rows
-          .map((request) => request.service_id)
-          .filter(Boolean)
-      ),
+      ...new Set(rows.map((r) => r.service_id).filter(Boolean)),
     ];
 
-    let profilesById = {};
-    let servicesById = {};
+    let profiles = {};
+    let serviceRows = {};
 
-    if (profileIds.length > 0) {
-      const {
-        data: profiles,
-        error: profilesError,
-      } = await supabase
+    if (profileIds.length) {
+      const { data: ps } = await supabase
         .from("profiles")
         .select("id,name,profession,bio")
         .in("id", profileIds);
 
-      if (profilesError) {
-        console.error(
-          "Error cargando perfiles de solicitudes:",
-          profilesError
-        );
-      } else {
-        profilesById = Object.fromEntries(
-          (profiles || []).map((profile) => [
-            profile.id,
-            profile,
-          ])
-        );
-      }
+      profiles = Object.fromEntries(
+        (ps || []).map((p) => [p.id, p])
+      );
     }
 
-    if (serviceIds.length > 0) {
-      const {
-        data: serviceRows,
-        error: servicesError,
-      } = await supabase
+    if (serviceIds.length) {
+      const { data: ss } = await supabase
         .from("services")
         .select(
           "id,service_title,category,description,price,user_id"
         )
         .in("id", serviceIds);
 
-      if (servicesError) {
-        console.error(
-          "Error cargando servicios de solicitudes:",
-          servicesError
-        );
-      } else {
-        servicesById = Object.fromEntries(
-          (serviceRows || []).map((service) => [
-            service.id,
-            service,
-          ])
-        );
-      }
+      serviceRows = Object.fromEntries(
+        (ss || []).map((s) => [s.id, s])
+      );
     }
 
-    const enrichedRequests = rows.map((request) => {
-      const service = servicesById[request.service_id];
-      const clientProfile =
-        profilesById[request.client_id];
-      const providerProfile =
-        profilesById[request.provider_id];
+    setRequests(
+      rows.map((r) => {
+        const service = serviceRows[r.service_id];
+        const client = profiles[r.client_id];
+        const provider = profiles[r.provider_id];
 
-      return {
-        ...request,
-        clientName:
-          clientProfile?.name ||
-          (request.client_id === userId
-            ? loggedUser.name
-            : "Cliente"),
-        providerName:
-          providerProfile?.name ||
-          (request.provider_id === userId
-            ? loggedUser.name
-            : "Profesional"),
-        serviceTitle:
-          service?.service_title ||
-          "Servicio profesional",
-        serviceCategory:
-          service?.category || "Otros",
-        serviceDescription:
-          service?.description || "",
-        servicePrice:
-          Number(service?.price) || 0,
-      };
-    });
+        return {
+          ...r,
+          clientName:
+            client?.name ||
+            (r.client_id === loggedUser.id
+              ? loggedUser.name
+              : "Cliente"),
+          providerName:
+            provider?.name ||
+            (r.provider_id === loggedUser.id
+              ? loggedUser.name
+              : "Profesional"),
+          serviceTitle:
+            service?.service_title || "Servicio profesional",
+          serviceCategory: service?.category || "Otros",
+          servicePrice: Number(service?.price) || 0,
+        };
+      })
+    );
 
-    setRequests(enrichedRequests);
     setLoadingRequests(false);
   }
 
@@ -421,61 +355,33 @@ function App() {
 
     setLoadingMessages(true);
 
-    const userId = loggedUser.id;
-
     const { data, error } = await supabase
       .from("messages")
       .select(
         "id,created_at,sender_id,receiver_id,request_id,message"
       )
       .or(
-        `and(sender_id.eq.${userId},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${userId})`
+        `and(sender_id.eq.${loggedUser.id},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${loggedUser.id})`
       )
       .order("created_at", { ascending: true });
 
     if (error) {
-      console.error(
-        "Error cargando mensajes:",
-        error
-      );
+      console.error(error);
       setMessages([]);
-      setLoadingMessages(false);
-      return;
+    } else {
+      setMessages(data || []);
     }
 
-    setMessages(data || []);
     setLoadingMessages(false);
   }
 
   async function sendMessage(event) {
-    if (event) {
-      event.preventDefault();
-    }
+    event.preventDefault();
 
-    if (!loggedUser?.id) {
-      alert(
-        "Debes iniciar sesión para enviar mensajes."
-      );
-      setPage("account");
-      setAccountMode("login");
-      return;
-    }
-
-    if (!selectedContact?.id) {
-      alert("No hay un contacto seleccionado.");
-      return;
-    }
+    if (!loggedUser || !selectedContact) return;
 
     const text = messageText.trim();
-
     if (!text) return;
-
-    if (selectedContact.id === loggedUser.id) {
-      alert(
-        "No puedes enviarte mensajes a ti mismo."
-      );
-      return;
-    }
 
     setSendingMessage(true);
 
@@ -484,18 +390,13 @@ function App() {
       .insert({
         sender_id: loggedUser.id,
         receiver_id: selectedContact.id,
-        request_id:
-          selectedContact.requestId || null,
+        request_id: selectedContact.requestId || null,
         message: text,
       })
       .select()
       .single();
 
     if (error) {
-      console.error(
-        "Error enviando mensaje:",
-        error
-      );
       alert(error.message);
       setSendingMessage(false);
       return;
@@ -508,94 +409,44 @@ function App() {
 
   async function openMessaging(contact) {
     if (!loggedUser) {
-      alert(
-        "Debes iniciar sesión para utilizar la mensajería."
-      );
       setAccountMode("login");
       setPage("account");
       return;
     }
 
     if (!contact?.userId) {
-      alert(
-        "Este profesional todavía no tiene mensajería disponible."
-      );
+      alert("Este profesional todavía no tiene mensajería disponible.");
       return;
     }
 
     if (contact.userId === loggedUser.id) {
-      alert(
-        "No puedes iniciar una conversación contigo mismo."
-      );
+      alert("No puedes iniciar una conversación contigo mismo.");
       return;
     }
 
     const contactData = {
       id: contact.userId,
       name: contact.name || "Profesional",
-      profession:
-        contact.profession || "Profesional",
+      profession: contact.profession || "Profesional",
       requestId: contact.requestId || null,
     };
 
     setSelectedContact(contactData);
-    setMessageText("");
     setMessages([]);
+    setMessageText("");
     setPage("messages");
 
     await loadMessages(contactData.id);
   }
 
-  function openMessagingFromRequest(request) {
-    if (!loggedUser) return;
-
-    const isProvider =
-      request.provider_id === loggedUser.id;
-
-    const contactId = isProvider
-      ? request.client_id
-      : request.provider_id;
-
-    const contactName = isProvider
-      ? request.clientName
-      : request.providerName;
-
-    const contactProfession = isProvider
-      ? "Cliente"
-      : "Profesional";
-
-    openMessaging({
-      userId: contactId,
-      name: contactName,
-      profession: contactProfession,
-      requestId: request.id,
-    });
-  }
-
-  async function openRequests() {
+  async function sendRequest() {
     if (!loggedUser) {
-      setPage("account");
       setAccountMode("login");
+      setPage("account");
       return;
     }
 
-    await loadRequests();
-    setPage("requests");
-  }
-
-  async function sendServiceRequest() {
-    if (!loggedUser) {
-      alert(
-        "Debes iniciar sesión para solicitar un servicio."
-      );
-      setPage("account");
-      setAccountMode("login");
-      return;
-    }
-
-    if (!selectedService) return;
-
-    if (!selectedService.userId) {
+    if (!selectedService?.userId) {
       alert(
         "Este servicio de demostración todavía no puede recibir solicitudes."
       );
@@ -603,9 +454,7 @@ function App() {
     }
 
     if (selectedService.userId === loggedUser.id) {
-      alert(
-        "No puedes solicitar tu propio servicio."
-      );
+      alert("No puedes solicitar tu propio servicio.");
       return;
     }
 
@@ -624,10 +473,6 @@ function App() {
       });
 
     if (error) {
-      console.error(
-        "Error creando solicitud:",
-        error
-      );
       alert(error.message);
       setSendingRequest(false);
       return;
@@ -642,45 +487,32 @@ function App() {
     setPage("requests");
   }
 
-  async function updateRequestStatus(
-    requestId,
-    status
-  ) {
-    if (!loggedUser?.id) return;
+  async function changeRequestStatus(id, status) {
+    if (!loggedUser) return;
 
-    setUpdatingRequestId(requestId);
+    setUpdatingRequest(id);
 
     const { error } = await supabase
       .from("service_requests")
       .update({ status })
-      .eq("id", requestId)
+      .eq("id", id)
       .eq("provider_id", loggedUser.id);
 
     if (error) {
-      console.error(
-        "Error actualizando solicitud:",
-        error
-      );
       alert(error.message);
-      setUpdatingRequestId(null);
-      return;
+    } else {
+      await loadRequests();
     }
 
-    await loadRequests();
-    setUpdatingRequestId(null);
+    setUpdatingRequest(null);
   }
 
   async function saveProfile(event) {
     event.preventDefault();
 
-    if (!loggedUser?.id) return;
+    if (!loggedUser) return;
 
-    const name = profileForm.name.trim();
-    const profession =
-      profileForm.profession.trim();
-    const bio = profileForm.bio.trim();
-
-    if (!name) {
+    if (!profileForm.name.trim()) {
       alert("Escribe tu nombre.");
       return;
     }
@@ -690,40 +522,33 @@ function App() {
     const { data, error } = await supabase
       .from("profiles")
       .update({
-        name,
+        name: profileForm.name.trim(),
         profession:
-          profession || "Profesional",
-        bio,
+          profileForm.profession.trim() || "Profesional",
+        bio: profileForm.bio.trim(),
       })
       .eq("id", loggedUser.id)
       .select()
       .single();
 
     if (error) {
-      console.error(
-        "Error actualizando perfil:",
-        error
-      );
       alert(error.message);
       setSavingProfile(false);
       return;
     }
 
-    const updatedUser = {
+    const updated = {
       ...loggedUser,
-      name: data.name || name,
-      profession:
-        data.profession ||
-        profession ||
-        "Profesional",
-      bio: data.bio || bio,
+      name: data.name,
+      profession: data.profession,
+      bio: data.bio,
     };
 
-    setLoggedUser(updatedUser);
+    setLoggedUser(updated);
     setProfileForm({
-      name: updatedUser.name,
-      profession: updatedUser.profession,
-      bio: updatedUser.bio,
+      name: updated.name,
+      profession: updated.profession,
+      bio: updated.bio,
     });
 
     setSavingProfile(false);
@@ -735,48 +560,32 @@ function App() {
   async function register(event) {
     event.preventDefault();
 
-    const name = form.name.trim();
-    const email = form.email.trim();
-    const password = form.password;
-    const profession =
-      form.profession.trim();
-    const bio = form.bio.trim();
-
-    if (!name || !email || !password) {
-      alert(
-        "Completa nombre, correo y contraseña."
-      );
+    if (!form.name.trim() || !form.email.trim() || !form.password) {
+      alert("Completa nombre, correo y contraseña.");
       return;
     }
 
-    if (password.length < 6) {
-      alert(
-        "La contraseña debe tener al menos 6 caracteres."
-      );
+    if (form.password.length < 6) {
+      alert("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
 
     setAuthLoading(true);
 
-    const { data, error } =
-      await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            profession:
-              profession || "Profesional",
-            bio,
-          },
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email.trim(),
+      password: form.password,
+      options: {
+        data: {
+          name: form.name.trim(),
+          profession:
+            form.profession.trim() || "Profesional",
+          bio: form.bio.trim(),
         },
-      });
+      },
+    });
 
     if (error) {
-      console.error(
-        "Error registrando usuario:",
-        error
-      );
       alert(error.message);
       setAuthLoading(false);
       return;
@@ -787,8 +596,7 @@ function App() {
         "Cuenta creada. Revisa tu correo para confirmar tu cuenta."
       );
     } else if (data.user) {
-      await refreshLoggedUser(data.user);
-      alert("Cuenta creada correctamente.");
+      await refreshUser(data.user);
       setPage("account");
     }
 
@@ -806,13 +614,8 @@ function App() {
   async function login(event) {
     event.preventDefault();
 
-    const email = form.email.trim();
-    const password = form.password;
-
-    if (!email || !password) {
-      alert(
-        "Escribe tu correo y contraseña."
-      );
+    if (!form.email.trim() || !form.password) {
+      alert("Escribe tu correo y contraseña.");
       return;
     }
 
@@ -820,26 +623,22 @@ function App() {
 
     const { data, error } =
       await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: form.email.trim(),
+        password: form.password,
       });
 
     if (error) {
-      console.error(
-        "Error iniciando sesión:",
-        error
-      );
       alert(error.message);
       setAuthLoading(false);
       return;
     }
 
-    await refreshLoggedUser(data.user);
+    await refreshUser(data.user);
     setPage("account");
 
     setForm({
       name: "",
-      email,
+      email: form.email,
       password: "",
       profession: "",
       bio: "",
@@ -849,14 +648,9 @@ function App() {
   }
 
   async function logout() {
-    const { error } =
-      await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error(
-        "Error cerrando sesión:",
-        error
-      );
       alert(error.message);
       return;
     }
@@ -866,27 +660,60 @@ function App() {
     setMessages([]);
     setSelectedContact(null);
     setPage("home");
-    setAccountMode("login");
   }
 
-  function updateForm(field, value) {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  }
+  async function publishService(event) {
+    event.preventDefault();
 
-  function updateProfileForm(field, value) {
-    setProfileForm((current) => ({
-      ...current,
-      [field]: value,
-    }));
-  }
+    if (!loggedUser) {
+      setAccountMode("login");
+      setPage("account");
+      return;
+    }
 
-  function openService(service) {
-    setSelectedService(service);
-    setRequestMessage("");
-    setPage("service");
+    if (
+      !offer.serviceTitle.trim() ||
+      !offer.description.trim() ||
+      !offer.price
+    ) {
+      alert("Completa título, descripción y precio.");
+      return;
+    }
+
+    setPublishing(true);
+
+    const { error } = await supabase
+      .from("services")
+      .insert({
+        name: loggedUser.name,
+        profession: loggedUser.profession || "Profesional",
+        service_title: offer.serviceTitle.trim(),
+        category: offer.category,
+        description: offer.description.trim(),
+        price: Number(offer.price),
+        user_id: loggedUser.id,
+      });
+
+    if (error) {
+      alert(error.message);
+      setPublishing(false);
+      return;
+    }
+
+    setPublishing(false);
+
+    setOffer({
+      serviceTitle: "",
+      category: "Tecnología",
+      description: "",
+      price: "",
+    });
+
+    await loadServices();
+
+    alert("¡Servicio publicado correctamente!");
+
+    setPage("home");
   }
 
   function openAccount() {
@@ -895,15 +722,31 @@ function App() {
     if (loggedUser) {
       setProfileForm({
         name: loggedUser.name || "",
-        profession:
-          loggedUser.profession || "",
+        profession: loggedUser.profession || "",
         bio: loggedUser.bio || "",
       });
     }
   }
 
+  function openRequests() {
+    if (!loggedUser) {
+      setAccountMode("login");
+      setPage("account");
+      return;
+    }
+
+    loadRequests();
+    setPage("requests");
+  }
+
+  function openService(service) {
+    setSelectedService(service);
+    setRequestMessage("");
+    setPage("service");
+  }
+
   useEffect(() => {
-    async function loadAuth() {
+    async function startAuth() {
       setAuthLoading(true);
 
       const {
@@ -911,22 +754,20 @@ function App() {
       } = await supabase.auth.getSession();
 
       if (session?.user) {
-        await refreshLoggedUser(session.user);
-      } else {
-        setLoggedUser(null);
+        await refreshUser(session.user);
       }
 
       setAuthLoading(false);
     }
 
-    loadAuth();
+    startAuth();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (session?.user) {
-          await refreshLoggedUser(session.user);
+          await refreshUser(session.user);
         } else {
           setLoggedUser(null);
         }
@@ -941,26 +782,18 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (loggedUser?.id) {
-      loadRequests();
-    } else {
-      setRequests([]);
-    }
+    if (loggedUser?.id) loadRequests();
   }, [loggedUser?.id]);
 
   const filteredServices = useMemo(() => {
-    const text = search
-      .trim()
-      .toLowerCase();
+    const q = search.trim().toLowerCase();
 
     return services.filter((service) => {
-      const matchesCategory =
-        selectedCategory === "Todas" ||
-        service.category === selectedCategory;
+      const categoryMatch =
+        category === "Todas" || service.category === category;
 
-      if (!matchesCategory) return false;
-
-      if (!text) return true;
+      if (!categoryMatch) return false;
+      if (!q) return true;
 
       return [
         service.name,
@@ -971,79 +804,57 @@ function App() {
       ]
         .filter(Boolean)
         .some((value) =>
-          String(value)
-            .toLowerCase()
-            .includes(text)
+          String(value).toLowerCase().includes(q)
         );
     });
-  }, [
-    services,
-    search,
-    selectedCategory,
-  ]);
+  }, [services, search, category]);
 
-  const receivedRequests = useMemo(
-    () =>
-      requests.filter(
-        (request) =>
-          request.provider_id ===
-          loggedUser?.id
-      ),
-    [requests, loggedUser?.id]
+  const received = requests.filter(
+    (r) => r.provider_id === loggedUser?.id
   );
 
-  const sentRequests = useMemo(
-    () =>
-      requests.filter(
-        (request) =>
-          request.client_id ===
-          loggedUser?.id
-      ),
-    [requests, loggedUser?.id]
+  const sent = requests.filter(
+    (r) => r.client_id === loggedUser?.id
   );
 
-  const acceptedRequests = requests.filter(
-    (request) => request.status === "accepted"
+  const pending = requests.filter(
+    (r) => r.status === "pending"
   ).length;
 
-  const pendingRequests = requests.filter(
-    (request) => request.status === "pending"
+  const accepted = requests.filter(
+    (r) => r.status === "accepted"
   ).length;
 
-  const publishedServices = services.filter(
-    (service) =>
-      !service.demo &&
-      service.userId === loggedUser?.id
+  const published = services.filter(
+    (s) =>
+      !s.demo &&
+      s.userId === loggedUser?.id
   ).length;
 
   function Header() {
     return (
-      <header style={styles.header}>
-        <div
-          style={styles.headerInner}
-        >
+      <header className="header">
+        <div className="headerInner">
           <button
-            style={styles.logoButton}
+            className="logoButton"
             onClick={() => setPage("home")}
           >
-            <span style={styles.logoMark}>
-              R
-            </span>
-            <span style={styles.logoText}>
+            <span className="logoMark">R</span>
+            <span className="logoText">
               Rob<span>Loren</span>
             </span>
           </button>
 
-          <nav style={styles.nav}>
+          <nav className="nav">
             <button
-              style={styles.navButton}
+              className="navButton"
               onClick={() => setPage("home")}
             >
               Inicio
             </button>
 
             <button
-              style={styles.navButton}
+              className="navButton"
               onClick={() => {
                 setPage("home");
                 setTimeout(() => {
@@ -1052,7 +863,7 @@ function App() {
                     ?.scrollIntoView({
                       behavior: "smooth",
                     });
-                }, 50);
+                }, 100);
               }}
             >
               Servicios
@@ -1060,7 +871,7 @@ function App() {
 
             {loggedUser && (
               <button
-                style={styles.navButton}
+                className="navButton"
                 onClick={openRequests}
               >
                 Solicitudes
@@ -1068,16 +879,10 @@ function App() {
             )}
 
             <button
-              style={
-                loggedUser
-                  ? styles.navAccountButton
-                  : styles.navPrimaryButton
-              }
+              className="navAccount"
               onClick={openAccount}
             >
-              {loggedUser
-                ? "Mi cuenta"
-                : "Entrar"}
+              {loggedUser ? "Mi cuenta" : "Entrar"}
             </button>
           </nav>
         </div>
@@ -1088,42 +893,41 @@ function App() {
   function HomePage() {
     return (
       <>
-        <section style={styles.hero}>
-          <div style={styles.heroInner}>
-            <div style={styles.heroCopy}>
-              <div style={styles.badge}>
+        <section className="hero">
+          <div className="heroInner">
+            <div className="heroCopy">
+              <span className="badge">
                 ✦ Marketplace profesional
-              </div>
+              </span>
 
-              <h1 style={styles.heroTitle}>
+              <h1>
                 Conecta talento
                 <br />
                 <span>con oportunidades.</span>
               </h1>
 
-              <p style={styles.heroText}>
-                Encuentra profesionales,
-                publica tus servicios y conecta
-                con clientes dentro de una
-                plataforma creada para crecer.
+              <p>
+                Encuentra profesionales, publica tus servicios
+                y conecta con clientes dentro de una plataforma
+                creada para crecer.
               </p>
 
-              <div style={styles.heroActions}>
+              <div className="heroActions">
                 <button
-                  style={styles.primaryButton}
-                  onClick={() => {
+                  className="primary"
+                  onClick={() =>
                     document
                       .getElementById("services")
                       ?.scrollIntoView({
                         behavior: "smooth",
-                      });
-                  }}
+                      })
+                  }
                 >
                   Explorar servicios
                 </button>
 
                 <button
-                  style={styles.outlineButton}
+                  className="secondary"
                   onClick={() => {
                     if (!loggedUser) {
                       setAccountMode("register");
@@ -1138,28 +942,22 @@ function App() {
               </div>
             </div>
 
-            <div style={styles.heroCard}>
-              <div style={styles.heroCardTop}>
-                <span>
-                  🔎
-                </span>
-                <strong>
-                  Encuentra talento
-                </strong>
+            <div className="heroCard">
+              <div className="heroCardTitle">
+                🔎 Encuentra talento
               </div>
 
-              <div style={styles.heroSearch}>
-                <span>¿Qué servicio buscas?</span>
-                <span>⌕</span>
+              <div className="heroSearch">
+                ¿Qué servicio buscas?
               </div>
 
-              <div style={styles.heroTags}>
+              <div className="tags">
                 <span>💻 Tecnología</span>
                 <span>🎨 Diseño</span>
                 <span>📣 Marketing</span>
               </div>
 
-              <div style={styles.heroMiniStats}>
+              <div className="miniStats">
                 <div>
                   <strong>+100</strong>
                   <span>Servicios</span>
@@ -1177,835 +975,553 @@ function App() {
           </div>
         </section>
 
-        <section style={styles.categoriesSection}>
-          <div style={styles.sectionContainer}>
-            <div style={styles.sectionHeader}>
-              <div>
-                <span style={styles.eyebrow}>
-                  EXPLORA
-                </span>
-                <h2 style={styles.sectionTitle}>
-                  Encuentra el servicio que necesitas
-                </h2>
-              </div>
+        <section className="categories">
+          <div className="container">
+            <span className="eyebrow">EXPLORA</span>
 
-              <p style={styles.sectionSubtext}>
-                Profesionales listos para ayudarte.
-              </p>
-            </div>
+            <h2>
+              Encuentra el servicio que necesitas
+            </h2>
 
-            <div style={styles.categoryGrid}>
+            <p className="muted">
+              Profesionales listos para ayudarte.
+            </p>
+
+            <div className="categoryGrid">
               <button
-                style={
-                  selectedCategory === "Todas"
-                    ? styles.categoryCardActive
-                    : styles.categoryCard
+                className={
+                  category === "Todas"
+                    ? "category active"
+                    : "category"
                 }
-                onClick={() =>
-                  setSelectedCategory("Todas")
-                }
+                onClick={() => setCategory("Todas")}
               >
-                <span style={styles.categoryIcon}>
-                  ✨
-                </span>
-                <strong>Todas</strong>
+                <span>✨</span>
+                Todas
               </button>
 
-              {categories.map(
-                ([icon, name]) => (
-                  <button
-                    key={name}
-                    style={
-                      selectedCategory === name
-                        ? styles.categoryCardActive
-                        : styles.categoryCard
-                    }
-                    onClick={() =>
-                      setSelectedCategory(name)
-                    }
-                  >
-                    <span style={styles.categoryIcon}>
-                      {icon}
-                    </span>
-                    <strong>{name}</strong>
-                  </button>
-                )
-              )}
+              {categories.map(([icon, name]) => (
+                <button
+                  key={name}
+                  className={
+                    category === name
+                      ? "category active"
+                      : "category"
+                  }
+                  onClick={() => setCategory(name)}
+                >
+                  <span>{icon}</span>
+                  {name}
+                </button>
+              ))}
             </div>
           </div>
         </section>
 
         <section
           id="services"
-          style={styles.servicesSection}
+          className="services"
         >
-          <div style={styles.sectionContainer}>
-            <div style={styles.servicesToolbar}>
+          <div className="container">
+            <div className="sectionTop">
               <div>
-                <span style={styles.eyebrow}>
+                <span className="eyebrow">
                   SERVICIOS
                 </span>
-                <h2 style={styles.sectionTitle}>
-                  Profesionales disponibles
-                </h2>
+                <h2>Profesionales disponibles</h2>
               </div>
 
-              <div style={styles.searchBox}>
-                <span>🔎</span>
+              <div className="searchBox">
+                🔎
                 <input
                   value={search}
-                  onChange={(event) =>
-                    setSearch(event.target.value)
+                  onChange={(e) =>
+                    setSearch(e.target.value)
                   }
                   placeholder="Buscar servicios..."
-                  style={styles.searchInput}
                 />
               </div>
             </div>
 
             {servicesLoading ? (
-              <div style={styles.loadingBox}>
+              <div className="empty">
                 Cargando servicios...
               </div>
             ) : filteredServices.length === 0 ? (
-              <div style={styles.emptyBox}>
-                <div style={styles.emptyIcon}>
-                  🔎
-                </div>
-                <h3>No encontramos servicios</h3>
+              <div className="empty">
+                <strong>
+                  No encontramos servicios
+                </strong>
                 <p>
-                  Prueba con otra búsqueda o
-                  categoría.
+                  Prueba con otra búsqueda o categoría.
                 </p>
               </div>
             ) : (
-              <div style={styles.serviceGrid}>
-                {filteredServices.map(
-                  (service) => (
-                    <article
-                      key={`${service.demo ? "demo" : "real"}-${service.id}`}
-                      style={styles.serviceCard}
-                    >
-                      <div
-                        style={styles.serviceCardTop}
-                      >
-                        <div
-                          style={
-                            styles.serviceAvatar
-                          }
-                        >
-                          {service.name
-                            ?.charAt(0)
-                            ?.toUpperCase() ||
-                            "R"}
-                        </div>
+              <div className="serviceGrid">
+                {filteredServices.map((service) => (
+                  <article
+                    key={`${service.demo ? "demo" : "real"}-${service.id}`}
+                    className="serviceCard"
+                  >
+                    <div className="provider">
+                      <div className="avatar">
+                        {service.name
+                          ?.charAt(0)
+                          ?.toUpperCase() || "R"}
+                      </div>
 
-                        <div
-                          style={
-                            styles.serviceProvider
-                          }
-                        >
-                          <strong>
-                            {service.name}
-                          </strong>
-                          <span>
-                            {service.profession}
-                          </span>
-                        </div>
-
-                        <span
-                          style={
-                            styles.categoryPill
-                          }
-                        >
-                          {service.category}
+                      <div>
+                        <strong>{service.name}</strong>
+                        <span>
+                          {service.profession}
                         </span>
                       </div>
 
-                      <h3
-                        style={
-                          styles.serviceTitle
-                        }
-                      >
-                        {service.service}
-                      </h3>
+                      <small>
+                        {service.category}
+                      </small>
+                    </div>
 
-                      <p
-                        style={
-                          styles.serviceDescription
-                        }
-                      >
-                        {service.description}
-                      </p>
+                    <h3>{service.service}</h3>
 
-                      <div
-                        style={
-                          styles.serviceFooter
-                        }
-                      >
-                        <div>
-                          <span
-                            style={
-                              styles.priceLabel
-                            }
-                          >
-                            Desde
-                          </span>
-                          <strong
-                            style={
-                              styles.price
-                            }
-                          >
-                            ${service.price}
-                          </strong>
-                        </div>
+                    <p>
+                      {service.description}
+                    </p>
 
-                        <button
-                          style={
-                            styles.viewButton
-                          }
-                          onClick={() =>
-                            openService(
-                              service
-                            )
-                          }
-                        >
-                          Ver servicio →
-                        </button>
+                    <div className="serviceBottom">
+                      <div>
+                        <small>Desde</small>
+                        <strong>
+                          ${service.price}
+                        </strong>
                       </div>
-                    </article>
-                  )
-                )}
+
+                      <button
+                        className="view"
+                        onClick={() =>
+                          openService(service)
+                        }
+                      >
+                        Ver servicio →
+                      </button>
+                    </div>
+                  </article>
+                ))}
               </div>
             )}
           </div>
         </section>
 
-        <section style={styles.ctaSection}>
-          <div style={styles.ctaInner}>
-            <div>
-              <span style={styles.eyebrow}>
-                ROBLOREN
-              </span>
-              <h2 style={styles.ctaTitle}>
-                Tu talento merece
-                <br />
-                nuevas oportunidades.
-              </h2>
-              <p style={styles.ctaText}>
-                Crea tu perfil y comienza a
-                ofrecer tus servicios.
-              </p>
-            </div>
+        <section className="cta">
+          <div>
+            <span className="eyebrow">
+              ROBLOREN
+            </span>
 
-            <button
-              style={styles.ctaButton}
-              onClick={() => {
-                if (!loggedUser) {
-                  setAccountMode("register");
-                  setPage("account");
-                } else {
-                  setPage("offer");
-                }
-              }}
-            >
-              Comenzar ahora →
-            </button>
+            <h2>
+              Tu talento merece nuevas oportunidades.
+            </h2>
+
+            <p>
+              Crea tu perfil y comienza a ofrecer tus
+              servicios.
+            </p>
           </div>
+
+          <button
+            className="ctaButton"
+            onClick={() => {
+              if (!loggedUser) {
+                setAccountMode("register");
+                setPage("account");
+              } else {
+                setPage("offer");
+              }
+            }}
+          >
+            Comenzar ahora →
+          </button>
         </section>
       </>
     );
   }
 
   function AccountPage() {
-    if (loggedUser) {
+    if (!loggedUser) {
       return (
-        <section style={styles.pageSection}>
-          <div style={styles.dashboardContainer}>
-            <div style={styles.dashboardHeader}>
-              <div>
-                <span style={styles.eyebrow}>
-                  CUENTA PROFESIONAL
-                </span>
-                <h1 style={styles.dashboardTitle}>
-                  Hola, {loggedUser.name}
-                </h1>
-                <p style={styles.dashboardSubtitle}>
-                  Gestiona tu perfil, servicios y
-                  oportunidades desde un solo lugar.
-                </p>
-              </div>
-
-              <div style={styles.accountHeaderAvatar}>
-                {loggedUser.name
-                  ?.charAt(0)
-                  ?.toUpperCase() || "R"}
-              </div>
+        <section className="page">
+          <div className="authCard">
+            <div className="accountLogo">
+              R
             </div>
 
-            <div style={styles.statsGrid}>
-              <div style={styles.statCard}>
-                <span style={styles.statIcon}>
-                  📋
-                </span>
-                <div>
-                  <strong>
-                    {requests.length}
-                  </strong>
-                  <span>
-                    Solicitudes
-                  </span>
-                </div>
-              </div>
+            <span className="eyebrow">
+              ROBLOREN
+            </span>
 
-              <div style={styles.statCard}>
-                <span style={styles.statIcon}>
-                  ⏳
-                </span>
-                <div>
-                  <strong>
-                    {pendingRequests}
-                  </strong>
-                  <span>
-                    Pendientes
-                  </span>
-                </div>
-              </div>
+            <h1>
+              {accountMode === "login"
+                ? "Bienvenido a RobLoren"
+                : "Crea tu cuenta"}
+            </h1>
 
-              <div style={styles.statCard}>
-                <span style={styles.statIcon}>
-                  ✓
-                </span>
-                <div>
-                  <strong>
-                    {acceptedRequests}
-                  </strong>
-                  <span>
-                    Aceptadas
-                  </span>
-                </div>
-              </div>
+            <p className="muted">
+              Conecta talento con oportunidades.
+            </p>
 
-              <div style={styles.statCard}>
-                <span style={styles.statIcon}>
-                  🛠️
-                </span>
-                <div>
-                  <strong>
-                    {publishedServices}
-                  </strong>
-                  <span>
-                    Servicios publicados
-                  </span>
-                </div>
-              </div>
+            <div className="tabs">
+              <button
+                className={
+                  accountMode === "login"
+                    ? "tab active"
+                    : "tab"
+                }
+                onClick={() =>
+                  setAccountMode("login")
+                }
+              >
+                Iniciar sesión
+              </button>
+
+              <button
+                className={
+                  accountMode === "register"
+                    ? "tab active"
+                    : "tab"
+                }
+                onClick={() =>
+                  setAccountMode("register")
+                }
+              >
+                Crear cuenta
+              </button>
             </div>
 
-            <div style={styles.dashboardGrid}>
-              <div style={styles.dashboardMain}>
-                <div style={styles.panelCard}>
-                  <div style={styles.panelHeader}>
-                    <div>
-                      <span style={styles.eyebrow}>
-                        PERFIL
-                      </span>
-                      <h2 style={styles.panelTitle}>
-                        Tu información
-                      </h2>
-                    </div>
-                    <span style={styles.panelIcon}>
-                      👤
-                    </span>
-                  </div>
-
-                  <form
-                    onSubmit={saveProfile}
-                    style={styles.profileForm}
-                  >
-                    <label style={styles.label}>
-                      Nombre
-                      <input
-                        value={
-                          profileForm.name
-                        }
-                        onChange={(event) =>
-                          updateProfileForm(
-                            "name",
-                            event.target.value
-                          )
-                        }
-                        style={styles.input}
-                      />
-                    </label>
-
-                    <label style={styles.label}>
-                      Profesión
-                      <input
-                        value={
-                          profileForm.profession
-                        }
-                        onChange={(event) =>
-                          updateProfileForm(
-                            "profession",
-                            event.target.value
-                          )
-                        }
-                        style={styles.input}
-                      />
-                    </label>
-
-                    <label style={styles.label}>
-                      Biografía
-                      <textarea
-                        value={
-                          profileForm.bio
-                        }
-                        onChange={(event) =>
-                          updateProfileForm(
-                            "bio",
-                            event.target.value
-                          )
-                        }
-                        style={
-                          styles.textarea
-                        }
-                        placeholder="Cuéntales a tus clientes sobre ti..."
-                      />
-                    </label>
-
-                    <button
-                      type="submit"
-                      style={
-                        styles.primaryButton
-                      }
-                      disabled={
-                        savingProfile
-                      }
-                    >
-                      {savingProfile
-                        ? "Guardando..."
-                        : "Guardar cambios"}
-                    </button>
-                  </form>
-                </div>
-
-                <div style={styles.panelCard}>
-                  <div style={styles.panelHeader}>
-                    <div>
-                      <span style={styles.eyebrow}>
-                        ACTIVIDAD
-                      </span>
-                      <h2 style={styles.panelTitle}>
-                        Resumen de actividad
-                      </h2>
-                    </div>
-                    <span style={styles.panelIcon}>
-                      📊
-                    </span>
-                  </div>
-
-                  <div style={styles.activityList}>
-                    <button
-                      style={
-                        styles.activityItem
-                      }
-                      onClick={openRequests}
-                    >
-                      <span
-                        style={
-                          styles.activityIcon
-                        }
-                      >
-                        📋
-                      </span>
-                      <div>
-                        <strong>
-                          Solicitudes
-                        </strong>
-                        <span>
-                          Revisa las solicitudes
-                          enviadas y recibidas.
-                        </span>
-                      </div>
-                      <span>→</span>
-                    </button>
-
-                    <button
-                      style={
-                        styles.activityItem
-                      }
-                      onClick={() =>
-                        setPage("messages")
-                      }
-                    >
-                      <span
-                        style={
-                          styles.activityIcon
-                        }
-                      >
-                        💬
-                      </span>
-                      <div>
-                        <strong>
-                          Mensajes
-                        </strong>
-                        <span>
-                          Comunícate con clientes y
-                          profesionales.
-                        </span>
-                      </div>
-                      <span>→</span>
-                    </button>
-
-                    <button
-                      style={
-                        styles.activityItem
-                      }
-                      onClick={() =>
-                        setPage("offer")
-                      }
-                    >
-                      <span
-                        style={
-                          styles.activityIcon
-                        }
-                      >
-                        ➕
-                      </span>
-                      <div>
-                        <strong>
-                          Publicar servicio
-                        </strong>
-                        <span>
-                          Añade una nueva oferta a
-                          RobLoren.
-                        </span>
-                      </div>
-                      <span>→</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <aside style={styles.dashboardSide}>
-                <div style={styles.profileSummary}>
-                  <div
-                    style={
-                      styles.profileSummaryAvatar
+            {accountMode === "login" ? (
+              <form
+                onSubmit={login}
+                className="form"
+              >
+                <label>
+                  Correo electrónico
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        email: e.target.value,
+                      })
                     }
-                  >
-                    {loggedUser.name
-                      ?.charAt(0)
-                      ?.toUpperCase() || "R"}
-                  </div>
+                    placeholder="tu@email.com"
+                  />
+                </label>
 
-                  <h3>
-                    {loggedUser.name}
-                  </h3>
-
-                  <p>
-                    {loggedUser.profession}
-                  </p>
-
-                  <span
-                    style={
-                      styles.verifiedBadge
+                <label>
+                  Contraseña
+                  <input
+                    type="password"
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        password: e.target.value,
+                      })
                     }
-                  >
-                    ✓ Cuenta activa
-                  </span>
-                </div>
+                    placeholder="Tu contraseña"
+                  />
+                </label>
 
-                <div style={styles.quickActions}>
-                  <h3 style={styles.quickTitle}>
-                    Acciones rápidas
-                  </h3>
+                <button
+                  className="primary full"
+                  disabled={authLoading}
+                >
+                  {authLoading
+                    ? "Procesando..."
+                    : "Entrar a RobLoren"}
+                </button>
+              </form>
+            ) : (
+              <form
+                onSubmit={register}
+                className="form"
+              >
+                <label>
+                  Nombre
+                  <input
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Tu nombre"
+                  />
+                </label>
 
-                  <button
-                    style={
-                      styles.quickButtonPrimary
+                <label>
+                  Correo electrónico
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        email: e.target.value,
+                      })
                     }
-                    onClick={() =>
-                      setPage("offer")
-                    }
-                  >
-                    ➕ Publicar servicio
-                  </button>
+                    placeholder="tu@email.com"
+                  />
+                </label>
 
-                  <button
-                    style={
-                      styles.quickButton
+                <label>
+                  Contraseña
+                  <input
+                    type="password"
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        password: e.target.value,
+                      })
                     }
-                    onClick={openRequests}
-                  >
-                    📋 Ver solicitudes
-                  </button>
+                    placeholder="Mínimo 6 caracteres"
+                  />
+                </label>
 
-                  <button
-                    style={
-                      styles.quickButton
+                <label>
+                  Profesión
+                  <input
+                    value={form.profession}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        profession: e.target.value,
+                      })
                     }
-                    onClick={() =>
-                      setPage("messages")
-                    }
-                  >
-                    💬 Abrir mensajes
-                  </button>
+                    placeholder="Ej. Diseñador gráfico"
+                  />
+                </label>
 
-                  <button
-                    style={
-                      styles.logoutButton
+                <label>
+                  Biografía
+                  <textarea
+                    value={form.bio}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        bio: e.target.value,
+                      })
                     }
-                    onClick={logout}
-                  >
-                    🚪 Cerrar sesión
-                  </button>
-                </div>
-              </aside>
-            </div>
+                    placeholder="Cuéntanos sobre ti..."
+                  />
+                </label>
+
+                <button
+                  className="primary full"
+                  disabled={authLoading}
+                >
+                  {authLoading
+                    ? "Creando..."
+                    : "Crear mi cuenta"}
+                </button>
+              </form>
+            )}
           </div>
         </section>
       );
     }
 
     return (
-      <section style={styles.pageSection}>
-        <div style={styles.authCard}>
-          <div style={styles.authHeader}>
-            <div style={styles.accountLogo}>
-              R
+      <section className="page">
+        <div className="dashboard">
+          <div className="dashboardHeader">
+            <div>
+              <span className="eyebrow">
+                CUENTA PROFESIONAL
+              </span>
+
+              <h1>
+                Hola, {loggedUser.name}
+              </h1>
+
+              <p>
+                Gestiona tu perfil, servicios y
+                oportunidades desde un solo lugar.
+              </p>
             </div>
 
-            <span style={styles.eyebrow}>
-              ROBLOREN
-            </span>
-
-            <h1 style={styles.authTitle}>
-              {accountMode === "login"
-                ? "Bienvenido a RobLoren"
-                : "Crea tu cuenta"}
-            </h1>
-
-            <p style={styles.authSubtitle}>
-              Conecta talento con oportunidades.
-            </p>
+            <div className="bigAvatar">
+              {loggedUser.name
+                ?.charAt(0)
+                ?.toUpperCase() || "R"}
+            </div>
           </div>
 
-          <div style={styles.authTabs}>
-            <button
-              style={
-                accountMode === "login"
-                  ? styles.authTabActive
-                  : styles.authTab
-              }
-              onClick={() =>
-                setAccountMode("login")
-              }
-            >
-              Iniciar sesión
-            </button>
+          <div className="stats">
+            <div className="stat">
+              <span>📋</span>
+              <strong>{requests.length}</strong>
+              <small>Solicitudes</small>
+            </div>
 
-            <button
-              style={
-                accountMode === "register"
-                  ? styles.authTabActive
-                  : styles.authTab
-              }
-              onClick={() =>
-                setAccountMode("register")
-              }
-            >
-              Crear cuenta
-            </button>
+            <div className="stat">
+              <span>⏳</span>
+              <strong>{pending}</strong>
+              <small>Pendientes</small>
+            </div>
+
+            <div className="stat">
+              <span>✓</span>
+              <strong>{accepted}</strong>
+              <small>Aceptadas</small>
+            </div>
+
+            <div className="stat">
+              <span>🛠️</span>
+              <strong>{published}</strong>
+              <small>Servicios publicados</small>
+            </div>
           </div>
 
-          {accountMode === "login" ? (
-            <form
-              onSubmit={login}
-              style={styles.authForm}
-            >
-              <label style={styles.label}>
-                Correo electrónico
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(event) =>
-                    updateForm(
-                      "email",
-                      event.target.value
-                    )
-                  }
-                  style={styles.input}
-                  placeholder="tu@email.com"
-                  autoComplete="email"
-                />
-              </label>
+          <div className="dashboardGrid">
+            <div className="panel">
+              <span className="eyebrow">
+                PERFIL
+              </span>
 
-              <label style={styles.label}>
-                Contraseña
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(event) =>
-                    updateForm(
-                      "password",
-                      event.target.value
-                    )
-                  }
-                  style={styles.input}
-                  placeholder="Tu contraseña"
-                  autoComplete="current-password"
-                />
-              </label>
+              <h2>Tu información</h2>
 
-              <button
-                type="submit"
-                style={styles.primaryButtonFull}
-                disabled={authLoading}
+              <form
+                onSubmit={saveProfile}
+                className="form"
               >
-                {authLoading
-                  ? "Procesando..."
-                  : "Entrar a RobLoren"}
-              </button>
+                <label>
+                  Nombre
+                  <input
+                    value={profileForm.name}
+                    onChange={(e) =>
+                      setProfileForm({
+                        ...profileForm,
+                        name: e.target.value,
+                      })
+                    }
+                  />
+                </label>
 
-              <p style={styles.formNote}>
-                Tu cuenta se gestiona de forma
-                segura mediante autenticación.
-              </p>
-            </form>
-          ) : (
-            <form
-              onSubmit={register}
-              style={styles.authForm}
-            >
-              <label style={styles.label}>
-                Nombre
-                <input
-                  value={form.name}
-                  onChange={(event) =>
-                    updateForm(
-                      "name",
-                      event.target.value
-                    )
+                <label>
+                  Profesión
+                  <input
+                    value={profileForm.profession}
+                    onChange={(e) =>
+                      setProfileForm({
+                        ...profileForm,
+                        profession: e.target.value,
+                      })
+                    }
+                  />
+                </label>
+
+                <label>
+                  Biografía
+                  <textarea
+                    value={profileForm.bio}
+                    onChange={(e) =>
+                      setProfileForm({
+                        ...profileForm,
+                        bio: e.target.value,
+                      })
+                    }
+                  />
+                </label>
+
+                <button
+                  className="primary"
+                  disabled={savingProfile}
+                >
+                  {savingProfile
+                    ? "Guardando..."
+                    : "Guardar cambios"}
+                </button>
+              </form>
+            </div>
+
+            <aside>
+              <div className="profileBox">
+                <div className="profileAvatar">
+                  {loggedUser.name
+                    ?.charAt(0)
+                    ?.toUpperCase() || "R"}
+                </div>
+
+                <h3>{loggedUser.name}</h3>
+
+                <p>{loggedUser.profession}</p>
+
+                <span>✓ Cuenta activa</span>
+              </div>
+
+              <div className="quick">
+                <h3>Acciones rápidas</h3>
+
+                <button
+                  onClick={() => setPage("offer")}
+                >
+                  ➕ Publicar servicio
+                </button>
+
+                <button onClick={openRequests}>
+                  📋 Ver solicitudes
+                </button>
+
+                <button
+                  onClick={() =>
+                    setPage("messages")
                   }
-                  style={styles.input}
-                  placeholder="Tu nombre"
-                  autoComplete="name"
-                />
-              </label>
+                >
+                  💬 Abrir mensajes
+                </button>
 
-              <label style={styles.label}>
-                Correo electrónico
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(event) =>
-                    updateForm(
-                      "email",
-                      event.target.value
-                    )
-                  }
-                  style={styles.input}
-                  placeholder="tu@email.com"
-                  autoComplete="email"
-                />
-              </label>
-
-              <label style={styles.label}>
-                Contraseña
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(event) =>
-                    updateForm(
-                      "password",
-                      event.target.value
-                    )
-                  }
-                  style={styles.input}
-                  placeholder="Mínimo 6 caracteres"
-                  autoComplete="new-password"
-                />
-              </label>
-
-              <label style={styles.label}>
-                Profesión
-                <input
-                  value={form.profession}
-                  onChange={(event) =>
-                    updateForm(
-                      "profession",
-                      event.target.value
-                    )
-                  }
-                  style={styles.input}
-                  placeholder="Ej. Diseñador gráfico"
-                />
-              </label>
-
-              <label style={styles.label}>
-                Biografía
-                <textarea
-                  value={form.bio}
-                  onChange={(event) =>
-                    updateForm(
-                      "bio",
-                      event.target.value
-                    )
-                  }
-                  style={styles.textarea}
-                  placeholder="Cuéntanos brevemente sobre ti..."
-                />
-              </label>
-
-              <button
-                type="submit"
-                style={styles.primaryButtonFull}
-                disabled={authLoading}
-              >
-                {authLoading
-                  ? "Creando..."
-                  : "Crear mi cuenta"}
-              </button>
-
-              <p style={styles.formNote}>
-                Después del registro puede ser
-                necesario confirmar tu correo.
-              </p>
-            </form>
-          )}
+                <button
+                  className="logout"
+                  onClick={logout}
+                >
+                  🚪 Cerrar sesión
+                </button>
+              </div>
+            </aside>
+          </div>
         </div>
       </section>
     );
   }
 
   function ServicePage() {
-    if (!selectedService) {
-      return null;
-    }
+    if (!selectedService) return null;
 
     return (
-      <section style={styles.pageSection}>
-        <div style={styles.detailContainer}>
+      <section className="page">
+        <div className="detail">
           <button
-            style={styles.backButton}
+            className="back"
             onClick={() => setPage("home")}
           >
             ← Volver a servicios
           </button>
 
-          <div style={styles.detailGrid}>
-            <div style={styles.detailMain}>
-              <div style={styles.detailCategory}>
+          <div className="detailGrid">
+            <div className="panel">
+              <span className="eyebrow">
                 {selectedService.category}
-              </div>
+              </span>
 
-              <h1 style={styles.detailTitle}>
+              <h1>
                 {selectedService.service}
               </h1>
 
-              <div style={styles.detailProvider}>
-                <div style={styles.detailAvatar}>
+              <div className="provider">
+                <div className="avatar">
                   {selectedService.name
                     ?.charAt(0)
                     ?.toUpperCase() || "R"}
@@ -2021,91 +1537,78 @@ function App() {
                 </div>
               </div>
 
-              <div style={styles.detailDivider} />
+              <hr />
 
-              <h2 style={styles.detailHeading}>
-                Sobre este servicio
-              </h2>
+              <h2>Sobre este servicio</h2>
 
-              <p style={styles.detailDescription}>
+              <p>
                 {selectedService.description}
               </p>
 
-              <div style={styles.detailInfoGrid}>
+              <div className="infoGrid">
                 <div>
-                  <span>Precio inicial</span>
+                  <small>Precio inicial</small>
                   <strong>
                     ${selectedService.price}
                   </strong>
                 </div>
 
                 <div>
-                  <span>Categoría</span>
+                  <small>Categoría</small>
                   <strong>
                     {selectedService.category}
                   </strong>
                 </div>
 
                 <div>
-                  <span>Modalidad</span>
-                  <strong>
-                    Online
-                  </strong>
+                  <small>Modalidad</small>
+                  <strong>Online</strong>
                 </div>
               </div>
             </div>
 
-            <aside style={styles.requestCard}>
-              <span style={styles.eyebrow}>
+            <div className="panel requestPanel">
+              <span className="eyebrow">
                 CONTRATAR
               </span>
 
-              <h2 style={styles.requestTitle}>
+              <h2>
                 Solicita este servicio
               </h2>
 
-              <div style={styles.requestPrice}>
-                <span>Desde</span>
-                <strong>
-                  ${selectedService.price}
-                </strong>
+              <div className="requestPrice">
+                Desde ${selectedService.price}
               </div>
 
               {selectedService.demo ? (
-                <div style={styles.demoNotice}>
+                <div className="notice">
                   <strong>
                     Servicio de demostración
                   </strong>
                   <p>
-                    Este servicio muestra cómo se
-                    verá el marketplace. Los
-                    servicios publicados por usuarios
-                    sí pueden recibir solicitudes.
+                    Los servicios publicados por
+                    usuarios sí pueden recibir
+                    solicitudes.
                   </p>
                 </div>
               ) : (
                 <>
-                  <label style={styles.label}>
+                  <label>
                     Mensaje para el profesional
                     <textarea
                       value={requestMessage}
-                      onChange={(event) =>
+                      onChange={(e) =>
                         setRequestMessage(
-                          event.target.value
+                          e.target.value
                         )
                       }
-                      style={styles.textarea}
                       placeholder="Cuéntale qué necesitas..."
                     />
                   </label>
 
                   <button
-                    style={
-                      styles.primaryButtonFull
-                    }
-                    onClick={
-                      sendServiceRequest
-                    }
+                    className="primary full"
+                    onClick={sendRequest}
                     disabled={sendingRequest}
                   >
                     {sendingRequest
@@ -2114,9 +1617,7 @@ function App() {
                   </button>
 
                   <button
-                    style={
-                      styles.secondaryButtonFull
-                    }
+                    className="secondary full"
                     onClick={() =>
                       openMessaging({
                         userId:
@@ -2132,7 +1633,7 @@ function App() {
                   </button>
                 </>
               )}
-            </aside>
+            </div>
           </div>
         </div>
       </section>
@@ -2141,116 +1642,41 @@ function App() {
 
   function RequestsPage() {
     return (
-      <section style={styles.pageSection}>
-        <div style={styles.dashboardContainer}>
+      <section className="page">
+        <div className="dashboard">
           <button
-            style={styles.backButton}
+            className="back"
             onClick={openAccount}
           >
             ← Volver a mi cuenta
           </button>
 
-          <div style={styles.pageTitleBlock}>
-            <span style={styles.eyebrow}>
-              GESTIÓN
-            </span>
-            <h1 style={styles.dashboardTitle}>
-              Solicitudes
-            </h1>
-            <p style={styles.dashboardSubtitle}>
-              Gestiona tus oportunidades y
-              contrataciones.
-            </p>
-          </div>
+          <span className="eyebrow">
+            GESTIÓN
+          </span>
+
+          <h1>Solicitudes</h1>
+
+          <p className="muted">
+            Gestiona tus oportunidades y contrataciones.
+          </p>
 
           {loadingRequests ? (
-            <div style={styles.loadingBox}>
+            <div className="empty">
               Cargando solicitudes...
             </div>
           ) : (
-            <div style={styles.requestsGrid}>
-              <div style={styles.requestColumn}>
-                <div style={styles.columnHeader}>
-                  <div>
-                    <span>📥</span>
-                    <h2>
-                      Solicitudes recibidas
-                    </h2>
-                  </div>
-                  <strong>
-                    {receivedRequests.length}
-                  </strong>
-                </div>
+            <div className="requestColumns">
+              <RequestColumn
+                title="📥 Solicitudes recibidas"
+                items={received}
+                received
+              />
 
-                {receivedRequests.length === 0 ? (
-                  <div style={styles.emptySmall}>
-                    <span>📭</span>
-                    <strong>
-                      No tienes solicitudes
-                    </strong>
-                    <p>
-                      Las solicitudes de clientes
-                      aparecerán aquí.
-                    </p>
-                  </div>
-                ) : (
-                  receivedRequests.map(
-                    (request) => (
-                      <RequestCard
-                        key={request.id}
-                        request={request}
-                        received
-                      />
-                    )
-                  )
-                )}
-              </div>
-
-              <div style={styles.requestColumn}>
-                <div style={styles.columnHeader}>
-                  <div>
-                    <span>📤</span>
-                    <h2>
-                      Mis solicitudes
-                    </h2>
-                  </div>
-                  <strong>
-                    {sentRequests.length}
-                  </strong>
-                </div>
-
-                {sentRequests.length === 0 ? (
-                  <div style={styles.emptySmall}>
-                    <span>📭</span>
-                    <strong>
-                      No has enviado solicitudes
-                    </strong>
-                    <p>
-                      Explora servicios para encontrar
-                      profesionales.
-                    </p>
-                    <button
-                      style={
-                        styles.smallPrimaryButton
-                      }
-                      onClick={() =>
-                        setPage("home")
-                      }
-                    >
-                      Explorar servicios
-                    </button>
-                  </div>
-                ) : (
-                  sentRequests.map(
-                    (request) => (
-                      <RequestCard
-                        key={request.id}
-                        request={request}
-                      />
-                    )
-                  )
-                )}
-              </div>
+              <RequestColumn
+                title="📤 Mis solicitudes"
+                items={sent}
+              />
             </div>
           )}
         </div>
@@ -2258,235 +1684,238 @@ function App() {
     );
   }
 
-  function RequestCard({
-    request,
+  function RequestColumn({
+    title,
+    items,
     received = false,
   }) {
     return (
-      <article style={styles.requestItem}>
-        <div style={styles.requestItemTop}>
-          <span
-            style={{
-              ...styles.statusPill,
-              ...(request.status ===
-              "accepted"
-                ? styles.statusAccepted
-                : request.status ===
-                  "rejected"
-                ? styles.statusRejected
-                : styles.statusPending),
-            }}
-          >
-            {statusLabel(request.status)}
-          </span>
+      <div className="panel">
+        <h2>{title}</h2>
 
-          <span style={styles.requestDate}>
-            {formatMessageDate(
-              request.created_at
-            )}
-          </span>
-        </div>
-
-        <h3 style={styles.requestServiceTitle}>
-          {request.serviceTitle}
-        </h3>
-
-        <div style={styles.requestPeople}>
-          <div>
-            <span>Cliente</span>
+        {items.length === 0 ? (
+          <div className="empty small">
             <strong>
-              {request.clientName}
+              No hay solicitudes
             </strong>
+            <p>
+              {received
+                ? "Las solicitudes de clientes aparecerán aquí."
+                : "Explora servicios para encontrar profesionales."}
+            </p>
           </div>
-
-          <div>
-            <span>Profesional</span>
-            <strong>
-              {request.providerName}
-            </strong>
-          </div>
-        </div>
-
-        <div style={styles.requestMessage}>
-          “{request.message}”
-        </div>
-
-        <div style={styles.requestActions}>
-          {received &&
-            request.status ===
-              "pending" && (
-              <>
-                <button
-                  style={styles.acceptButton}
-                  disabled={
-                    updatingRequestId ===
-                    request.id
-                  }
-                  onClick={() =>
-                    updateRequestStatus(
-                      request.id,
-                      "accepted"
-                    )
+        ) : (
+          items.map((request) => (
+            <div
+              className="requestCard"
+              key={request.id}
+            >
+              <div className="requestTop">
+                <span
+                  className={
+                    request.status === "accepted"
+                      ? "status accepted"
+                      : request.status === "rejected"
+                      ? "status rejected"
+                      : "status"
                   }
                 >
-                  ✓ Aceptar
-                </button>
+                  {statusText(request.status)}
+                </span>
+
+                <small>
+                  {dateText(request.created_at)}
+                </small>
+              </div>
+
+              <h3>
+                {request.serviceTitle}
+              </h3>
+
+              <p>
+                <strong>Cliente:</strong>{" "}
+                {request.clientName}
+              </p>
+
+              <p>
+                <strong>Profesional:</strong>{" "}
+                {request.providerName}
+              </p>
+
+              <div className="messageQuote">
+                “{request.message}”
+              </div>
+
+              <div className="requestActions">
+                {received &&
+                  request.status === "pending" && (
+                    <>
+                      <button
+                        className="accept"
+                        disabled={
+                          updatingRequest ===
+                          request.id
+                        }
+                        onClick={() =>
+                          changeRequestStatus(
+                            request.id,
+                            "accepted"
+                          )
+                        }
+                      >
+                        ✓ Aceptar
+                      </button>
+
+                      <button
+                        className="reject"
+                        disabled={
+                          updatingRequest ===
+                          request.id
+                        }
+                        onClick={() =>
+                          changeRequestStatus(
+                            request.id,
+                            "rejected"
+                          )
+                        }
+                      >
+                        ✕ Rechazar
+                      </button>
+                    </>
+                  )}
 
                 <button
-                  style={styles.rejectButton}
-                  disabled={
-                    updatingRequestId ===
-                    request.id
-                  }
+                  className="messageBtn"
                   onClick={() =>
-                    updateRequestStatus(
-                      request.id,
-                      "rejected"
-                    )
+                    openMessaging({
+                      userId:
+                        received
+                          ? request.client_id
+                          : request.provider_id,
+                      name:
+                        received
+                          ? request.clientName
+                          : request.providerName,
+                      profession:
+                        received
+                          ? "Cliente"
+                          : "Profesional",
+                      requestId: request.id,
+                    })
                   }
                 >
-                  ✕ Rechazar
+                  💬 Mensajear
                 </button>
-              </>
-            )}
-
-          <button
-            style={styles.messageButton}
-            onClick={() =>
-              openMessagingFromRequest(
-                request
-              )
-            }
-          >
-            💬 Mensajear
-          </button>
-        </div>
-      </article>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     );
   }
 
   function MessagesPage() {
+    const contacts = requests.map((request) => {
+      const provider =
+        request.provider_id === loggedUser?.id;
+
+      return {
+        id: request.id,
+        contactId: provider
+          ? request.client_id
+          : request.provider_id,
+        name: provider
+          ? request.clientName
+          : request.providerName,
+        profession: provider
+          ? "Cliente"
+          : "Profesional",
+        requestId: request.id,
+        serviceTitle: request.serviceTitle,
+      };
+    });
+
     return (
-      <section style={styles.pageSection}>
-        <div style={styles.messagesContainer}>
+      <section className="page">
+        <div className="dashboard">
           <button
-            style={styles.backButton}
+            className="back"
             onClick={openRequests}
           >
             ← Volver a solicitudes
           </button>
 
-          <div style={styles.messagesLayout}>
-            <aside style={styles.contactsPanel}>
-              <div style={styles.contactsHeader}>
-                <span style={styles.eyebrow}>
-                  COMUNICACIÓN
-                </span>
-                <h2>Mensajes</h2>
-              </div>
+          <div className="messagesLayout">
+            <aside className="contacts">
+              <span className="eyebrow">
+                COMUNICACIÓN
+              </span>
 
-              {requests.length === 0 ? (
-                <div style={styles.emptyContact}>
-                  <span>💬</span>
-                  <p>
-                    Aún no tienes conversaciones.
-                  </p>
+              <h2>Mensajes</h2>
+
+              {contacts.length === 0 ? (
+                <div className="empty small">
+                  Aún no tienes conversaciones.
                 </div>
               ) : (
-                requests.map((request) => {
-                  const isProvider =
-                    request.provider_id ===
-                    loggedUser?.id;
+                contacts.map((contact) => (
+                  <button
+                    key={contact.id}
+                    className={
+                      selectedContact?.id ===
+                      contact.contactId
+                        ? "contact active"
+                        : "contact"
+                    }
+                    onClick={() =>
+                      openMessaging({
+                        userId:
+                          contact.contactId,
+                        name: contact.name,
+                        profession:
+                          contact.profession,
+                        requestId:
+                          contact.requestId,
+                      })
+                    }
+                  >
+                    <div className="avatar">
+                      {contact.name
+                        ?.charAt(0)
+                        ?.toUpperCase() || "R"}
+                    </div>
 
-                  const contactId =
-                    isProvider
-                      ? request.client_id
-                      : request.provider_id;
-
-                  const contactName =
-                    isProvider
-                      ? request.clientName
-                      : request.providerName;
-
-                  if (!contactId) return null;
-
-                  return (
-                    <button
-                      key={request.id}
-                      style={
-                        selectedContact?.id ===
-                        contactId
-                          ? styles.contactItemActive
-                          : styles.contactItem
-                      }
-                      onClick={() =>
-                        openMessaging({
-                          userId: contactId,
-                          name: contactName,
-                          profession:
-                            isProvider
-                              ? "Cliente"
-                              : "Profesional",
-                          requestId:
-                            request.id,
-                        })
-                      }
-                    >
-                      <div
-                        style={
-                          styles.contactAvatar
-                        }
-                      >
-                        {contactName
-                          ?.charAt(0)
-                          ?.toUpperCase() ||
-                          "R"}
-                      </div>
-
-                      <div
-                        style={
-                          styles.contactInfo
-                        }
-                      >
-                        <strong>
-                          {contactName}
-                        </strong>
-                        <span>
-                          {request.serviceTitle}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })
+                    <div>
+                      <strong>
+                        {contact.name}
+                      </strong>
+                      <span>
+                        {contact.serviceTitle}
+                      </span>
+                    </div>
+                  </button>
+                ))
               )}
             </aside>
 
-            <main style={styles.chatPanel}>
+            <main className="chat">
               {!selectedContact ? (
-                <div style={styles.chatEmpty}>
-                  <div style={styles.chatEmptyIcon}>
-                    💬
-                  </div>
+                <div className="chatEmpty">
+                  <span>💬</span>
                   <h2>
                     Selecciona una conversación
                   </h2>
                   <p>
-                    Elige un contacto para comenzar
-                    a conversar.
+                    Elige un contacto para comenzar.
                   </p>
                 </div>
               ) : (
                 <>
-                  <div style={styles.chatHeader}>
-                    <div
-                      style={
-                        styles.contactAvatarLarge
-                      }
-                    >
+                  <div className="chatHeader">
+                    <div className="avatar">
                       {selectedContact.name
                         ?.charAt(0)
-                        ?.toUpperCase() ||
-                        "R"}
+                        ?.toUpperCase() || "R"}
                     </div>
 
                     <div>
@@ -2494,36 +1923,24 @@ function App() {
                         {selectedContact.name}
                       </strong>
                       <span>
-                        {
-                          selectedContact.profession
-                        }
+                        {selectedContact.profession}
                       </span>
                     </div>
                   </div>
 
-                  <div style={styles.messageList}>
+                  <div className="chatMessages">
                     {loadingMessages ? (
-                      <div
-                        style={
-                          styles.chatLoading
-                        }
-                      >
+                      <div className="empty small">
                         Cargando mensajes...
                       </div>
-                    ) : messages.length ===
-                      0 ? (
-                      <div
-                        style={
-                          styles.chatNoMessages
-                        }
-                      >
+                    ) : messages.length === 0 ? (
+                      <div className="chatEmpty">
                         <span>👋</span>
                         <strong>
                           Inicia la conversación
                         </strong>
                         <p>
-                          Escribe un mensaje para
-                          comenzar.
+                          Escribe un mensaje para comenzar.
                         </p>
                       </div>
                     ) : (
@@ -2535,29 +1952,27 @@ function App() {
                         return (
                           <div
                             key={message.id}
-                            style={
+                            className={
                               mine
-                                ? styles.messageRowMine
-                                : styles.messageRow
+                                ? "bubbleRow mine"
+                                : "bubbleRow"
                             }
                           >
                             <div
-                              style={
+                              className={
                                 mine
-                                  ? styles.messageBubbleMine
-                                  : styles.messageBubble
+                                  ? "bubble mine"
+                                  : "bubble"
                               }
                             >
                               <p>
-                                {
-                                  message.message
-                                }
+                                {message.message}
                               </p>
-                              <span>
-                                {formatMessageDate(
+                              <small>
+                                {dateText(
                                   message.created_at
                                 )}
-                              </span>
+                              </small>
                             </div>
                           </div>
                         );
@@ -2567,25 +1982,21 @@ function App() {
 
                   <form
                     onSubmit={sendMessage}
-                    style={styles.messageForm}
+                    className="messageForm"
                   >
                     <textarea
                       value={messageText}
-                      onChange={(event) =>
+                      onChange={(e) =>
                         setMessageText(
-                          event.target.value
+                          e.target.value
                         )
-                      }
-                      style={
-                        styles.messageInput
                       }
                       placeholder="Escribe tu mensaje..."
                       rows={2}
                     />
 
                     <button
-                      type="submit"
-                      style={styles.sendButton}
+                      className="primary"
                       disabled={sendingMessage}
                     >
                       {sendingMessage
@@ -2603,120 +2014,38 @@ function App() {
   }
 
   function OfferPage() {
-    const [offer, setOffer] =
-      useState({
-        serviceTitle: "",
-        category: "Tecnología",
-        description: "",
-        price: "",
-      });
-
-    const [publishing, setPublishing] =
-      useState(false);
-
-    async function publishService(event) {
-      event.preventDefault();
-
-      if (!loggedUser) {
-        alert(
-          "Debes iniciar sesión para publicar un servicio."
-        );
-        setPage("account");
-        setAccountMode("login");
-        return;
-      }
-
-      if (
-        !offer.serviceTitle.trim() ||
-        !offer.description.trim() ||
-        !offer.price
-      ) {
-        alert(
-          "Completa título, descripción y precio."
-        );
-        return;
-      }
-
-      setPublishing(true);
-
-      const { error } = await supabase
-        .from("services")
-        .insert({
-          name: loggedUser.name,
-          profession:
-            loggedUser.profession ||
-            "Profesional",
-          service_title:
-            offer.serviceTitle.trim(),
-          category: offer.category,
-          description:
-            offer.description.trim(),
-          price: Number(offer.price),
-          user_id: loggedUser.id,
-        });
-
-      if (error) {
-        console.error(
-          "Error publicando servicio:",
-          error
-        );
-        alert(error.message);
-        setPublishing(false);
-        return;
-      }
-
-      setPublishing(false);
-
-      alert(
-        "¡Servicio publicado correctamente!"
-      );
-
-      await loadServices();
-      setPage("home");
-
-      setTimeout(() => {
-        document
-          .getElementById("services")
-          ?.scrollIntoView({
-            behavior: "smooth",
-          });
-      }, 100);
-    }
-
     return (
-      <section style={styles.pageSection}>
-        <div style={styles.formContainer}>
+      <section className="page">
+        <div className="formContainer">
           <button
-            style={styles.backButton}
+            className="back"
             onClick={openAccount}
           >
             ← Volver a mi cuenta
           </button>
 
-          <div style={styles.formHeader}>
-            <span style={styles.eyebrow}>
-              NUEVA OFERTA
-            </span>
-            <h1 style={styles.dashboardTitle}>
-              Publica tu servicio
-            </h1>
-            <p style={styles.dashboardSubtitle}>
-              Presenta tu talento de forma
-              profesional y conecta con nuevos
-              clientes.
-            </p>
-          </div>
+          <span className="eyebrow">
+            NUEVA OFERTA
+          </span>
+
+          <h1>Publica tu servicio</h1>
+
+          <p className="muted">
+            Presenta tu talento de forma profesional
+            y conecta con nuevos clientes.
+          </p>
 
           <form
+            className="panel form"
             onSubmit={publishService}
-            style={styles.offerCard}
           >
-            <div style={styles.offerIntro}>
-              <div
-                style={styles.offerIntroIcon}
-              >
-                ✨
+            <div className="offerUser">
+              <div className="avatar">
+                {loggedUser?.name
+                  ?.charAt(0)
+                  ?.toUpperCase() || "R"}
               </div>
+
               <div>
                 <strong>
                   {loggedUser?.name}
@@ -2727,93 +2056,77 @@ function App() {
               </div>
             </div>
 
-            <label style={styles.label}>
+            <label>
               Título del servicio
               <input
                 value={offer.serviceTitle}
-                onChange={(event) =>
-                  setOffer((current) => ({
-                    ...current,
+                onChange={(e) =>
+                  setOffer({
+                    ...offer,
                     serviceTitle:
-                      event.target.value,
-                  }))
+                      e.target.value,
+                  })
                 }
-                style={styles.input}
                 placeholder="Ej. Diseño de logotipo profesional"
               />
             </label>
 
-            <label style={styles.label}>
+            <label>
               Categoría
               <select
                 value={offer.category}
-                onChange={(event) =>
-                  setOffer((current) => ({
-                    ...current,
-                    category:
-                      event.target.value,
-                  }))
+                onChange={(e) =>
+                  setOffer({
+                    ...offer,
+                    category: e.target.value,
+                  })
                 }
-                style={styles.input}
               >
-                {categories.map(
-                  ([, name]) => (
-                    <option
-                      key={name}
-                      value={name}
-                    >
-                      {name}
-                    </option>
-                  )
-                )}
+                {categories.map(([, name]) => (
+                  <option
+                    key={name}
+                    value={name}
+                  >
+                    {name}
+                  </option>
+                ))}
               </select>
             </label>
 
-            <label style={styles.label}>
+            <label>
               Descripción
               <textarea
                 value={offer.description}
-                onChange={(event) =>
-                  setOffer((current) => ({
-                    ...current,
+                onChange={(e) =>
+                  setOffer({
+                    ...offer,
                     description:
-                      event.target.value,
-                  }))
+                      e.target.value,
+                  })
                 }
-                style={
-                  styles.textareaLarge
-                }
-                placeholder="Describe qué ofreces, qué incluye el servicio y por qué un cliente debería contratarte..."
+                placeholder="Describe qué ofreces..."
               />
             </label>
 
-            <label style={styles.label}>
+            <label>
               Precio inicial
-              <div style={styles.priceInputWrap}>
-                <span>$</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={offer.price}
-                  onChange={(event) =>
-                    setOffer((current) => ({
-                      ...current,
-                      price:
-                        event.target.value,
-                    }))
-                  }
-                  style={
-                    styles.priceInput
-                  }
-                  placeholder="0"
-                />
-              </div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={offer.price}
+                onChange={(e) =>
+                  setOffer({
+                    ...offer,
+                    price: e.target.value,
+                  })
+                }
+                placeholder="0"
+              />
             </label>
 
             <button
-              type="submit"
-              style={styles.primaryButtonFull}
+              className="primary full"
               disabled={publishing}
             >
               {publishing
@@ -2826,1492 +2139,1120 @@ function App() {
     );
   }
 
-  function Footer() {
-    return (
-      <footer style={styles.footer}>
-        <div style={styles.footerInner}>
-          <div>
-            <div style={styles.footerBrand}>
-              <span style={styles.logoMark}>
-                R
-              </span>
-              <span style={styles.logoText}>
-                Rob<span>Loren</span>
-              </span>
-            </div>
-            <p style={styles.footerText}>
-              Conecta talento con oportunidades.
-            </p>
-          </div>
-
-          <div style={styles.footerLinks}>
-            <button
-              onClick={() => setPage("home")}
-            >
-              Inicio
-            </button>
-            <button
-              onClick={() => setPage("home")}
-            >
-              Servicios
-            </button>
-            <button
-              onClick={openAccount}
-            >
-              Mi cuenta
-            </button>
-          </div>
-        </div>
-
-        <div style={styles.footerBottom}>
-          © {new Date().getFullYear()} RobLoren.
-          Todos los derechos reservados.
-        </div>
-      </footer>
-    );
-  }
-
   return (
-    <div style={styles.app}>
+    <>
+      <style>{`
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          margin: 0;
+          background: #f7f9fc;
+          color: #17263a;
+          font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+          font: inherit;
+        }
+
+        button {
+          cursor: pointer;
+        }
+
+        .header {
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          background: rgba(255,255,255,.97);
+          border-bottom: 1px solid #e5eaf0;
+          backdrop-filter: blur(12px);
+        }
+
+        .headerInner {
+          max-width: 1180px;
+          margin: auto;
+          padding: 13px 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .logoButton {
+          border: 0;
+          background: transparent;
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          padding: 0;
+        }
+
+        .logoMark,
+        .accountLogo {
+          display: grid;
+          place-items: center;
+          background: #132238;
+          color: white;
+          font-weight: 800;
+        }
+
+        .logoMark {
+          width: 38px;
+          height: 38px;
+          border-radius: 11px;
+        }
+
+        .logoText {
+          font-size: 22px;
+          font-weight: 800;
+        }
+
+        .logoText span {
+          color: #58718c;
+        }
+
+        .nav {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .navButton,
+        .navAccount {
+          border: 0;
+          background: transparent;
+          padding: 10px 12px;
+          color: #56657a;
+          font-weight: 700;
+        }
+
+        .navAccount {
+          background: #132238;
+          color: white;
+          border-radius: 10px;
+        }
+
+        .hero {
+          background:
+            linear-gradient(
+              135deg,
+              #f0f5fa,
+              #fff 55%,
+              #edf3f9
+            );
+        }
+
+        .heroInner {
+          max-width: 1180px;
+          min-height: 570px;
+          margin: auto;
+          padding: 70px 24px;
+          display: grid;
+          grid-template-columns:
+            minmax(0,1.15fr)
+            minmax(300px,.85fr);
+          gap: 60px;
+          align-items: center;
+        }
+
+        .heroCopy {
+          max-width: 650px;
+        }
+
+        .badge {
+          display: inline-block;
+          padding: 8px 13px;
+          border-radius: 999px;
+          background: #e7eef6;
+          color: #38536e;
+          font-size: 13px;
+          font-weight: 800;
+          margin-bottom: 18px;
+        }
+
+        .hero h1 {
+          margin: 0;
+          font-size: clamp(42px,6vw,72px);
+          line-height: 1.02;
+          letter-spacing: -3px;
+        }
+
+        .hero h1 span {
+          color: #506b86;
+        }
+
+        .hero p {
+          max-width: 570px;
+          color: #64758a;
+          font-size: 18px;
+          line-height: 1.65;
+          margin: 25px 0;
+        }
+
+        .heroActions {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .primary,
+        .secondary {
+          border-radius: 10px;
+          padding: 13px 18px;
+          font-weight: 800;
+        }
+
+        .primary {
+          border: 0;
+          background: #132238;
+          color: white;
+        }
+
+        .secondary {
+          border: 1px solid #ccd7e2;
+          background: white;
+          color: #21364d;
+        }
+
+        .full {
+          width: 100%;
+        }
+
+        .heroCard {
+          background: white;
+          border: 1px solid #dfe7ef;
+          border-radius: 24px;
+          padding: 28px;
+          box-shadow:
+            0 25px 70px rgba(20,32,51,.1);
+        }
+
+        .heroCardTitle {
+          font-weight: 800;
+          margin-bottom: 18px;
+        }
+
+        .heroSearch {
+          border: 1px solid #dce4ed;
+          border-radius: 12px;
+          padding: 15px;
+          color: #8591a0;
+        }
+
+        .tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 14px;
+        }
+
+        .tags span {
+          background: #f0f4f8;
+          padding: 7px 9px;
+          border-radius: 999px;
+          font-size: 12px;
+        }
+
+        .miniStats {
+          display: grid;
+          grid-template-columns: repeat(3,1fr);
+          gap: 10px;
+          border-top: 1px solid #edf1f5;
+          margin-top: 24px;
+          padding-top: 20px;
+        }
+
+        .miniStats div,
+        .stat {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .miniStats strong {
+          font-size: 19px;
+        }
+
+        .miniStats span {
+          color: #8793a2;
+          font-size: 11px;
+        }
+
+        .categories,
+        .services {
+          padding: 65px 0;
+        }
+
+        .categories {
+          background: white;
+        }
+
+        .services {
+          background: #f7f9fc;
+        }
+
+        .container,
+        .dashboard,
+        .detail,
+        .formContainer {
+          max-width: 1180px;
+          margin: auto;
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+
+        .eyebrow {
+          display: block;
+          color: #718196;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 1.7px;
+          margin-bottom: 8px;
+        }
+
+        h1,
+        h2,
+        h3 {
+          color: #17263a;
+        }
+
+        h2 {
+          font-size: 30px;
+          letter-spacing: -1px;
+          margin: 0 0 10px;
+        }
+
+        .muted {
+          color: #718096;
+        }
+
+        .categoryGrid {
+          display: grid;
+          grid-template-columns:
+            repeat(auto-fit,minmax(125px,1fr));
+          gap: 11px;
+          margin-top: 25px;
+        }
+
+        .category {
+          border: 1px solid #dfe6ed;
+          background: white;
+          border-radius: 14px;
+          padding: 17px 10px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 7px;
+          font-weight: 700;
+          color: #405269;
+        }
+
+        .category span {
+          font-size: 24px;
+        }
+
+        .category.active {
+          background: #132238;
+          border-color: #132238;
+          color: white;
+        }
+
+        .sectionTop {
+          display: flex;
+          justify-content: space-between;
+          align-items: end;
+          gap: 20px;
+          margin-bottom: 28px;
+        }
+
+        .searchBox {
+          width: 330px;
+          max-width: 100%;
+          background: white;
+          border: 1px solid #dce4ed;
+          border-radius: 11px;
+          padding: 0 13px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .searchBox input {
+          border: 0;
+          outline: 0;
+          width: 100%;
+          padding: 13px 0;
+          background: transparent;
+        }
+
+        .serviceGrid {
+          display: grid;
+          grid-template-columns:
+            repeat(auto-fit,minmax(280px,1fr));
+          gap: 17px;
+        }
+
+        .serviceCard,
+        .panel,
+        .authCard {
+          background: white;
+          border: 1px solid #e0e7ef;
+          border-radius: 18px;
+          padding: 23px;
+          box-shadow:
+            0 10px 30px rgba(20,32,51,.035);
+        }
+
+        .provider {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .provider > div:nth-child(2) {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .provider span,
+        .offerUser span,
+        .contact span,
+        .chatHeader span {
+          color: #7a899b;
+          font-size: 12px;
+        }
+
+        .provider small {
+          background: #f0f4f8;
+          padding: 5px 8px;
+          border-radius: 999px;
+          color: #617287;
+        }
+
+        .avatar {
+          width: 43px;
+          height: 43px;
+          flex: 0 0 auto;
+          border-radius: 12px;
+          background: #eaf0f6;
+          display: grid;
+          place-items: center;
+          font-weight: 900;
+          color: #263b53;
+        }
+
+        .serviceCard h3 {
+          margin: 20px 0 8px;
+        }
+
+        .serviceCard p,
+        .panel p {
+          color: #6c7c90;
+          line-height: 1.6;
+        }
+
+        .serviceBottom {
+          border-top: 1px solid #edf1f5;
+          padding-top: 15px;
+          margin-top: 17px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .serviceBottom small {
+          display: block;
+          color: #8a96a5;
+          font-size: 10px;
+        }
+
+        .serviceBottom strong {
+          font-size: 21px;
+        }
+
+        .view {
+          border: 0;
+          background: #eef3f8;
+          color: #263c55;
+          border-radius: 9px;
+          padding: 9px 12px;
+          font-weight: 800;
+        }
+
+        .cta {
+          background: #132238;
+          color: white;
+          padding: 70px max(24px,calc((100% - 1120px)/2));
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 30px;
+        }
+
+        .cta h2 {
+          color: white;
+          font-size: 40px;
+          max-width: 650px;
+        }
+
+        .cta p {
+          color: #b9c4d2;
+        }
+
+        .ctaButton {
+          border: 0;
+          background: white;
+          color: #132238;
+          border-radius: 10px;
+          padding: 14px 20px;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .page {
+          min-height: calc(100vh - 70px);
+          padding: 45px 0 80px;
+        }
+
+        .authCard {
+          max-width: 520px;
+          margin: 20px auto;
+        }
+
+        .authCard > h1 {
+          margin-bottom: 5px;
+        }
+
+        .accountLogo {
+          width: 58px;
+          height: 58px;
+          border-radius: 17px;
+          margin: 0 auto 17px;
+        }
+
+        .authCard {
+          text-align: center;
+        }
+
+        .tabs {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          background: #f1f4f8;
+          padding: 4px;
+          border-radius: 10px;
+          margin: 25px 0;
+        }
+
+        .tab {
+          border: 0;
+          background: transparent;
+          padding: 10px;
+          border-radius: 8px;
+          font-weight: 700;
+          color: #718096;
+        }
+
+        .tab.active {
+          background: white;
+          color: #17263a;
+          box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+
+        .form {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          text-align: left;
+        }
+
+        label {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+          color: #405168;
+          font-size: 13px;
+          font-weight: 800;
+        }
+
+        input,
+        textarea,
+        select {
+          width: 100%;
+          border: 1px solid #d7e0e9;
+          border-radius: 10px;
+          padding: 12px 13px;
+          outline: 0;
+          background: white;
+          color: #17263a;
+        }
+
+        textarea {
+          min-height: 110px;
+          resize: vertical;
+        }
+
+        .dashboardHeader {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 25px;
+          margin-bottom: 28px;
+        }
+
+        .dashboardHeader h1 {
+          font-size: 39px;
+          margin: 0 0 8px;
+        }
+
+        .dashboardHeader p {
+          color: #718096;
+        }
+
+        .bigAvatar {
+          width: 72px;
+          height: 72px;
+          border-radius: 20px;
+          display: grid;
+          place-items: center;
+          background: #132238;
+          color: white;
+          font-size: 28px;
+          font-weight: 900;
+        }
+
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(4,1fr);
+          gap: 14px;
+          margin-bottom: 20px;
+        }
+
+        .stat {
+          background: white;
+          border: 1px solid #e0e7ef;
+          border-radius: 15px;
+          padding: 18px;
+        }
+
+        .stat span {
+          font-size: 20px;
+        }
+
+        .stat strong {
+          font-size: 25px;
+        }
+
+        .stat small {
+          color: #718096;
+        }
+
+        .dashboardGrid,
+        .detailGrid,
+        .requestColumns {
+          display: grid;
+          grid-template-columns:
+            minmax(0,1fr) 320px;
+          gap: 20px;
+        }
+
+        .requestColumns {
+          grid-template-columns: 1fr 1fr;
+          margin-top: 25px;
+        }
+
+        .profileBox {
+          background: #132238;
+          color: white;
+          border-radius: 18px;
+          padding: 25px;
+          text-align: center;
+        }
+
+        .profileBox h3 {
+          color: white;
+        }
+
+        .profileBox p {
+          color: #bdc8d5;
+        }
+
+        .profileBox > span {
+          background: rgba(255,255,255,.12);
+          padding: 6px 10px;
+          border-radius: 999px;
+          font-size: 11px;
+        }
+
+        .profileAvatar {
+          width: 68px;
+          height: 68px;
+          margin: auto;
+          border-radius: 19px;
+          background: white;
+          color: #132238;
+          display: grid;
+          place-items: center;
+          font-size: 26px;
+          font-weight: 900;
+        }
+
+        .quick {
+          margin-top: 15px;
+          background: white;
+          border: 1px solid #e0e7ef;
+          border-radius: 18px;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+
+        .quick button {
+          border: 1px solid #dce4ed;
+          background: white;
+          border-radius: 9px;
+          padding: 11px;
+          font-weight: 800;
+          text-align: left;
+        }
+
+        .quick .logout {
+          color: #a34d4d;
+        }
+
+        .back {
+          border: 0;
+          background: transparent;
+          color: #5c6e83;
+          font-weight: 800;
+          padding: 0;
+          margin-bottom: 25px;
+        }
+
+        .infoGrid {
+          display: grid;
+          grid-template-columns: repeat(3,1fr);
+          gap: 12px;
+          margin-top: 25px;
+        }
+
+        .infoGrid div {
+          background: #f6f8fa;
+          padding: 15px;
+          border-radius: 12px;
+        }
+
+        .infoGrid small,
+        .infoGrid strong {
+          display: block;
+        }
+
+        .infoGrid small {
+          color: #7b8999;
+        }
+
+        .requestPrice {
+          font-size: 25px;
+          font-weight: 900;
+          margin: 15px 0;
+        }
+
+        .notice {
+          background: #f1f5f8;
+          padding: 15px;
+          border-radius: 12px;
+        }
+
+        .notice p {
+          margin-bottom: 0;
+        }
+
+        .requestCard {
+          border-top: 1px solid #e9edf2;
+          padding: 18px 0;
+        }
+
+        .requestTop {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        .status {
+          background: #fff4d9;
+          color: #8a6510;
+          padding: 5px 9px;
+          border-radius: 999px;
+          font-size: 11px;
+          font-weight: 900;
+        }
+
+        .status.accepted {
+          background: #e4f5eb;
+          color: #267348;
+        }
+
+        .status.rejected {
+          background: #f9e5e5;
+          color: #a34848;
+        }
+
+        .messageQuote {
+          background: #f5f7fa;
+          padding: 12px;
+          border-radius: 10px;
+          color: #627287;
+          font-size: 13px;
+        }
+
+        .requestActions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        .requestActions button {
+          border: 0;
+          border-radius: 8px;
+          padding: 9px 11px;
+          font-weight: 800;
+        }
+
+        .accept {
+          background: #e5f5eb;
+          color: #267348;
+        }
+
+        .reject {
+          background: #fae7e7;
+          color: #a34848;
+        }
+
+        .messageBtn {
+          background: #edf2f7;
+          color: #29415b;
+        }
+
+        .messagesLayout {
+          display: grid;
+          grid-template-columns: 300px 1fr;
+          min-height: 580px;
+          background: white;
+          border: 1px solid #e0e7ef;
+          border-radius: 18px;
+          overflow: hidden;
+        }
+
+        .contacts {
+          border-right: 1px solid #e5eaf0;
+          padding: 20px;
+        }
+
+        .contact {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          text-align: left;
+          border: 0;
+          background: transparent;
+          padding: 11px;
+          border-radius: 10px;
+        }
+
+        .contact.active {
+          background: #edf2f7;
+        }
+
+        .contact div:last-child {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .chat {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .chatHeader {
+          padding: 17px;
+          border-bottom: 1px solid #e5eaf0;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .chatHeader div:last-child {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .chatMessages {
+          flex: 1;
+          padding: 20px;
+          overflow-y: auto;
+        }
+
+        .bubbleRow {
+          display: flex;
+          justify-content: flex-start;
+          margin-bottom: 9px;
+        }
+
+        .bubbleRow.mine {
+          justify-content: flex-end;
+        }
+
+        .bubble {
+          max-width: 75%;
+          background: #edf2f7;
+          padding: 10px 13px;
+          border-radius: 14px;
+        }
+
+        .bubble.mine {
+          background: #132238;
+          color: white;
+        }
+
+        .bubble p {
+          margin: 0 0 5px;
+        }
+
+        .bubble small {
+          font-size: 9px;
+          opacity: .65;
+        }
+
+        .messageForm {
+          border-top: 1px solid #e5eaf0;
+          padding: 13px;
+          display: flex;
+          gap: 10px;
+        }
+
+        .messageForm textarea {
+          min-height: 50px;
+        }
+
+        .chatEmpty {
+          min-height: 300px;
+          display: grid;
+          place-items: center;
+          align-content: center;
+          text-align: center;
+          color: #718096;
+          padding: 30px;
+        }
+
+        .chatEmpty span {
+          font-size: 35px;
+        }
+
+        .offerUser {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding-bottom: 5px;
+        }
+
+        .offerUser div:last-child {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .empty {
+          background: white;
+          border: 1px solid #e0e7ef;
+          border-radius: 16px;
+          padding: 45px;
+          text-align: center;
+          color: #718096;
+        }
+
+        .empty.small {
+          padding: 30px 15px;
+        }
+
+        @media (max-width: 760px) {
+          .headerInner {
+            padding: 10px 15px;
+          }
+
+          .logoText {
+            font-size: 19px;
+          }
+
+          .nav {
+            gap: 2px;
+          }
+
+          .navButton {
+            display: none;
+          }
+
+          .navAccount {
+            padding: 9px 12px;
+          }
+
+          .heroInner {
+            grid-template-columns: 1fr;
+            padding: 48px 17px;
+            min-height: auto;
+            gap: 35px;
+          }
+
+          .hero h1 {
+            font-size: 45px;
+            letter-spacing: -2px;
+          }
+
+          .hero p {
+            font-size: 16px;
+          }
+
+          .heroActions {
+            flex-direction: column;
+          }
+
+          .heroActions button {
+            width: 100%;
+          }
+
+          .heroCard {
+            padding: 20px;
+          }
+
+          .container,
+          .dashboard,
+          .detail,
+          .formContainer {
+            padding-left: 15px;
+            padding-right: 15px;
+          }
+
+          .categories,
+          .services {
+            padding: 45px 0;
+          }
+
+          .categoryGrid {
+            grid-template-columns: repeat(2,1fr);
+          }
+
+          .sectionTop,
+          .dashboardHeader,
+          .cta {
+            align-items: stretch;
+            flex-direction: column;
+          }
+
+          .searchBox {
+            width: 100%;
+          }
+
+          .serviceGrid {
+            grid-template-columns: 1fr;
+          }
+
+          .serviceCard {
+            width: 100%;
+          }
+
+          .stats {
+            grid-template-columns: repeat(2,1fr);
+          }
+
+          .dashboardGrid,
+          .detailGrid,
+          .requestColumns {
+            grid-template-columns: 1fr;
+          }
+
+          .bigAvatar {
+            display: none;
+          }
+
+          .dashboardHeader h1 {
+            font-size: 32px;
+          }
+
+          .infoGrid {
+            grid-template-columns: 1fr;
+          }
+
+          .messagesLayout {
+            grid-template-columns: 1fr;
+            min-height: 650px;
+          }
+
+          .contacts {
+            border-right: 0;
+            border-bottom: 1px solid #e5eaf0;
+            max-height: 220px;
+            overflow-y: auto;
+          }
+
+          .messageForm {
+            flex-direction: column;
+          }
+
+          .messageForm button {
+            width: 100%;
+          }
+
+          .cta {
+            padding: 50px 18px;
+          }
+
+          .cta h2 {
+            font-size: 32px;
+          }
+
+          .ctaButton {
+            width: 100%;
+          }
+        }
+      `}</style>
+
       <Header />
 
-      <main>
-        {page === "home" && <HomePage />}
-        {page === "account" && <AccountPage />}
-        {page === "service" && <ServicePage />}
-        {page === "requests" && (
-          <RequestsPage />
-        )}
-        {page === "messages" && (
-          <MessagesPage />
-        )}
-        {page === "offer" && <OfferPage />}
-      </main>
-
-      <Footer />
-    </div>
+      {authLoading && !loggedUser ? (
+        <div className="empty">
+          Cargando RobLoren...
+        </div>
+      ) : (
+        <>
+          {page === "home" && <HomePage />}
+          {page === "account" && <AccountPage />}
+          {page === "service" && <ServicePage />}
+          {page === "requests" && <RequestsPage />}
+          {page === "messages" && <MessagesPage />}
+          {page === "offer" && <OfferPage />}
+        </>
+      )}
+    </>
   );
 }
 
-const styles = {
-  app: {
-    minHeight: "100vh",
-    background: "#f7f9fc",
-    color: "#142033",
-    fontFamily:
-      "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-  },
-
-  header: {
-    position: "sticky",
-    top: 0,
-    zIndex: 20,
-    background: "rgba(255,255,255,0.96)",
-    borderBottom: "1px solid #e8edf3",
-    backdropFilter: "blur(12px)",
-  },
-
-  headerInner: {
-    maxWidth: 1180,
-    margin: "0 auto",
-    padding: "14px 24px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 20,
-  },
-
-  logoButton: {
-    border: 0,
-    background: "transparent",
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    cursor: "pointer",
-    padding: 0,
-  },
-
-  logoMark: {
-    width: 38,
-    height: 38,
-    borderRadius: 11,
-    background: "#132238",
-    color: "#fff",
-    display: "grid",
-    placeItems: "center",
-    fontWeight: 800,
-    fontSize: 19,
-  },
-
-  logoText: {
-    fontSize: 22,
-    fontWeight: 800,
-    color: "#142033",
-    letterSpacing: "-0.8px",
-  },
-
-  nav: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  navButton: {
-    border: 0,
-    background: "transparent",
-    color: "#56657a",
-    fontWeight: 600,
-    padding: "10px 12px",
-    cursor: "pointer",
-  },
-
-  navPrimaryButton: {
-    border: 0,
-    background: "#132238",
-    color: "#fff",
-    borderRadius: 10,
-    padding: "11px 18px",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-
-  navAccountButton: {
-    border: "1px solid #d8e0ea",
-    background: "#fff",
-    color: "#142033",
-    borderRadius: 10,
-    padding: "10px 17px",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-
-  hero: {
-    background:
-      "linear-gradient(135deg, #f4f7fb 0%, #ffffff 55%, #eef4fb 100%)",
-    borderBottom: "1px solid #e7edf4",
-  },
-
-  heroInner: {
-    maxWidth: 1180,
-    margin: "0 auto",
-    minHeight: 570,
-    padding: "72px 24px",
-    display: "grid",
-    gridTemplateColumns:
-      "minmax(0, 1.15fr) minmax(320px, 0.85fr)",
-    gap: 70,
-    alignItems: "center",
-  },
-
-  heroCopy: {
-    maxWidth: 650,
-  },
-
-  badge: {
-    display: "inline-flex",
-    background: "#e9f0f8",
-    color: "#35516f",
-    borderRadius: 999,
-    padding: "8px 13px",
-    fontSize: 13,
-    fontWeight: 700,
-    marginBottom: 20,
-  },
-
-  heroTitle: {
-    fontSize: "clamp(42px, 6vw, 72px)",
-    lineHeight: 1.02,
-    letterSpacing: "-3px",
-    margin: 0,
-    color: "#102033",
-  },
-
-  heroText: {
-    maxWidth: 570,
-    color: "#607086",
-    fontSize: 18,
-    lineHeight: 1.7,
-    margin: "25px 0",
-  },
-
-  heroActions: {
-    display: "flex",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-
-  heroCard: {
-    background: "#fff",
-    border: "1px solid #e1e8f0",
-    borderRadius: 24,
-    padding: 28,
-    boxShadow:
-      "0 25px 70px rgba(20,32,51,0.10)",
-  },
-
-  heroCardTop: {
-    display: "flex",
-    gap: 10,
-    alignItems: "center",
-    color: "#22364d",
-    marginBottom: 18,
-  },
-
-  heroSearch: {
-    border: "1px solid #dce4ed",
-    borderRadius: 13,
-    padding: "15px 16px",
-    color: "#8390a0",
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: 14,
-  },
-
-  heroTags: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-
-  heroMiniStats: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(3, 1fr)",
-    gap: 10,
-    marginTop: 25,
-    paddingTop: 22,
-    borderTop: "1px solid #edf1f5",
-  },
-
-  primaryButton: {
-    border: 0,
-    background: "#132238",
-    color: "#fff",
-    borderRadius: 11,
-    padding: "13px 20px",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-
-  outlineButton: {
-    border: "1px solid #cdd7e2",
-    background: "#fff",
-    color: "#1d2d43",
-    borderRadius: 11,
-    padding: "13px 20px",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-
-  categoriesSection: {
-    padding: "70px 0 35px",
-    background: "#fff",
-  },
-
-  sectionContainer: {
-    maxWidth: 1180,
-    margin: "0 auto",
-    padding: "0 24px",
-  },
-
-  sectionHeader: {
-    display: "flex",
-    alignItems: "end",
-    justifyContent: "space-between",
-    gap: 30,
-    marginBottom: 28,
-  },
-
-  eyebrow: {
-    display: "block",
-    color: "#708197",
-    fontSize: 11,
-    fontWeight: 800,
-    letterSpacing: "1.8px",
-    marginBottom: 8,
-  },
-
-  sectionTitle: {
-    margin: 0,
-    fontSize: 30,
-    letterSpacing: "-1px",
-    color: "#17263a",
-  },
-
-  sectionSubtext: {
-    color: "#758399",
-    margin: 0,
-  },
-
-  categoryGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(auto-fit, minmax(130px, 1fr))",
-    gap: 12,
-  },
-
-  categoryCard: {
-    border: "1px solid #e0e7ef",
-    background: "#fff",
-    borderRadius: 15,
-    padding: "18px 12px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 8,
-    color: "#34465c",
-    cursor: "pointer",
-  },
-
-  categoryCardActive: {
-    border: "1px solid #132238",
-    background: "#132238",
-    color: "#fff",
-    borderRadius: 15,
-    padding: "18px 12px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 8,
-    cursor: "pointer",
-  },
-
-  categoryIcon: {
-    fontSize: 25,
-  },
-
-  servicesSection: {
-    padding: "45px 0 85px",
-    background: "#f7f9fc",
-  },
-
-  servicesToolbar: {
-    display: "flex",
-    alignItems: "end",
-    justifyContent: "space-between",
-    gap: 25,
-    marginBottom: 28,
-  },
-
-  searchBox: {
-    width: 330,
-    maxWidth: "100%",
-    display: "flex",
-    alignItems: "center",
-    gap: 9,
-    background: "#fff",
-    border: "1px solid #dce4ed",
-    borderRadius: 12,
-    padding: "0 14px",
-  },
-
-  searchInput: {
-    width: "100%",
-    border: 0,
-    outline: 0,
-    padding: "13px 0",
-    fontSize: 14,
-    background: "transparent",
-  },
-
-  loadingBox: {
-    background: "#fff",
-    border: "1px solid #e2e8ef",
-    borderRadius: 16,
-    padding: 50,
-    textAlign: "center",
-    color: "#718095",
-  },
-
-  emptyBox: {
-    background: "#fff",
-    border: "1px solid #e2e8ef",
-    borderRadius: 18,
-    padding: 55,
-    textAlign: "center",
-  },
-
-  emptyIcon: {
-    fontSize: 35,
-    marginBottom: 8,
-  },
-
-  serviceGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: 18,
-  },
-
-  serviceCard: {
-    background: "#fff",
-    border: "1px solid #e2e8ef",
-    borderRadius: 18,
-    padding: 22,
-    boxShadow:
-      "0 10px 30px rgba(20,32,51,0.035)",
-  },
-
-  serviceCardTop: {
-    display: "flex",
-    alignItems: "center",
-    gap: 11,
-  },
-
-  serviceAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    background: "#eaf0f6",
-    color: "#21364d",
-    display: "grid",
-    placeItems: "center",
-    fontWeight: 800,
-  },
-
-  serviceProvider: {
-    minWidth: 0,
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    gap: 3,
-  },
-
-  categoryPill: {
-    background: "#f0f4f8",
-    color: "#64758b",
-    borderRadius: 999,
-    padding: "5px 8px",
-    fontSize: 10,
-    fontWeight: 700,
-  },
-
-  serviceTitle: {
-    margin: "22px 0 9px",
-    fontSize: 19,
-    color: "#17263a",
-  },
-
-  serviceDescription: {
-    color: "#6b7b90",
-    lineHeight: 1.6,
-    minHeight: 72,
-    margin: 0,
-    fontSize: 14,
-  },
-
-  serviceFooter: {
-    borderTop: "1px solid #edf1f5",
-    marginTop: 18,
-    paddingTop: 17,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  priceLabel: {
-    display: "block",
-    color: "#8a96a5",
-    fontSize: 10,
-  },
-
-  price: {
-    fontSize: 21,
-    color: "#17263a",
-  },
-
-  viewButton: {
-    border: 0,
-    background: "#eef3f8",
-    color: "#263c55",
-    borderRadius: 9,
-    padding: "9px 12px",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-
-  ctaSection: {
-    padding: "75px 24px",
-    background: "#132238",
-    color: "#fff",
-  },
-
-  ctaInner: {
-    maxWidth: 1120,
-    margin: "0 auto",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 35,
-  },
-
-  ctaTitle: {
-    fontSize: 40,
-    lineHeight: 1.08,
-    letterSpacing: "-1.5px",
-    margin: "0 0 15px",
-  },
-
-  ctaText: {
-    color: "#b7c3d2",
-    margin: 0,
-  },
-
-  ctaButton: {
-    border: 0,
-    background: "#fff",
-    color: "#132238",
-    borderRadius: 11,
-    padding: "14px 20px",
-    fontWeight: 800,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-  },
-
-  pageSection: {
-    minHeight: "calc(100vh - 70px)",
-    padding: "45px 24px 80px",
-  },
-
-  authCard: {
-    width: "100%",
-    maxWidth: 520,
-    margin: "25px auto",
-    background: "#fff",
-    border: "1px solid #e1e7ee",
-    borderRadius: 22,
-    padding: 35,
-    boxShadow:
-      "0 20px 60px rgba(20,32,51,0.07)",
-  },
-
-  authHeader: {
-    textAlign: "center",
-  },
-
-  accountLogo: {
-    width: 58,
-    height: 58,
-    borderRadius: 17,
-    background: "#132238",
-    color: "#fff",
-    display: "grid",
-    placeItems: "center",
-    margin: "0 auto 18px",
-    fontSize: 25,
-    fontWeight: 800,
-  },
-
-  authTitle: {
-    margin: "8px 0",
-    fontSize: 30,
-    letterSpacing: "-1px",
-  },
-
-  authSubtitle: {
-    color: "#718095",
-    margin: 0,
-  },
-
-  authTabs: {
-    display: "grid",
-    gridTemplateColumns:
-      "1fr 1fr",
-    background: "#f1f4f8",
-    borderRadius: 11,
-    padding: 4,
-    margin: "28px 0",
-  },
-
-  authTab: {
-    border: 0,
-    background: "transparent",
-    padding: "10px",
-    borderRadius: 8,
-    color: "#738197",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-
-  authTabActive: {
-    border: 0,
-    background: "#fff",
-    padding: "10px",
-    borderRadius: 8,
-    color: "#17263a",
-    fontWeight: 800,
-    cursor: "pointer",
-    boxShadow:
-      "0 2px 8px rgba(20,32,51,0.07)",
-  },
-
-  authForm: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 16,
-  },
-
-  label: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 7,
-    color: "#405168",
-    fontSize: 13,
-    fontWeight: 700,
-  },
-
-  input: {
-    width: "100%",
-    boxSizing: "border-box",
-    border: "1px solid #d7e0e9",
-    background: "#fff",
-    borderRadius: 10,
-    padding: "12px 13px",
-    outline: "none",
-    fontSize: 14,
-    color: "#17263a",
-  },
-
-  textarea: {
-    width: "100%",
-    minHeight: 105,
-    boxSizing: "border-box",
-    border: "1px solid #d7e0e9",
-    background: "#fff",
-    borderRadius: 10,
-    padding: "12px 13px",
-    outline: "none",
-    fontSize: 14,
-    color: "#17263a",
-    resize: "vertical",
-    fontFamily: "inherit",
-  },
-
-  textareaLarge: {
-    width: "100%",
-    minHeight: 180,
-    boxSizing: "border-box",
-    border: "1px solid #d7e0e9",
-    background: "#fff",
-    borderRadius: 10,
-    padding: "12px 13px",
-    outline: "none",
-    fontSize: 14,
-    color: "#17263a",
-    resize: "vertical",
-    fontFamily: "inherit",
-  },
-
-  primaryButtonFull: {
-    border: 0,
-    background: "#132238",
-    color: "#fff",
-    borderRadius: 10,
-    padding: "13px 18px",
-    fontWeight: 800,
-    cursor: "pointer",
-    width: "100%",
-  },
-
-  secondaryButtonFull: {
-    border: "1px solid #d7e0e9",
-    background: "#fff",
-    color: "#24384f",
-    borderRadius: 10,
-    padding: "12px 18px",
-    fontWeight: 800,
-    cursor: "pointer",
-    width: "100%",
-    marginTop: 10,
-  },
-
-  formNote: {
-    color: "#8a96a5",
-    fontSize: 12,
-    lineHeight: 1.5,
-    textAlign: "center",
-    margin: 0,
-  },
-
-  dashboardContainer: {
-    maxWidth: 1180,
-    margin: "0 auto",
-  },
-
-  dashboardHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 25,
-    marginBottom: 30,
-  },
-
-  dashboardTitle: {
-    fontSize: 39,
-    letterSpacing: "-1.5px",
-    margin: "0 0 8px",
-    color: "#17263a",
-  },
-
-  dashboardSubtitle: {
-    margin: 0,
-    color: "#708096",
-    lineHeight: 1.6,
-  },
-
-  accountHeaderAvatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    background: "#132238",
-    color: "#fff",
-    display: "grid",
-    placeItems: "center",
-    fontSize: 28,
-    fontWeight: 800,
-  },
-
-  statsGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(4, 1fr)",
-    gap: 15,
-    marginBottom: 20,
-  },
-
-  statCard: {
-    background: "#fff",
-    border: "1px solid #e0e7ef",
-    borderRadius: 16,
-    padding: 19,
-    display: "flex",
-    gap: 13,
-    alignItems: "center",
-  },
-
-  statIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    background: "#edf2f7",
-    display: "grid",
-    placeItems: "center",
-    fontSize: 19,
-  },
-
-  dashboardGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "minmax(0, 1fr) 320px",
-    gap: 20,
-  },
-
-  dashboardMain: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 20,
-  },
-
-  panelCard: {
-    background: "#fff",
-    border: "1px solid #e0e7ef",
-    borderRadius: 18,
-    padding: 25,
-  },
-
-  panelHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "start",
-    marginBottom: 20,
-  },
-
-  panelTitle: {
-    margin: 0,
-    fontSize: 23,
-    letterSpacing: "-0.5px",
-  },
-
-  panelIcon: {
-    fontSize: 23,
-  },
-
-  profileForm: {
-    display: "grid",
-    gridTemplateColumns:
-      "1fr 1fr",
-    gap: 16,
-  },
-
-  activityList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-  },
-
-  activityItem: {
-    width: "100%",
-    border: "1px solid #e4eaf0",
-    background: "#fff",
-    borderRadius: 12,
-    padding: 13,
-    display: "grid",
-    gridTemplateColumns:
-      "42px 1fr 20px",
-    alignItems: "center",
-    gap: 11,
-    textAlign: "left",
-    cursor: "pointer",
-    color: "#17263a",
-  },
-
-  activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 11,
-    background: "#edf2f7",
-    display: "grid",
-    placeItems: "center",
-  },
-
-  profileSummary: {
-    background: "#132238",
-    color: "#fff",
-    borderRadius: 18,
-    padding: 27,
-    textAlign: "center",
-  },
-
-  profileSummaryAvatar: {
-    width: 68,
-    height: 68,
-    margin: "0 auto 13px",
-    borderRadius: 19,
-    background: "#fff",
-    color: "#132238",
-    display: "grid",
-    placeItems: "center",
-    fontSize: 26,
-    fontWeight: 800,
-  },
-
-  verifiedBadge: {
-    display: "inline-block",
-    marginTop: 10,
-    background: "rgba(255,255,255,0.12)",
-    borderRadius: 999,
-    padding: "6px 10px",
-    fontSize: 11,
-  },
-
-  quickActions: {
-    marginTop: 15,
-    background: "#fff",
-    border: "1px solid #e0e7ef",
-    borderRadius: 18,
-    padding: 20,
-    display: "flex",
-    flexDirection: "column",
-    gap: 9,
-  },
-
-  quickTitle: {
-    margin: "0 0 5px",
-    fontSize: 15,
-  },
-
-  quickButtonPrimary: {
-    border: 0,
-    background: "#132238",
-    color: "#fff",
-    borderRadius: 10,
-    padding: 12,
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-
-  quickButton: {
-    border: "1px solid #dce4ed",
-    background: "#fff",
-    color: "#273a52",
-    borderRadius: 10,
-    padding: 11,
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-
-  logoutButton: {
-    border: "1px solid #f0d8d8",
-    background: "#fff",
-    color: "#a34d4d",
-    borderRadius: 10,
-    padding: 11,
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-
-  backButton: {
-    border: 0,
-    background: "transparent",
-    color: "#5c6e83",
-    fontWeight: 700,
-    padding: 0,
-    cursor: "pointer",
-    marginBottom: 25,
-  },
-
-  detailContainer: {
-    maxWidth: 1050,
-    margin: "0 auto",
-  },
-
-  detailGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "minmax(0, 1fr) 330px",
-    gap: 25,
-  },
-
-  detailMain: {
-    background: "#fff",
-    border: "1px solid #e0e7ef",
-    borderRadius: 20,
-    padding: 32,
-  },
-
-  detailCategory: {
-    display: "inline-block",
-    background: "#edf2f7",
-    color: "#53677e",
-    borderRadius: 999,
-    padding: "6px 10px",
-    fontSize: 11,
-    fontWeight: 800,
-  },
-
-  detailTitle: {
-    fontSize: 40,
-    lineHeight: 1.1,
-    letterSpacing: "-1.5px",
-    margin: "18px 0 24px",
-  },
-
-  detailProvider: {
-    display: "flex",
-    gap: 12,
-    alignItems: "center",
-  },
-
-  detailAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    background: "#eaf0f6",
-    color: "#20364d",
-    display: "grid",
-    placeItems: "center",
-    fontWeight: 800,
-  },
-
-  detailDivider: {
-    height: 1,
-    background: "#e8edf2",
-    margin: "28px 0",
-  },
-
-  detailHeading: {
-    fontSize: 21,
-    marginBottom: 10,
-  },
-
-  detailDescription: {
-    color: "#64748a",
-    lineHeight: 1.75,
-    fontSize: 15,
-  },
-
-  detailInfoGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(3, 1fr)",
-    gap: 10,
-    marginTop: 30,
-  },
-
-  requestCard: {
-    background: "#fff",
-    border: "1px solid #e0e7ef",
-    borderRadius: 20,
-    padding: 25,
-    height: "fit-content",
-  },
-
-  requestTitle: {
-    margin: "5px 0 22px",
-    fontSize: 24,
-  },
-
-  requestPrice: {
-    background: "#f3f6f9",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 20,
-  },
-
-  demoNotice: {
-    background: "#f7f9fc",
-    border: "1px solid #e1e8ef",
-    borderRadius: 12,
-    padding: 14,
-    color: "#617188",
-    fontSize: 13,
-    lineHeight: 1.5,
-  },
-
-  pageTitleBlock: {
-    marginBottom: 28,
-  },
-
-  requestsGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "1fr 1fr",
-    gap: 20,
-  },
-
-  requestColumn: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-  },
-
-  columnHeader: {
-    background: "#fff",
-    border: "1px solid #e0e7ef",
-    borderRadius: 15,
-    padding: 16,
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  requestItem: {
-    background: "#fff",
-    border: "1px solid #e0e7ef",
-    borderRadius: 16,
-    padding: 18,
-  },
-
-  requestItemTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  statusPill: {
-    borderRadius: 999,
-    padding: "6px 9px",
-    fontSize: 10,
-    fontWeight: 800,
-  },
-
-  statusPending: {
-    background: "#fff4d8",
-    color: "#886b20",
-  },
-
-  statusAccepted: {
-    background: "#e2f5ea",
-    color: "#267247",
-  },
-
-  statusRejected: {
-    background: "#fbe7e7",
-    color: "#9b4242",
-  },
-
-  requestDate: {
-    color: "#8b98a8",
-    fontSize: 11,
-  },
-
-  requestServiceTitle: {
-    fontSize: 18,
-    margin: "15px 0",
-  },
-
-  requestPeople: {
-    display: "grid",
-    gridTemplateColumns:
-      "1fr 1fr",
-    gap: 10,
-  },
-
-  requestMessage: {
-    background: "#f7f9fb",
-    borderRadius: 10,
-    padding: 12,
-    margin: "14px 0",
-    color: "#627287",
-    fontSize: 13,
-    lineHeight: 1.5,
-  },
-
-  requestActions: {
-    display: "flex",
-    gap: 7,
-    flexWrap: "wrap",
-  },
-
-  acceptButton: {
-    border: 0,
-    background: "#e5f5eb",
-    color: "#267247",
-    borderRadius: 8,
-    padding: "8px 10px",
-    fontWeight: 800,
-    cursor: "pointer",
-  },
-
-  rejectButton: {
-    border: 0,
-    background: "#fbe9e9",
-    color: "#9b4242",
-    borderRadius: 8,
-    padding: "8px 10px",
-    fontWeight: 800,
-    cursor: "pointer",
-  },
-
-  messageButton: {
-    border: "1px solid #dce4ed",
-    background: "#fff",
-    color: "#33485f",
-    borderRadius: 8,
-    padding: "8px 10px",
-    fontWeight: 800,
-    cursor: "pointer",
-  },
-
-  emptySmall: {
-    background: "#fff",
-    border: "1px dashed #d6dfe8",
-    borderRadius: 15,
-    padding: 35,
-    textAlign: "center",
-    color: "#718096",
-  },
-
-  smallPrimaryButton: {
-    border: 0,
-    background: "#132238",
-    color: "#fff",
-    borderRadius: 9,
-    padding: "10px 14px",
-    fontWeight: 700,
-    cursor: "pointer",
-    marginTop: 10,
-  },
-
-  messagesContainer: {
-    maxWidth: 1050,
-    margin: "0 auto",
-  },
-
-  messagesLayout: {
-    display: "grid",
-    gridTemplateColumns:
-      "290px minmax(0, 1fr)",
-    minHeight: 600,
-    background: "#fff",
-    border: "1px solid #e0e7ef",
-    borderRadius: 18,
-    overflow: "hidden",
-  },
-
-  contactsPanel: {
-    borderRight: "1px solid #e4eaf0",
-    background: "#fbfcfd",
-  },
-
-  contactsHeader: {
-    padding: 20,
-    borderBottom: "1px solid #e4eaf0",
-  },
-
-  contactItem: {
-    width: "100%",
-    border: 0,
-    borderBottom: "1px solid #edf1f5",
-    background: "transparent",
-    padding: 13,
-    display: "flex",
-    gap: 10,
-    alignItems: "center",
-    textAlign: "left",
-    cursor: "pointer",
-  },
-
-  contactItemActive: {
-    width: "100%",
-    border: 0,
-    borderBottom: "1px solid #edf1f5",
-    background: "#edf3f8",
-    padding: 13,
-    display: "flex",
-    gap: 10,
-    alignItems: "center",
-    textAlign: "left",
-    cursor: "pointer",
-  },
-
-  contactAvatar: {
-    width: 42,
-    height: 42,
-    flexShrink: 0,
-    borderRadius: 12,
-    background: "#dfe8f0",
-    color: "#263b52",
-    display: "grid",
-    placeItems: "center",
-    fontWeight: 800,
-  },
-
-  contactInfo: {
-    minWidth: 0,
-    display: "flex",
-    flexDirection: "column",
-    gap: 3,
-  },
-
-  emptyContact: {
-    padding: 30,
-    textAlign: "center",
-    color: "#738197",
-  },
-
-  chatPanel: {
-    minWidth: 0,
-    display: "flex",
-    flexDirection: "column",
-  },
-
-  chatEmpty: {
-    flex: 1,
-    minHeight: 500,
-    display: "grid",
-    placeItems: "center",
-    alignContent: "center",
-    textAlign: "center",
-    color: "#718095",
-    padding: 30,
-  },
-
-  chatEmptyIcon: {
-    fontSize: 40,
-    marginBottom: 10,
-  },
-
-  chatHeader: {
-    display: "flex",
-    alignItems: "center",
-    gap: 11,
-    padding: 16,
-    borderBottom: "1px solid #e4eaf0",
-  },
-
-  contactAvatarLarge: {
-    width: 44,
-    height: 44,
-    borderRadius: 13,
-    background: "#e5edf4",
-    color: "#263b52",
-    display: "grid",
-    placeItems: "center",
-    fontWeight: 800,
-  },
-
-  messageList: {
-    flex: 1,
-    minHeight: 400,
-    maxHeight: 500,
-    overflowY: "auto",
-    padding: 20,
-    background: "#f8fafc",
-  },
-
-  chatLoading: {
-    textAlign: "center",
-    color: "#78879a",
-    padding: 30,
-  },
-
-  chatNoMessages: {
-    height: "100%",
-    minHeight: 330,
-    display: "grid",
-    placeItems: "center",
-    alignContent: "center",
-    textAlign: "center",
-    color: "#748298",
-  },
-
-  messageRow: {
-    display: "flex",
-    justifyContent: "flex-start",
-    marginBottom: 10,
-  },
-
-  messageRowMine: {
-    display: "flex",
-    justifyContent: "flex-end",
-    marginBottom: 10,
-  },
-
-  messageBubble: {
-    maxWidth: "72%",
-    background: "#fff",
-    border: "1px solid #e0e7ef",
-    borderRadius: "14px 14px 14px 4px",
-    padding: "10px 13px",
-  },
-
-  messageBubbleMine: {
-    maxWidth: "72%",
-    background: "#132238",
-    color: "#fff",
-    borderRadius: "14px 14px 4px 14px",
-    padding: "10px 13px",
-  },
-
-  messageForm: {
-    display: "flex",
-    gap: 9,
-    padding: 13,
-    borderTop: "1px solid #e4eaf0",
-  },
-
-  messageInput: {
-    flex: 1,
-    border: "1px solid #d8e1ea",
-    borderRadius: 10,
-    padding: "10px 12px",
-    resize: "none",
-    outline: "none",
-    fontFamily: "inherit",
-  },
-
-  sendButton: {
-    border: 0,
-    background: "#132238",
-    color: "#fff",
-    borderRadius: 10,
-    padding: "0 17px",
-    fontWeight: 800,
-    cursor: "pointer",
-  },
-
-  formContainer: {
-    maxWidth: 720,
-    margin: "0 auto",
-  },
-
-  formHeader: {
-    marginBottom: 25,
-  },
-
-  offerCard: {
-    background: "#fff",
-    border: "1px solid #e0e7ef",
-    borderRadius: 20,
-    padding: 28,
-    display: "flex",
-    flexDirection: "column",
-    gap: 17,
-  },
-
-  offerIntro: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    paddingBottom: 18,
-    borderBottom: "1px solid #edf1f5",
-  },
-
-  offerIntroIcon: {
-    width: 45,
-    height: 45,
-    borderRadius: 13,
-    background: "#e9f0f6",
-    display: "grid",
-    placeItems: "center",
-  },
-
-  priceInputWrap: {
-    display: "flex",
-    alignItems: "center",
-    border: "1px solid #d7e0e9",
-    borderRadius: 10,
-    paddingLeft: 13,
-  },
-
-  priceInput: {
-    flex: 1,
-    border: 0,
-    outline: 0,
-    padding: "12px 13px 12px 7px",
-    fontSize: 14,
-  },
-
-  footer: {
-    background: "#0e1a2a",
-    color: "#fff",
-    padding: "42px 24px 20px",
-  },
-
-  footerInner: {
-    maxWidth: 1120,
-    margin: "0 auto",
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 30,
-  },
-
-  footerBrand: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-  },
-
-  footerText: {
-    color: "#9eacbd",
-    fontSize: 13,
-  },
-
-  footerLinks: {
-    display: "flex",
-    gap: 15,
-    alignItems: "start",
-  },
-
-  footerLinksButton: {
-    color: "#b9c4d2",
-  },
-
-  footerBottom: {
-    maxWidth: 1120,
-    margin: "30px auto 0",
-    paddingTop: 18,
-    borderTop: "1px solid rgba(255,255,255,0.1)",
-    color: "#8291a4",
-    fontSize: 11,
-  },
-};
-
 ReactDOM.createRoot(
   document.getElementById("root")
-).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+).render(<App />);
