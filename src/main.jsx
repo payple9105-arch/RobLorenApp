@@ -2,6 +2,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { supabase } from "./supabaseClient";
 
+/* =========================================================
+   DATOS
+========================================================= */
+
 const categories = [
   ["💻", "Tecnología"],
   ["🎨", "Diseño"],
@@ -53,6 +57,10 @@ const demoServices = [
     demo: true,
   },
 ];
+
+/* =========================================================
+   FUNCIONES AUXILIARES
+========================================================= */
 
 function mapService(row, profile) {
   return {
@@ -107,6 +115,12 @@ function dateText(value) {
   });
 }
 
+/* =========================================================
+   COMPONENTES ESTABLES
+   IMPORTANTE: están fuera de App para evitar perder el foco
+   de inputs en iPhone.
+========================================================= */
+
 function Avatar({ name = "Usuario", large = false }) {
   const letter = name.trim().charAt(0).toUpperCase() || "U";
 
@@ -116,6 +130,52 @@ function Avatar({ name = "Usuario", large = false }) {
     </div>
   );
 }
+
+function ServiceCard({ service, onOpen }) {
+  return (
+    <article className="service-card">
+      <span className="service-category">{service.category}</span>
+
+      <h3>{service.service}</h3>
+
+      <div className="service-professional">
+        <Avatar name={service.name} />
+
+        <div>
+          <strong>{service.name}</strong>
+          <span>{service.profession}</span>
+        </div>
+      </div>
+
+      <p className="service-description">{service.description}</p>
+
+      <div className="service-bottom">
+        <div className="price">
+          <small>Desde</small>
+          ${service.price}
+        </div>
+
+        <button className="primary" onClick={() => onOpen(service)}>
+          Ver servicio
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function StatCard({ icon, value, label }) {
+  return (
+    <div className="stat-card">
+      <span>{icon}</span>
+      <strong>{value}</strong>
+      <small>{label}</small>
+    </div>
+  );
+}
+
+/* =========================================================
+   APP
+========================================================= */
 
 function App() {
   const [page, setPage] = useState("home");
@@ -168,6 +228,10 @@ function App() {
 
   const [publishing, setPublishing] = useState(false);
 
+  /* =======================================================
+     PERFIL
+  ======================================================= */
+
   async function ensureProfile(user) {
     if (!user) return null;
 
@@ -178,11 +242,11 @@ function App() {
       .limit(1);
 
     if (error) {
-      console.error(error);
+      console.error("Error leyendo perfil:", error);
       return null;
     }
 
-    if (data && data.length > 0) {
+    if (data?.length) {
       return data[0];
     }
 
@@ -202,8 +266,8 @@ function App() {
       .select("id,name,profession,bio");
 
     if (createError) {
-      console.error(createError);
-      return null;
+      console.error("Error creando perfil:", createError);
+      return profile;
     }
 
     return created?.[0] || profile;
@@ -232,6 +296,10 @@ function App() {
     });
   }
 
+  /* =======================================================
+     SERVICIOS
+  ======================================================= */
+
   async function loadServices() {
     setServicesLoading(true);
 
@@ -243,7 +311,7 @@ function App() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(error);
+      console.error("Error cargando servicios:", error);
       setServices(demoServices);
       setServicesLoading(false);
       return;
@@ -252,7 +320,7 @@ function App() {
     const rows = data || [];
 
     const ids = [
-      ...new Set(rows.map((x) => x.user_id).filter(Boolean)),
+      ...new Set(rows.map((item) => item.user_id).filter(Boolean)),
     ];
 
     let profiles = {};
@@ -264,7 +332,10 @@ function App() {
         .in("id", ids);
 
       profiles = Object.fromEntries(
-        (profileRows || []).map((p) => [p.id, p])
+        (profileRows || []).map((profile) => [
+          profile.id,
+          profile,
+        ])
       );
     }
 
@@ -275,6 +346,10 @@ function App() {
     setServices([...real, ...demoServices]);
     setServicesLoading(false);
   }
+
+  /* =======================================================
+     SOLICITUDES
+  ======================================================= */
 
   async function loadRequests() {
     if (!loggedUser?.id) {
@@ -293,7 +368,7 @@ function App() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(error);
+      console.error("Error cargando solicitudes:", error);
       setRequests([]);
       setLoadingRequests(false);
       return;
@@ -304,31 +379,39 @@ function App() {
     const profileIds = [
       ...new Set(
         rows
-          .flatMap((r) => [r.client_id, r.provider_id])
+          .flatMap((row) => [
+            row.client_id,
+            row.provider_id,
+          ])
           .filter(Boolean)
       ),
     ];
 
     const serviceIds = [
-      ...new Set(rows.map((r) => r.service_id).filter(Boolean)),
+      ...new Set(
+        rows.map((row) => row.service_id).filter(Boolean)
+      ),
     ];
 
     let profiles = {};
     let serviceRows = {};
 
     if (profileIds.length) {
-      const { data: ps } = await supabase
+      const { data: profileData } = await supabase
         .from("profiles")
         .select("id,name,profession,bio")
         .in("id", profileIds);
 
       profiles = Object.fromEntries(
-        (ps || []).map((p) => [p.id, p])
+        (profileData || []).map((profile) => [
+          profile.id,
+          profile,
+        ])
       );
     }
 
     if (serviceIds.length) {
-      const { data: ss } = await supabase
+      const { data: serviceData } = await supabase
         .from("services")
         .select(
           "id,service_title,category,description,price,user_id"
@@ -336,40 +419,56 @@ function App() {
         .in("id", serviceIds);
 
       serviceRows = Object.fromEntries(
-        (ss || []).map((s) => [s.id, s])
+        (serviceData || []).map((service) => [
+          service.id,
+          service,
+        ])
       );
     }
 
     setRequests(
-      rows.map((r) => {
-        const service = serviceRows[r.service_id];
-        const client = profiles[r.client_id];
-        const provider = profiles[r.provider_id];
+      rows.map((row) => {
+        const service = serviceRows[row.service_id];
+        const client = profiles[row.client_id];
+        const provider = profiles[row.provider_id];
 
         return {
-          ...r,
+          ...row,
+
           clientName:
             client?.name ||
-            (r.client_id === loggedUser.id
+            (row.client_id === loggedUser.id
               ? loggedUser.name
               : "Cliente"),
+
           providerName:
             provider?.name ||
-            (r.provider_id === loggedUser.id
+            (row.provider_id === loggedUser.id
               ? loggedUser.name
               : "Profesional"),
+
           serviceTitle:
-            service?.service_title || "Servicio profesional",
-          serviceCategory: service?.category || "Otros",
-          servicePrice: Number(service?.price) || 0,
-          providerId: r.provider_id,
-          clientId: r.client_id,
+            service?.service_title ||
+            "Servicio profesional",
+
+          serviceCategory:
+            service?.category || "Otros",
+
+          servicePrice:
+            Number(service?.price) || 0,
+
+          providerId: row.provider_id,
+          clientId: row.client_id,
         };
       })
     );
 
     setLoadingRequests(false);
   }
+
+  /* =======================================================
+     MENSAJES
+  ======================================================= */
 
   async function loadMessages(contactId) {
     if (!loggedUser?.id || !contactId) {
@@ -390,13 +489,49 @@ function App() {
       .order("created_at", { ascending: true });
 
     if (error) {
-      console.error(error);
+      console.error("Error cargando mensajes:", error);
       setMessages([]);
     } else {
       setMessages(data || []);
     }
 
     setLoadingMessages(false);
+  }
+
+  async function openMessaging(contact) {
+    if (!loggedUser) {
+      setAccountMode("login");
+      setPage("account");
+      return;
+    }
+
+    if (!contact?.userId) {
+      alert(
+        "Este profesional todavía no tiene mensajería disponible."
+      );
+      return;
+    }
+
+    if (contact.userId === loggedUser.id) {
+      alert(
+        "No puedes iniciar una conversación contigo mismo."
+      );
+      return;
+    }
+
+    const contactData = {
+      id: contact.userId,
+      name: contact.name || "Profesional",
+      profession: contact.profession || "Profesional",
+      requestId: contact.requestId || null,
+    };
+
+    setSelectedContact(contactData);
+    setMessages([]);
+    setMessageText("");
+    setPage("messages");
+
+    await loadMessages(contactData.id);
   }
 
   async function sendMessage(event) {
@@ -436,39 +571,9 @@ function App() {
     setSendingMessage(false);
   }
 
-  async function openMessaging(contact) {
-    if (!loggedUser) {
-      setAccountMode("login");
-      setPage("account");
-      return;
-    }
-
-    if (!contact?.userId) {
-      alert(
-        "Este profesional todavía no tiene mensajería disponible."
-      );
-      return;
-    }
-
-    if (contact.userId === loggedUser.id) {
-      alert("No puedes iniciar una conversación contigo mismo.");
-      return;
-    }
-
-    const contactData = {
-      id: contact.userId,
-      name: contact.name || "Profesional",
-      profession: contact.profession || "Profesional",
-      requestId: contact.requestId || null,
-    };
-
-    setSelectedContact(contactData);
-    setMessages([]);
-    setMessageText("");
-    setPage("messages");
-
-    await loadMessages(contactData.id);
-  }
+  /* =======================================================
+     SOLICITAR SERVICIO
+  ======================================================= */
 
   async function sendRequest() {
     if (!loggedUser) {
@@ -538,6 +643,10 @@ function App() {
     setUpdatingRequest(null);
   }
 
+  /* =======================================================
+     GUARDAR PERFIL
+  ======================================================= */
+
   async function saveProfile(event) {
     event.preventDefault();
 
@@ -597,6 +706,10 @@ function App() {
     await loadServices();
   }
 
+  /* =======================================================
+     PUBLICAR SERVICIO
+  ======================================================= */
+
   async function publishService(event) {
     event.preventDefault();
 
@@ -623,15 +736,17 @@ function App() {
 
     setPublishing(true);
 
-    const { error } = await supabase.from("services").insert({
-      name: loggedUser.name,
-      profession: loggedUser.profession,
-      service_title: offer.serviceTitle.trim(),
-      category: offer.category,
-      description: offer.description.trim(),
-      price: Number(offer.price),
-      user_id: loggedUser.id,
-    });
+    const { error } = await supabase
+      .from("services")
+      .insert({
+        name: loggedUser.name,
+        profession: loggedUser.profession,
+        service_title: offer.serviceTitle.trim(),
+        category: offer.category,
+        description: offer.description.trim(),
+        price: Number(offer.price),
+        user_id: loggedUser.id,
+      });
 
     if (error) {
       alert(error.message);
@@ -654,6 +769,10 @@ function App() {
     setPage("services");
   }
 
+  /* =======================================================
+     REGISTRO
+  ======================================================= */
+
   async function register(event) {
     event.preventDefault();
 
@@ -668,7 +787,9 @@ function App() {
     }
 
     if (form.password.length < 6) {
-      alert("La contraseña debe tener al menos 6 caracteres.");
+      alert(
+        "La contraseña debe tener al menos 6 caracteres."
+      );
       return;
     }
 
@@ -677,6 +798,7 @@ function App() {
     const { data, error } = await supabase.auth.signUp({
       email: form.email.trim(),
       password: form.password,
+
       options: {
         data: {
           name: form.name.trim(),
@@ -694,13 +816,11 @@ function App() {
     }
 
     if (data?.user) {
-      const user = data.user;
-
       const { error: profileError } = await supabase
         .from("profiles")
         .upsert(
           {
-            id: user.id,
+            id: data.user.id,
             name: form.name.trim(),
             profession:
               form.profession.trim() || "Profesional",
@@ -732,6 +852,10 @@ function App() {
     setAuthLoading(false);
   }
 
+  /* =======================================================
+     LOGIN
+  ======================================================= */
+
   async function login(event) {
     event.preventDefault();
 
@@ -742,10 +866,11 @@ function App() {
 
     setAuthLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: form.email.trim(),
-      password: form.password,
-    });
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email: form.email.trim(),
+        password: form.password,
+      });
 
     if (error) {
       alert(error.message);
@@ -767,6 +892,10 @@ function App() {
     setPage("account");
   }
 
+  /* =======================================================
+     LOGOUT
+  ======================================================= */
+
   async function logout() {
     await supabase.auth.signOut();
 
@@ -778,11 +907,16 @@ function App() {
     setAccountMode("login");
   }
 
+  /* =======================================================
+     AUTH
+  ======================================================= */
+
   useEffect(() => {
     let mounted = true;
 
     async function start() {
-      const { data } = await supabase.auth.getSession();
+      const { data } =
+        await supabase.auth.getSession();
 
       if (!mounted) return;
 
@@ -799,23 +933,29 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return;
+    } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
 
-      if (session?.user) {
-        await refreshUser(session.user);
-      } else {
-        setLoggedUser(null);
+        if (session?.user) {
+          await refreshUser(session.user);
+        } else {
+          setLoggedUser(null);
+        }
+
+        setAuthLoading(false);
       }
-
-      setAuthLoading(false);
-    });
+    );
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
+
+  /* =======================================================
+     CARGA INICIAL
+  ======================================================= */
 
   useEffect(() => {
     loadServices();
@@ -826,6 +966,10 @@ function App() {
       loadRequests();
     }
   }, [loggedUser]);
+
+  /* =======================================================
+     DATOS DERIVADOS
+  ======================================================= */
 
   const filteredServices = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -866,26 +1010,27 @@ function App() {
     if (!loggedUser) return [];
 
     return requests.filter(
-      (r) =>
-        r.clientId === loggedUser.id ||
-        r.providerId === loggedUser.id
+      (request) =>
+        request.clientId === loggedUser.id ||
+        request.providerId === loggedUser.id
     );
   }, [requests, loggedUser]);
 
   const pendingRequests = myRequests.filter(
-    (r) =>
-      r.status === "pending" &&
-      r.providerId === loggedUser?.id
+    (request) =>
+      request.status === "pending" &&
+      request.providerId === loggedUser?.id
   );
 
   const acceptedRequests = myRequests.filter(
-    (r) => r.status === "accepted"
+    (request) => request.status === "accepted"
   );
 
   const recentActivity = myRequests.slice(0, 4);
 
-  function go(pageName) {
-    setPage(pageName);
+  function go(nextPage) {
+    setPage(nextPage);
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -898,1079 +1043,15 @@ function App() {
     go("service");
   }
 
-  function HomePage() {
-    return (
-      <>
-        <section className="hero">
-          <div className="hero-content">
-            <span className="eyebrow">
-              MARKETPLACE PROFESIONAL
-            </span>
-
-            <h1>
-              Conecta talento
-              <br />
-              con oportunidades.
-            </h1>
-
-            <p>
-              Encuentra profesionales, descubre servicios y
-              conecta directamente con personas que pueden
-              ayudarte a llevar tus proyectos más lejos.
-            </p>
-
-            <div className="hero-actions">
-              <button
-                className="primary"
-                onClick={() => go("services")}
-              >
-                Explorar servicios
-              </button>
-
-              <button
-                className="secondary"
-                onClick={() =>
-                  loggedUser
-                    ? go("publish")
-                    : setPage("account")
-                }
-              >
-                Ofrecer mis servicios
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section className="section">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">CATEGORÍAS</span>
-              <h2>Encuentra el talento que necesitas</h2>
-            </div>
-
-            <button
-              className="text-button"
-              onClick={() => go("categories")}
-            >
-              Ver todas →
-            </button>
-          </div>
-
-          <div className="category-grid">
-            {categories.slice(0, 6).map(([icon, name]) => (
-              <button
-                className="category-card"
-                key={name}
-                onClick={() => {
-                  setCategory(name);
-                  go("services");
-                }}
-              >
-                <span>{icon}</span>
-                <strong>{name}</strong>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="section soft-section">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">DESTACADOS</span>
-              <h2>Servicios profesionales</h2>
-            </div>
-
-            <button
-              className="text-button"
-              onClick={() => go("services")}
-            >
-              Ver todos →
-            </button>
-          </div>
-
-          <div className="service-grid">
-            {services.slice(0, 3).map((service) => (
-              <ServiceCard
-                key={`${service.demo ? "demo" : "real"}-${service.id}`}
-                service={service}
-                onOpen={openService}
-              />
-            ))}
-          </div>
-        </section>
-      </>
-    );
-  }
-
-  function ServicesPage() {
-    return (
-      <section className="section page-section">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">MARKETPLACE</span>
-            <h2>Servicios</h2>
-          </div>
-        </div>
-
-        <div className="search-panel">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar servicios..."
-          />
-
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            <option value="Todas">Todas las categorías</option>
-            {categories.map(([, name]) => (
-              <option value={name} key={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {servicesLoading ? (
-          <div className="empty-state">
-            Cargando servicios...
-          </div>
-        ) : filteredServices.length === 0 ? (
-          <div className="empty-state">
-            No encontramos servicios con esos criterios.
-          </div>
-        ) : (
-          <div className="service-grid">
-            {filteredServices.map((service) => (
-              <ServiceCard
-                key={`${service.demo ? "demo" : "real"}-${service.id}`}
-                service={service}
-                onOpen={openService}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-    );
-  }
-
-  function CategoriesPage() {
-    return (
-      <section className="section page-section">
-        <span className="eyebrow">EXPLORAR</span>
-        <h2>Categorías</h2>
-
-        <div className="category-grid category-grid-large">
-          {categories.map(([icon, name]) => (
-            <button
-              className="category-card"
-              key={name}
-              onClick={() => {
-                setCategory(name);
-                go("services");
-              }}
-            >
-              <span>{icon}</span>
-              <strong>{name}</strong>
-              <small>
-                Explorar servicios de {name.toLowerCase()}
-              </small>
-            </button>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  function ServicePage() {
-    if (!selectedService) {
-      return (
-        <section className="section page-section">
-          <button
-            className="back-button"
-            onClick={() => go("services")}
-          >
-            ← Volver
-          </button>
-        </section>
-      );
-    }
-
-    return (
-      <section className="section page-section">
-        <button
-          className="back-button"
-          onClick={() => go("services")}
-        >
-          ← Volver a servicios
-        </button>
-
-        <div className="service-detail">
-          <div className="service-detail-main">
-            <span className="service-category">
-              {selectedService.category}
-            </span>
-
-            <h2>{selectedService.service}</h2>
-
-            <div className="professional-row">
-              <Avatar name={selectedService.name} />
-
-              <div>
-                <strong>{selectedService.name}</strong>
-                <span>{selectedService.profession}</span>
-              </div>
-            </div>
-
-            <p className="detail-description">
-              {selectedService.description}
-            </p>
-
-            <div className="detail-price">
-              <small>Desde</small>
-              <strong>${selectedService.price}</strong>
-            </div>
-          </div>
-
-          <div className="request-box">
-            <h3>¿Te interesa este servicio?</h3>
-
-            {selectedService.demo ? (
-              <>
-                <p>
-                  Este es un servicio de demostración. Los
-                  servicios reales pueden recibir solicitudes.
-                </p>
-
-                <button
-                  className="secondary full"
-                  onClick={() => go("services")}
-                >
-                  Seguir explorando
-                </button>
-              </>
-            ) : (
-              <>
-                <textarea
-                  value={requestMessage}
-                  onChange={(e) =>
-                    setRequestMessage(e.target.value)
-                  }
-                  placeholder="Escribe un mensaje para el profesional..."
-                  rows="5"
-                />
-
-                <button
-                  className="primary full"
-                  disabled={sendingRequest}
-                  onClick={sendRequest}
-                >
-                  {sendingRequest
-                    ? "Enviando..."
-                    : "Solicitar servicio"}
-                </button>
-
-                {loggedUser &&
-                  selectedService.userId !== loggedUser.id && (
-                    <button
-                      className="secondary full"
-                      onClick={() =>
-                        openMessaging({
-                          userId: selectedService.userId,
-                          name: selectedService.name,
-                          profession:
-                            selectedService.profession,
-                        })
-                      }
-                    >
-                      💬 Contactar profesional
-                    </button>
-                  )}
-              </>
-            )}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  function DashboardPage() {
-    if (!loggedUser) {
-      return <AccountPage />;
-    }
-
-    return (
-      <section className="section page-section dashboard">
-        <div className="dashboard-header">
-          <div>
-            <span className="eyebrow">MI CUENTA</span>
-            <h2>Hola, {loggedUser.name}</h2>
-            <p>
-              Gestiona tu perfil, servicios y oportunidades
-              desde un solo lugar.
-            </p>
-          </div>
-
-          <div className="account-mini">
-            <Avatar name={loggedUser.name} />
-            <div>
-              <strong>{loggedUser.name}</strong>
-              <span>{loggedUser.profession}</span>
-              <small>✓ Cuenta activa</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="stats-grid">
-          <StatCard
-            icon="📋"
-            value={myRequests.length}
-            label="Solicitudes"
-          />
-          <StatCard
-            icon="⏳"
-            value={pendingRequests.length}
-            label="Pendientes"
-          />
-          <StatCard
-            icon="✓"
-            value={acceptedRequests.length}
-            label="Aceptadas"
-          />
-          <StatCard
-            icon="💼"
-            value={myServices.length}
-            label="Servicios publicados"
-          />
-        </div>
-
-        <div className="dashboard-grid">
-          <form
-            className="panel profile-panel"
-            onSubmit={saveProfile}
-          >
-            <div className="panel-heading">
-              <div>
-                <span className="eyebrow">PERFIL</span>
-                <h3>Tu información</h3>
-              </div>
-              <Avatar name={loggedUser.name} large />
-            </div>
-
-            <label>
-              Nombre
-              <input
-                value={profileForm.name}
-                onChange={(e) =>
-                  setProfileForm({
-                    ...profileForm,
-                    name: e.target.value,
-                  })
-                }
-                placeholder="Tu nombre"
-              />
-            </label>
-
-            <label>
-              Profesión
-              <input
-                value={profileForm.profession}
-                onChange={(e) =>
-                  setProfileForm({
-                    ...profileForm,
-                    profession: e.target.value,
-                  })
-                }
-                placeholder="Tu profesión"
-              />
-            </label>
-
-            <label>
-              Biografía
-              <textarea
-                value={profileForm.bio}
-                onChange={(e) =>
-                  setProfileForm({
-                    ...profileForm,
-                    bio: e.target.value,
-                  })
-                }
-                rows="5"
-                placeholder="Cuéntale a los clientes quién eres..."
-              />
-            </label>
-
-            <button
-              className="primary full"
-              disabled={savingProfile}
-            >
-              {savingProfile
-                ? "Guardando..."
-                : "Guardar cambios"}
-            </button>
-          </form>
-
-          <div className="panel">
-            <div className="panel-heading">
-              <div>
-                <span className="eyebrow">ACCIONES</span>
-                <h3>Accesos rápidos</h3>
-              </div>
-            </div>
-
-            <div className="quick-actions">
-              <button onClick={() => go("publish")}>
-                <span>➕</span>
-                <div>
-                  <strong>Publicar servicio</strong>
-                  <small>Ofrece tus habilidades</small>
-                </div>
-              </button>
-
-              <button onClick={() => go("requests")}>
-                <span>📋</span>
-                <div>
-                  <strong>Ver solicitudes</strong>
-                  <small>Gestiona tus oportunidades</small>
-                </div>
-              </button>
-
-              <button onClick={() => go("messages")}>
-                <span>💬</span>
-                <div>
-                  <strong>Abrir mensajes</strong>
-                  <small>Comunícate directamente</small>
-                </div>
-              </button>
-
-              <button onClick={logout}>
-                <span>🚪</span>
-                <div>
-                  <strong>Cerrar sesión</strong>
-                  <small>Salir de tu cuenta</small>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="panel-heading">
-            <div>
-              <span className="eyebrow">ACTIVIDAD</span>
-              <h3>Actividad reciente</h3>
-            </div>
-
-            <button
-              className="text-button"
-              onClick={() => go("requests")}
-            >
-              Ver solicitudes →
-            </button>
-          </div>
-
-          {recentActivity.length === 0 ? (
-            <div className="empty-small">
-              Todavía no tienes actividad reciente.
-            </div>
-          ) : (
-            <div className="activity-list">
-              {recentActivity.map((request) => (
-                <div
-                  className="activity-item"
-                  key={request.id}
-                >
-                  <span className={statusClass(request.status)}>
-                    {statusText(request.status)}
-                  </span>
-
-                  <div>
-                    <strong>{request.serviceTitle}</strong>
-                    <small>
-                      {request.providerId === loggedUser.id
-                        ? `Solicitud de ${request.clientName}`
-                        : `Solicitud enviada a ${request.providerName}`}
-                    </small>
-                  </div>
-
-                  <time>
-                    {dateText(request.created_at)}
-                  </time>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-    );
-  }
-
-  function RequestsPage() {
-    if (!loggedUser) return <AccountPage />;
-
-    return (
-      <section className="section page-section">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">GESTIÓN</span>
-            <h2>Solicitudes</h2>
-            <p>
-              Gestiona los servicios que has solicitado o
-              las solicitudes recibidas.
-            </p>
-          </div>
-        </div>
-
-        {loadingRequests ? (
-          <div className="empty-state">
-            Cargando solicitudes...
-          </div>
-        ) : myRequests.length === 0 ? (
-          <div className="empty-state">
-            <span>📋</span>
-            <h3>Aún no tienes solicitudes</h3>
-            <p>
-              Explora servicios y envía tu primera solicitud.
-            </p>
-            <button
-              className="primary"
-              onClick={() => go("services")}
-            >
-              Explorar servicios
-            </button>
-          </div>
-        ) : (
-          <div className="request-list">
-            {myRequests.map((request) => {
-              const isProvider =
-                request.providerId === loggedUser.id;
-
-              return (
-                <div className="request-card" key={request.id}>
-                  <div className="request-top">
-                    <div>
-                      <span className="service-category">
-                        {request.serviceCategory}
-                      </span>
-
-                      <h3>{request.serviceTitle}</h3>
-                    </div>
-
-                    <span className={statusClass(request.status)}>
-                      {statusText(request.status)}
-                    </span>
-                  </div>
-
-                  <div className="request-info">
-                    <div>
-                      <small>
-                        {isProvider ? "Cliente" : "Profesional"}
-                      </small>
-
-                      <strong>
-                        {isProvider
-                          ? request.clientName
-                          : request.providerName}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <small>Precio</small>
-                      <strong>
-                        ${request.servicePrice}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <small>Fecha</small>
-                      <strong>
-                        {dateText(request.created_at)}
-                      </strong>
-                    </div>
-                  </div>
-
-                  {request.message && (
-                    <p className="request-message">
-                      “{request.message}”
-                    </p>
-                  )}
-
-                  <div className="request-actions">
-                    {isProvider &&
-                      request.status === "pending" && (
-                        <>
-                          <button
-                            className="primary"
-                            disabled={
-                              updatingRequest === request.id
-                            }
-                            onClick={() =>
-                              changeRequestStatus(
-                                request.id,
-                                "accepted"
-                              )
-                            }
-                          >
-                            ✓ Aceptar
-                          </button>
-
-                          <button
-                            className="danger-button"
-                            disabled={
-                              updatingRequest === request.id
-                            }
-                            onClick={() =>
-                              changeRequestStatus(
-                                request.id,
-                                "rejected"
-                              )
-                            }
-                          >
-                            Rechazar
-                          </button>
-                        </>
-                      )}
-
-                    {request.providerId !== loggedUser.id && (
-                      <button
-                        className="secondary"
-                        onClick={() =>
-                          openMessaging({
-                            userId: request.providerId,
-                            name: request.providerName,
-                            profession: "Profesional",
-                            requestId: request.id,
-                          })
-                        }
-                      >
-                        💬 Mensaje
-                      </button>
-                    )}
-
-                    {request.providerId === loggedUser.id && (
-                      <button
-                        className="secondary"
-                        onClick={() =>
-                          openMessaging({
-                            userId: request.clientId,
-                            name: request.clientName,
-                            profession: "Cliente",
-                            requestId: request.id,
-                          })
-                        }
-                      >
-                        💬 Mensaje al cliente
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-    );
-  }
-
-  function MessagesPage() {
-    if (!loggedUser) return <AccountPage />;
-
-    if (!selectedContact) {
-      return (
-        <section className="section page-section">
-          <span className="eyebrow">COMUNICACIÓN</span>
-          <h2>Mensajes</h2>
-
-          <div className="empty-state">
-            <span>💬</span>
-            <h3>Selecciona una conversación</h3>
-            <p>
-              Puedes abrir una conversación desde una
-              solicitud o desde un servicio.
-            </p>
-
-            <button
-              className="primary"
-              onClick={() => go("requests")}
-            >
-              Ver solicitudes
-            </button>
-          </div>
-        </section>
-      );
-    }
-
-    return (
-      <section className="section page-section messages-page">
-        <button
-          className="back-button"
-          onClick={() => {
-            setSelectedContact(null);
-            go("requests");
-          }}
-        >
-          ← Volver a solicitudes
-        </button>
-
-        <div className="chat">
-          <div className="chat-header">
-            <Avatar name={selectedContact.name} />
-
-            <div>
-              <span className="eyebrow">CONVERSACIÓN</span>
-              <h3>{selectedContact.name}</h3>
-              <small>{selectedContact.profession}</small>
-            </div>
-          </div>
-
-          <div className="chat-body">
-            {loadingMessages ? (
-              <div className="chat-empty">
-                Cargando mensajes...
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="chat-empty">
-                <span>💬</span>
-                <p>
-                  Todavía no hay mensajes. Escribe el primero.
-                </p>
-              </div>
-            ) : (
-              messages.map((message) => {
-                const mine =
-                  message.sender_id === loggedUser.id;
-
-                return (
-                  <div
-                    key={message.id}
-                    className={
-                      mine
-                        ? "message-row mine"
-                        : "message-row"
-                    }
-                  >
-                    <div className="message-bubble">
-                      <p>{message.message}</p>
-                      <small>
-                        {dateText(message.created_at)}
-                      </small>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          <form
-            className="chat-form"
-            onSubmit={sendMessage}
-          >
-            <input
-              value={messageText}
-              onChange={(e) =>
-                setMessageText(e.target.value)
-              }
-              placeholder="Escribe un mensaje..."
-              autoComplete="off"
-            />
-
-            <button
-              className="primary"
-              disabled={sendingMessage}
-            >
-              {sendingMessage ? "..." : "Enviar"}
-            </button>
-          </form>
-        </div>
-      </section>
-    );
-  }
-
-  function PublishPage() {
-    if (!loggedUser) return <AccountPage />;
-
-    return (
-      <section className="section page-section">
-        <div className="section-heading">
-          <div>
-            <span className="eyebrow">OPORTUNIDAD</span>
-            <h2>Publicar servicio</h2>
-            <p>
-              Presenta tus habilidades y permite que nuevos
-              clientes te encuentren.
-            </p>
-          </div>
-        </div>
-
-        <form
-          className="publish-form panel"
-          onSubmit={publishService}
-        >
-          <label>
-            Nombre del servicio
-            <input
-              value={offer.serviceTitle}
-              onChange={(e) =>
-                setOffer({
-                  ...offer,
-                  serviceTitle: e.target.value,
-                })
-              }
-              placeholder="Ej. Diseño de logotipos"
-            />
-          </label>
-
-          <label>
-            Categoría
-            <select
-              value={offer.category}
-              onChange={(e) =>
-                setOffer({
-                  ...offer,
-                  category: e.target.value,
-                })
-              }
-            >
-              {categories.map(([, name]) => (
-                <option value={name} key={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Descripción
-            <textarea
-              value={offer.description}
-              onChange={(e) =>
-                setOffer({
-                  ...offer,
-                  description: e.target.value,
-                })
-              }
-              rows="7"
-              placeholder="Describe claramente qué ofreces..."
-            />
-          </label>
-
-          <label>
-            Precio inicial
-            <input
-              type="number"
-              min="1"
-              step="0.01"
-              value={offer.price}
-              onChange={(e) =>
-                setOffer({
-                  ...offer,
-                  price: e.target.value,
-                })
-              }
-              placeholder="Ej. 50"
-            />
-          </label>
-
-          <div className="publish-note">
-            <strong>💡 Importante</strong>
-            <p>
-              RobLoren todavía no procesa pagos reales. El
-              precio solamente informa al cliente del valor
-              del servicio.
-            </p>
-          </div>
-
-          <button
-            className="primary full"
-            disabled={publishing}
-          >
-            {publishing
-              ? "Publicando..."
-              : "Publicar servicio"}
-          </button>
-        </form>
-      </section>
-    );
-  }
-
-  function AccountPage() {
-    return (
-      <section className="section page-section auth-page">
-        <div className="auth-card">
-          <div className="auth-heading">
-            <span className="brand-mark">RL</span>
-
-            <span className="eyebrow">
-              ROBLOREN
-            </span>
-
-            <h2>
-              {accountMode === "login"
-                ? "Bienvenido de nuevo"
-                : "Crea tu cuenta"}
-            </h2>
-
-            <p>
-              {accountMode === "login"
-                ? "Accede a tu cuenta para gestionar tus servicios y oportunidades."
-                : "Únete a RobLoren y conecta tu talento con nuevas oportunidades."}
-            </p>
-          </div>
-
-          {accountMode === "login" ? (
-            <form onSubmit={login}>
-              <label>
-                Correo electrónico
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      email: e.target.value,
-                    })
-                  }
-                  autoComplete="email"
-                  placeholder="correo@ejemplo.com"
-                />
-              </label>
-
-              <label>
-                Contraseña
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      password: e.target.value,
-                    })
-                  }
-                  autoComplete="current-password"
-                  placeholder="Tu contraseña"
-                />
-              </label>
-
-              <button
-                className="primary full"
-                disabled={authLoading}
-              >
-                {authLoading
-                  ? "Entrando..."
-                  : "Iniciar sesión"}
-              </button>
-
-              <button
-                type="button"
-                className="link-button"
-                onClick={() => setAccountMode("register")}
-              >
-                ¿No tienes cuenta? Regístrate
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={register}>
-              <label>
-                Nombre
-                <input
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      name: e.target.value,
-                    })
-                  }
-                  autoComplete="name"
-                  placeholder="Tu nombre"
-                />
-              </label>
-
-              <label>
-                Correo electrónico
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      email: e.target.value,
-                    })
-                  }
-                  autoComplete="email"
-                  placeholder="correo@ejemplo.com"
-                />
-              </label>
-
-              <label>
-                Contraseña
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      password: e.target.value,
-                    })
-                  }
-                  autoComplete="new-password"
-                  placeholder="Mínimo 6 caracteres"
-                />
-              </label>
-
-              <label>
-                Profesión
-                <input
-                  value={form.profession}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      profession: e.target.value,
-                    })
-                  }
-                  placeholder="Ej. Diseñador gráfico"
-                />
-              </label>
-
-              <label>
-                Biografía
-                <textarea
-                  value={form.bio}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      bio: e.target.value,
-                    })
-                  }
-                  rows="4"
-                  placeholder="Cuéntanos brevemente sobre ti..."
-                />
-              </label>
-
-              <button
-                className="primary full"
-                disabled={authLoading}
-              >
-                {authLoading
-                  ? "Creando..."
-                  : "Crear cuenta"}
-              </button>
-
-              <button
-                type="button"
-                className="link-button"
-                onClick={() => setAccountMode("login")}
-              >
-                ← Ya tengo una cuenta
-              </button>
-            </form>
-          )}
-        </div>
-      </section>
-    );
-  }
-
-  if (authLoading && page === "home" && !loggedUser) {
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
+  if (
+    authLoading &&
+    page === "home" &&
+    !loggedUser
+  ) {
     return (
       <div className="loading-screen">
         <div className="brand-mark">RL</div>
@@ -1984,8 +1065,14 @@ function App() {
       <style>{`
         :root {
           font-family:
-            Inter, ui-sans-serif, system-ui, -apple-system,
-            BlinkMacSystemFont, "Segoe UI", sans-serif;
+            Inter,
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+
           color: #172033;
           background: #f7f9fc;
           font-synthesis: none;
@@ -2015,6 +1102,7 @@ function App() {
 
         button {
           cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
         }
 
         button:disabled {
@@ -2032,15 +1120,18 @@ function App() {
           background: #fff;
           color: #172033;
           outline: none;
-          transition: border .15s ease, box-shadow .15s ease;
           font-size: 16px;
+          transition:
+            border .15s ease,
+            box-shadow .15s ease;
         }
 
         input:focus,
         textarea:focus,
         select:focus {
           border-color: #315efb;
-          box-shadow: 0 0 0 3px rgba(49,94,251,.10);
+          box-shadow:
+            0 0 0 3px rgba(49,94,251,.10);
         }
 
         textarea {
@@ -2070,7 +1161,7 @@ function App() {
           position: sticky;
           top: 0;
           z-index: 50;
-          background: rgba(255,255,255,.94);
+          background: rgba(255,255,255,.96);
           backdrop-filter: blur(14px);
           border-bottom: 1px solid #e9edf3;
         }
@@ -2110,7 +1201,8 @@ function App() {
           background: #315efb;
           color: #fff;
           font-weight: 900;
-          box-shadow: 0 8px 20px rgba(49,94,251,.22);
+          box-shadow:
+            0 8px 20px rgba(49,94,251,.22);
         }
 
         .nav-links {
@@ -2138,10 +1230,22 @@ function App() {
           color: #172033 !important;
         }
 
+        .mobile-menu {
+          display: none;
+        }
+
         .hero {
           background:
-            radial-gradient(circle at 80% 20%, rgba(49,94,251,.18), transparent 32%),
-            linear-gradient(135deg, #101a31 0%, #1b2d55 100%);
+            radial-gradient(
+              circle at 80% 20%,
+              rgba(49,94,251,.18),
+              transparent 32%
+            ),
+            linear-gradient(
+              135deg,
+              #101a31 0%,
+              #1b2d55 100%
+            );
           color: white;
         }
 
@@ -2192,18 +1296,22 @@ function App() {
           border-radius: 12px;
           padding: 12px 17px;
           font-weight: 800;
-          transition: transform .15s ease, box-shadow .15s ease;
+          transition:
+            transform .15s ease,
+            box-shadow .15s ease;
         }
 
         .primary {
           background: #315efb;
           color: #fff;
-          box-shadow: 0 8px 18px rgba(49,94,251,.20);
+          box-shadow:
+            0 8px 18px rgba(49,94,251,.20);
         }
 
         .primary:hover {
           transform: translateY(-1px);
-          box-shadow: 0 11px 23px rgba(49,94,251,.26);
+          box-shadow:
+            0 11px 23px rgba(49,94,251,.26);
         }
 
         .secondary {
@@ -2244,8 +1352,10 @@ function App() {
 
         .soft-section {
           max-width: none;
-          padding-left: max(20px, calc((100vw - 1140px) / 2));
-          padding-right: max(20px, calc((100vw - 1140px) / 2));
+          padding-left:
+            max(20px, calc((100vw - 1140px) / 2));
+          padding-right:
+            max(20px, calc((100vw - 1140px) / 2));
           background: #eef3fa;
         }
 
@@ -2306,7 +1416,8 @@ function App() {
           flex-direction: column;
           align-items: flex-start;
           gap: 10px;
-          box-shadow: 0 8px 25px rgba(24,40,72,.04);
+          box-shadow:
+            0 8px 25px rgba(24,40,72,.04);
         }
 
         .category-card:hover {
@@ -2340,12 +1451,14 @@ function App() {
           display: flex;
           flex-direction: column;
           min-height: 300px;
-          box-shadow: 0 10px 30px rgba(25,42,74,.05);
+          box-shadow:
+            0 10px 30px rgba(25,42,74,.05);
         }
 
         .service-card:hover {
           border-color: #c2cff1;
-          box-shadow: 0 15px 35px rgba(25,42,74,.08);
+          box-shadow:
+            0 15px 35px rgba(25,42,74,.08);
         }
 
         .service-category {
@@ -2462,7 +1575,8 @@ function App() {
           background: #fff;
           border: 1px solid #e0e6ef;
           border-radius: 22px;
-          box-shadow: 0 10px 35px rgba(25,42,74,.05);
+          box-shadow:
+            0 10px 35px rgba(25,42,74,.05);
         }
 
         .service-detail-main {
@@ -2928,6 +2042,27 @@ function App() {
             display: none;
           }
 
+          .mobile-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          .mobile-menu button {
+            border: 1px solid #dbe3ef;
+            background: #fff;
+            color: #172033;
+            border-radius: 11px;
+            padding: 9px 11px;
+            font-weight: 800;
+          }
+
+          .mobile-menu .mobile-account {
+            background: #315efb;
+            color: #fff;
+            border-color: #315efb;
+          }
+
           .hero-content {
             padding: 70px 20px 80px;
           }
@@ -3026,12 +2161,22 @@ function App() {
           .message-bubble {
             max-width: 88%;
           }
+
+          .brand-name {
+            font-size: 17px;
+          }
         }
       `}</style>
 
       <div className="app">
+
+        {/* =================================================
+            NAVBAR
+        ================================================= */}
+
         <header className="topbar">
           <nav className="nav">
+
             <button
               className="brand"
               onClick={() => go("home")}
@@ -3041,6 +2186,7 @@ function App() {
             </button>
 
             <div className="nav-links">
+
               <button onClick={() => go("home")}>
                 Inicio
               </button>
@@ -3055,11 +2201,15 @@ function App() {
 
               {loggedUser && (
                 <>
-                  <button onClick={() => go("requests")}>
+                  <button
+                    onClick={() => go("requests")}
+                  >
                     Solicitudes
                   </button>
 
-                  <button onClick={() => go("messages")}>
+                  <button
+                    onClick={() => go("messages")}
+                  >
                     Mensajes
                   </button>
                 </>
@@ -3067,27 +2217,193 @@ function App() {
 
               <button
                 className="nav-account"
-                onClick={() =>
-                  loggedUser
-                    ? go("account")
-                    : go("account")
-                }
+                onClick={() => go("account")}
               >
                 {loggedUser ? "Mi cuenta" : "Entrar"}
               </button>
+
             </div>
+
+            {/* MENÚ MÓVIL */}
+            <div className="mobile-menu">
+
+              {loggedUser && (
+                <>
+                  <button
+                    onClick={() => go("requests")}
+                  >
+                    📋
+                  </button>
+
+                  <button
+                    onClick={() => go("messages")}
+                  >
+                    💬
+                  </button>
+                </>
+              )}
+
+              <button
+                className="mobile-account"
+                onClick={() => go("account")}
+              >
+                {loggedUser ? "Mi cuenta" : "Entrar"}
+              </button>
+
+            </div>
+
           </nav>
         </header>
 
+        {/* =================================================
+            CONTENIDO
+        ================================================= */}
+
         <main>
-          {page === "home" && <HomePage />}
-          {page === "services" && <ServicesPage />}
-          {page === "categories" && <CategoriesPage />}
-          {page === "service" && <ServicePage />}
-          {page === "account" && <DashboardPage />}
-          {page === "requests" && <RequestsPage />}
-          {page === "messages" && <MessagesPage />}
-          {page === "publish" && <PublishPage />}
+
+          {page === "home" && (
+            <HomePage
+              loggedUser={loggedUser}
+              services={services}
+              go={go}
+              setCategory={setCategory}
+              openService={openService}
+            />
+          )}
+
+          {page === "services" && (
+            <ServicesPage
+              servicesLoading={servicesLoading}
+              filteredServices={filteredServices}
+              search={search}
+              setSearch={setSearch}
+              category={category}
+              setCategory={setCategory}
+              openService={openService}
+            />
+          )}
+
+          {page === "categories" && (
+            <CategoriesPage
+              setCategory={setCategory}
+              go={go}
+            />
+          )}
+
+          {page === "service" && (
+            <ServicePage
+              selectedService={selectedService}
+              requestMessage={requestMessage}
+              setRequestMessage={setRequestMessage}
+              sendingRequest={sendingRequest}
+              loggedUser={loggedUser}
+              sendRequest={sendRequest}
+              openMessaging={openMessaging}
+              go={go}
+            />
+          )}
+
+          {page === "account" && (
+            loggedUser ? (
+              <DashboardPage
+                loggedUser={loggedUser}
+                profileForm={profileForm}
+                setProfileForm={setProfileForm}
+                savingProfile={savingProfile}
+                saveProfile={saveProfile}
+                myRequests={myRequests}
+                pendingRequests={pendingRequests}
+                acceptedRequests={acceptedRequests}
+                myServices={myServices}
+                recentActivity={recentActivity}
+                go={go}
+                logout={logout}
+              />
+            ) : (
+              <AccountPage
+                accountMode={accountMode}
+                setAccountMode={setAccountMode}
+                form={form}
+                setForm={setForm}
+                authLoading={authLoading}
+                login={login}
+                register={register}
+              />
+            )
+          )}
+
+          {page === "requests" && (
+            loggedUser ? (
+              <RequestsPage
+                loggedUser={loggedUser}
+                myRequests={myRequests}
+                loadingRequests={loadingRequests}
+                updatingRequest={updatingRequest}
+                changeRequestStatus={changeRequestStatus}
+                openMessaging={openMessaging}
+                go={go}
+              />
+            ) : (
+              <AccountPage
+                accountMode="login"
+                setAccountMode={setAccountMode}
+                form={form}
+                setForm={setForm}
+                authLoading={authLoading}
+                login={login}
+                register={register}
+              />
+            )
+          )}
+
+          {page === "messages" && (
+            loggedUser ? (
+              <MessagesPage
+                loggedUser={loggedUser}
+                selectedContact={selectedContact}
+                messages={messages}
+                messageText={messageText}
+                setMessageText={setMessageText}
+                loadingMessages={loadingMessages}
+                sendingMessage={sendingMessage}
+                sendMessage={sendMessage}
+                setSelectedContact={setSelectedContact}
+                go={go}
+              />
+            ) : (
+              <AccountPage
+                accountMode="login"
+                setAccountMode={setAccountMode}
+                form={form}
+                setForm={setForm}
+                authLoading={authLoading}
+                login={login}
+                register={register}
+              />
+            )
+          )}
+
+          {page === "publish" && (
+            loggedUser ? (
+              <PublishPage
+                offer={offer}
+                setOffer={setOffer}
+                publishing={publishing}
+                publishService={publishService}
+              />
+            ) : (
+              <AccountPage
+                accountMode="login"
+                setAccountMode={setAccountMode}
+                form={form}
+                setForm={setForm}
+                authLoading={authLoading}
+                login={login}
+                register={register}
+              />
+            )
+          )}
+
         </main>
 
         <footer
@@ -3105,59 +2421,1585 @@ function App() {
           </strong>{" "}
           · Conecta talento con oportunidades.
         </footer>
+
       </div>
     </>
   );
 }
 
-function ServiceCard({ service, onOpen }) {
+/* =========================================================
+   PÁGINA INICIO
+========================================================= */
+
+function HomePage({
+  loggedUser,
+  services,
+  go,
+  setCategory,
+  openService,
+}) {
   return (
-    <article className="service-card">
-      <span className="service-category">
-        {service.category}
-      </span>
+    <>
+      <section className="hero">
+        <div className="hero-content">
 
-      <h3>{service.service}</h3>
+          <span className="eyebrow">
+            MARKETPLACE PROFESIONAL
+          </span>
 
-      <div className="service-professional">
-        <Avatar name={service.name} />
+          <h1>
+            Conecta talento
+            <br />
+            con oportunidades.
+          </h1>
+
+          <p>
+            Encuentra profesionales, descubre servicios y
+            conecta directamente con personas que pueden
+            ayudarte a llevar tus proyectos más lejos.
+          </p>
+
+          <div className="hero-actions">
+
+            <button
+              className="primary"
+              onClick={() => go("services")}
+            >
+              Explorar servicios
+            </button>
+
+            <button
+              className="secondary"
+              onClick={() =>
+                loggedUser
+                  ? go("publish")
+                  : go("account")
+              }
+            >
+              Ofrecer mis servicios
+            </button>
+
+          </div>
+
+        </div>
+      </section>
+
+      <section className="section">
+
+        <div className="section-heading">
+
+          <div>
+            <span className="eyebrow">
+              CATEGORÍAS
+            </span>
+
+            <h2>
+              Encuentra el talento que necesitas
+            </h2>
+          </div>
+
+          <button
+            className="text-button"
+            onClick={() => go("categories")}
+          >
+            Ver todas →
+          </button>
+
+        </div>
+
+        <div className="category-grid">
+
+          {categories.slice(0, 6).map(
+            ([icon, name]) => (
+              <button
+                className="category-card"
+                key={name}
+                onClick={() => {
+                  setCategory(name);
+                  go("services");
+                }}
+              >
+                <span>{icon}</span>
+                <strong>{name}</strong>
+              </button>
+            )
+          )}
+
+        </div>
+
+      </section>
+
+      <section className="section soft-section">
+
+        <div className="section-heading">
+
+          <div>
+            <span className="eyebrow">
+              DESTACADOS
+            </span>
+
+            <h2>
+              Servicios profesionales
+            </h2>
+          </div>
+
+          <button
+            className="text-button"
+            onClick={() => go("services")}
+          >
+            Ver todos →
+          </button>
+
+        </div>
+
+        <div className="service-grid">
+
+          {services.slice(0, 3).map(
+            (service) => (
+              <ServiceCard
+                key={`${service.demo ? "demo" : "real"}-${service.id}`}
+                service={service}
+                onOpen={openService}
+              />
+            )
+          )}
+
+        </div>
+
+      </section>
+    </>
+  );
+}
+
+/* =========================================================
+   SERVICIOS
+========================================================= */
+
+function ServicesPage({
+  servicesLoading,
+  filteredServices,
+  search,
+  setSearch,
+  category,
+  setCategory,
+  openService,
+}) {
+  return (
+    <section className="section page-section">
+
+      <div className="section-heading">
 
         <div>
-          <strong>{service.name}</strong>
-          <span>{service.profession}</span>
+          <span className="eyebrow">
+            MARKETPLACE
+          </span>
+
+          <h2>Servicios</h2>
         </div>
+
       </div>
 
-      <p className="service-description">
-        {service.description}
-      </p>
+      <div className="search-panel">
 
-      <div className="service-bottom">
-        <div className="price">
-          <small>Desde</small>${service.price}
+        <input
+          value={search}
+          onChange={(event) =>
+            setSearch(event.target.value)
+          }
+          placeholder="Buscar servicios..."
+        />
+
+        <select
+          value={category}
+          onChange={(event) =>
+            setCategory(event.target.value)
+          }
+        >
+          <option value="Todas">
+            Todas las categorías
+          </option>
+
+          {categories.map(
+            ([, name]) => (
+              <option
+                value={name}
+                key={name}
+              >
+                {name}
+              </option>
+            )
+          )}
+        </select>
+
+      </div>
+
+      {servicesLoading ? (
+        <div className="empty-state">
+          Cargando servicios...
+        </div>
+      ) : filteredServices.length === 0 ? (
+        <div className="empty-state">
+          No encontramos servicios con esos criterios.
+        </div>
+      ) : (
+        <div className="service-grid">
+
+          {filteredServices.map(
+            (service) => (
+              <ServiceCard
+                key={`${service.demo ? "demo" : "real"}-${service.id}`}
+                service={service}
+                onOpen={openService}
+              />
+            )
+          )}
+
+        </div>
+      )}
+
+    </section>
+  );
+}
+
+/* =========================================================
+   CATEGORÍAS
+========================================================= */
+
+function CategoriesPage({
+  setCategory,
+  go,
+}) {
+  return (
+    <section className="section page-section">
+
+      <span className="eyebrow">
+        EXPLORAR
+      </span>
+
+      <h2>Categorías</h2>
+
+      <div className="category-grid category-grid-large">
+
+        {categories.map(
+          ([icon, name]) => (
+            <button
+              className="category-card"
+              key={name}
+              onClick={() => {
+                setCategory(name);
+                go("services");
+              }}
+            >
+              <span>{icon}</span>
+
+              <strong>{name}</strong>
+
+              <small>
+                Explorar servicios de{" "}
+                {name.toLowerCase()}
+              </small>
+            </button>
+          )
+        )}
+
+      </div>
+
+    </section>
+  );
+}
+
+/* =========================================================
+   DETALLE SERVICIO
+========================================================= */
+
+function ServicePage({
+  selectedService,
+  requestMessage,
+  setRequestMessage,
+  sendingRequest,
+  loggedUser,
+  sendRequest,
+  openMessaging,
+  go,
+}) {
+  if (!selectedService) {
+    return (
+      <section className="section page-section">
+        <button
+          className="back-button"
+          onClick={() => go("services")}
+        >
+          ← Volver
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <section className="section page-section">
+
+      <button
+        className="back-button"
+        onClick={() => go("services")}
+      >
+        ← Volver a servicios
+      </button>
+
+      <div className="service-detail">
+
+        <div className="service-detail-main">
+
+          <span className="service-category">
+            {selectedService.category}
+          </span>
+
+          <h2>
+            {selectedService.service}
+          </h2>
+
+          <div className="professional-row">
+
+            <Avatar
+              name={selectedService.name}
+            />
+
+            <div>
+              <strong>
+                {selectedService.name}
+              </strong>
+
+              <span>
+                {selectedService.profession}
+              </span>
+            </div>
+
+          </div>
+
+          <p className="detail-description">
+            {selectedService.description}
+          </p>
+
+          <div className="detail-price">
+            <small>Desde</small>
+            <strong>
+              ${selectedService.price}
+            </strong>
+          </div>
+
+        </div>
+
+        <div className="request-box">
+
+          <h3>
+            ¿Te interesa este servicio?
+          </h3>
+
+          {selectedService.demo ? (
+            <>
+              <p>
+                Este es un servicio de demostración.
+                Los servicios reales pueden recibir
+                solicitudes.
+              </p>
+
+              <button
+                className="secondary full"
+                onClick={() => go("services")}
+              >
+                Seguir explorando
+              </button>
+            </>
+          ) : (
+            <>
+              <textarea
+                value={requestMessage}
+                onChange={(event) =>
+                  setRequestMessage(
+                    event.target.value
+                  )
+                }
+                placeholder="Escribe un mensaje para el profesional..."
+                rows="5"
+              />
+
+              <button
+                className="primary full"
+                disabled={sendingRequest}
+                onClick={sendRequest}
+              >
+                {sendingRequest
+                  ? "Enviando..."
+                  : "Solicitar servicio"}
+              </button>
+
+              {loggedUser &&
+                selectedService.userId !==
+                  loggedUser.id && (
+                  <button
+                    className="secondary full"
+                    onClick={() =>
+                      openMessaging({
+                        userId:
+                          selectedService.userId,
+                        name:
+                          selectedService.name,
+                        profession:
+                          selectedService.profession,
+                      })
+                    }
+                  >
+                    💬 Contactar profesional
+                  </button>
+                )}
+            </>
+          )}
+
+        </div>
+
+      </div>
+
+    </section>
+  );
+}
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+function DashboardPage({
+  loggedUser,
+  profileForm,
+  setProfileForm,
+  savingProfile,
+  saveProfile,
+  myRequests,
+  pendingRequests,
+  acceptedRequests,
+  myServices,
+  recentActivity,
+  go,
+  logout,
+}) {
+  return (
+    <section className="section page-section dashboard">
+
+      <div className="dashboard-header">
+
+        <div>
+          <span className="eyebrow">
+            MI CUENTA
+          </span>
+
+          <h2>
+            Hola, {loggedUser.name}
+          </h2>
+
+          <p>
+            Gestiona tu perfil, servicios y
+            oportunidades desde un solo lugar.
+          </p>
+        </div>
+
+        <div className="account-mini">
+
+          <Avatar name={loggedUser.name} />
+
+          <div>
+            <strong>
+              {loggedUser.name}
+            </strong>
+
+            <span>
+              {loggedUser.profession}
+            </span>
+
+            <small>
+              ✓ Cuenta activa
+            </small>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div className="stats-grid">
+
+        <StatCard
+          icon="📋"
+          value={myRequests.length}
+          label="Solicitudes"
+        />
+
+        <StatCard
+          icon="⏳"
+          value={pendingRequests.length}
+          label="Pendientes"
+        />
+
+        <StatCard
+          icon="✓"
+          value={acceptedRequests.length}
+          label="Aceptadas"
+        />
+
+        <StatCard
+          icon="💼"
+          value={myServices.length}
+          label="Servicios publicados"
+        />
+
+      </div>
+
+      <div className="dashboard-grid">
+
+        <form
+          className="panel profile-panel"
+          onSubmit={saveProfile}
+        >
+
+          <div className="panel-heading">
+
+            <div>
+              <span className="eyebrow">
+                PERFIL
+              </span>
+
+              <h3>
+                Tu información
+              </h3>
+            </div>
+
+            <Avatar
+              name={loggedUser.name}
+              large
+            />
+
+          </div>
+
+          <label>
+            Nombre
+
+            <input
+              value={profileForm.name}
+              onChange={(event) =>
+                setProfileForm({
+                  ...profileForm,
+                  name: event.target.value,
+                })
+              }
+              placeholder="Tu nombre"
+              autoComplete="name"
+            />
+          </label>
+
+          <label>
+            Profesión
+
+            <input
+              value={profileForm.profession}
+              onChange={(event) =>
+                setProfileForm({
+                  ...profileForm,
+                  profession:
+                    event.target.value,
+                })
+              }
+              placeholder="Tu profesión"
+            />
+          </label>
+
+          <label>
+            Biografía
+
+            <textarea
+              value={profileForm.bio}
+              onChange={(event) =>
+                setProfileForm({
+                  ...profileForm,
+                  bio: event.target.value,
+                })
+              }
+              rows="5"
+              placeholder="Cuéntale a los clientes quién eres..."
+            />
+          </label>
+
+          <button
+            className="primary full"
+            disabled={savingProfile}
+            type="submit"
+          >
+            {savingProfile
+              ? "Guardando..."
+              : "Guardar cambios"}
+          </button>
+
+        </form>
+
+        <div className="panel">
+
+          <div className="panel-heading">
+
+            <div>
+              <span className="eyebrow">
+                ACCIONES
+              </span>
+
+              <h3>
+                Accesos rápidos
+              </h3>
+            </div>
+
+          </div>
+
+          <div className="quick-actions">
+
+            <button
+              onClick={() => go("publish")}
+            >
+              <span>➕</span>
+
+              <div>
+                <strong>
+                  Publicar servicio
+                </strong>
+
+                <small>
+                  Ofrece tus habilidades
+                </small>
+              </div>
+            </button>
+
+            <button
+              onClick={() => go("requests")}
+            >
+              <span>📋</span>
+
+              <div>
+                <strong>
+                  Ver solicitudes
+                </strong>
+
+                <small>
+                  Gestiona tus oportunidades
+                </small>
+              </div>
+            </button>
+
+            <button
+              onClick={() => go("messages")}
+            >
+              <span>💬</span>
+
+              <div>
+                <strong>
+                  Abrir mensajes
+                </strong>
+
+                <small>
+                  Comunícate directamente
+                </small>
+              </div>
+            </button>
+
+            <button onClick={logout}>
+              <span>🚪</span>
+
+              <div>
+                <strong>
+                  Cerrar sesión
+                </strong>
+
+                <small>
+                  Salir de tu cuenta
+                </small>
+              </div>
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div className="panel">
+
+        <div className="panel-heading">
+
+          <div>
+            <span className="eyebrow">
+              ACTIVIDAD
+            </span>
+
+            <h3>
+              Actividad reciente
+            </h3>
+          </div>
+
+          <button
+            className="text-button"
+            onClick={() => go("requests")}
+          >
+            Ver solicitudes →
+          </button>
+
+        </div>
+
+        {recentActivity.length === 0 ? (
+          <div className="empty-small">
+            Todavía no tienes actividad reciente.
+          </div>
+        ) : (
+          <div className="activity-list">
+
+            {recentActivity.map(
+              (request) => (
+                <div
+                  className="activity-item"
+                  key={request.id}
+                >
+                  <span
+                    className={statusClass(
+                      request.status
+                    )}
+                  >
+                    {statusText(
+                      request.status
+                    )}
+                  </span>
+
+                  <div>
+
+                    <strong>
+                      {request.serviceTitle}
+                    </strong>
+
+                    <small>
+                      {request.providerId ===
+                      loggedUser.id
+                        ? `Solicitud de ${request.clientName}`
+                        : `Solicitud enviada a ${request.providerName}`}
+                    </small>
+
+                  </div>
+
+                  <time>
+                    {dateText(
+                      request.created_at
+                    )}
+                  </time>
+
+                </div>
+              )
+            )}
+
+          </div>
+        )}
+
+      </div>
+
+    </section>
+  );
+}
+
+/* =========================================================
+   SOLICITUDES
+========================================================= */
+
+function RequestsPage({
+  loggedUser,
+  myRequests,
+  loadingRequests,
+  updatingRequest,
+  changeRequestStatus,
+  openMessaging,
+  go,
+}) {
+  return (
+    <section className="section page-section">
+
+      <div className="section-heading">
+
+        <div>
+          <span className="eyebrow">
+            GESTIÓN
+          </span>
+
+          <h2>
+            Solicitudes
+          </h2>
+
+          <p>
+            Gestiona los servicios que has solicitado
+            o las solicitudes recibidas.
+          </p>
+        </div>
+
+      </div>
+
+      {loadingRequests ? (
+        <div className="empty-state">
+          Cargando solicitudes...
+        </div>
+      ) : myRequests.length === 0 ? (
+        <div className="empty-state">
+
+          <span>📋</span>
+
+          <h3>
+            Aún no tienes solicitudes
+          </h3>
+
+          <p>
+            Explora servicios y envía tu primera
+            solicitud.
+          </p>
+
+          <button
+            className="primary"
+            onClick={() => go("services")}
+          >
+            Explorar servicios
+          </button>
+
+        </div>
+      ) : (
+        <div className="request-list">
+
+          {myRequests.map(
+            (request) => {
+              const isProvider =
+                request.providerId ===
+                loggedUser.id;
+
+              return (
+                <div
+                  className="request-card"
+                  key={request.id}
+                >
+
+                  <div className="request-top">
+
+                    <div>
+
+                      <span className="service-category">
+                        {request.serviceCategory}
+                      </span>
+
+                      <h3>
+                        {request.serviceTitle}
+                      </h3>
+
+                    </div>
+
+                    <span
+                      className={statusClass(
+                        request.status
+                      )}
+                    >
+                      {statusText(
+                        request.status
+                      )}
+                    </span>
+
+                  </div>
+
+                  <div className="request-info">
+
+                    <div>
+                      <small>
+                        {isProvider
+                          ? "Cliente"
+                          : "Profesional"}
+                      </small>
+
+                      <strong>
+                        {isProvider
+                          ? request.clientName
+                          : request.providerName}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <small>
+                        Precio
+                      </small>
+
+                      <strong>
+                        ${request.servicePrice}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <small>
+                        Fecha
+                      </small>
+
+                      <strong>
+                        {dateText(
+                          request.created_at
+                        )}
+                      </strong>
+                    </div>
+
+                  </div>
+
+                  {request.message && (
+                    <p className="request-message">
+                      “{request.message}”
+                    </p>
+                  )}
+
+                  <div className="request-actions">
+
+                    {isProvider &&
+                      request.status ===
+                        "pending" && (
+                        <>
+                          <button
+                            className="primary"
+                            disabled={
+                              updatingRequest ===
+                              request.id
+                            }
+                            onClick={() =>
+                              changeRequestStatus(
+                                request.id,
+                                "accepted"
+                              )
+                            }
+                          >
+                            ✓ Aceptar
+                          </button>
+
+                          <button
+                            className="danger-button"
+                            disabled={
+                              updatingRequest ===
+                              request.id
+                            }
+                            onClick={() =>
+                              changeRequestStatus(
+                                request.id,
+                                "rejected"
+                              )
+                            }
+                          >
+                            Rechazar
+                          </button>
+                        </>
+                      )}
+
+                    {request.providerId !==
+                      loggedUser.id && (
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          openMessaging({
+                            userId:
+                              request.providerId,
+                            name:
+                              request.providerName,
+                            profession:
+                              "Profesional",
+                            requestId:
+                              request.id,
+                          })
+                        }
+                      >
+                        💬 Mensaje
+                      </button>
+                    )}
+
+                    {request.providerId ===
+                      loggedUser.id && (
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          openMessaging({
+                            userId:
+                              request.clientId,
+                            name:
+                              request.clientName,
+                            profession:
+                              "Cliente",
+                            requestId:
+                              request.id,
+                          })
+                        }
+                      >
+                        💬 Mensaje al cliente
+                      </button>
+                    )}
+
+                  </div>
+
+                </div>
+              );
+            }
+          )}
+
+        </div>
+      )}
+
+    </section>
+  );
+}
+
+/* =========================================================
+   MENSAJES
+========================================================= */
+
+function MessagesPage({
+  loggedUser,
+  selectedContact,
+  messages,
+  messageText,
+  setMessageText,
+  loadingMessages,
+  sendingMessage,
+  sendMessage,
+  setSelectedContact,
+  go,
+}) {
+  if (!selectedContact) {
+    return (
+      <section className="section page-section">
+
+        <span className="eyebrow">
+          COMUNICACIÓN
+        </span>
+
+        <h2>
+          Mensajes
+        </h2>
+
+        <div className="empty-state">
+
+          <span>💬</span>
+
+          <h3>
+            Selecciona una conversación
+          </h3>
+
+          <p>
+            Puedes abrir una conversación desde una
+            solicitud o desde un servicio.
+          </p>
+
+          <button
+            className="primary"
+            onClick={() => go("requests")}
+          >
+            Ver solicitudes
+          </button>
+
+        </div>
+
+      </section>
+    );
+  }
+
+  return (
+    <section className="section page-section">
+
+      <button
+        className="back-button"
+        onClick={() => {
+          setSelectedContact(null);
+          go("requests");
+        }}
+      >
+        ← Volver a solicitudes
+      </button>
+
+      <div className="chat">
+
+        <div className="chat-header">
+
+          <Avatar
+            name={selectedContact.name}
+          />
+
+          <div>
+
+            <span className="eyebrow">
+              CONVERSACIÓN
+            </span>
+
+            <h3>
+              {selectedContact.name}
+            </h3>
+
+            <small>
+              {selectedContact.profession}
+            </small>
+
+          </div>
+
+        </div>
+
+        <div className="chat-body">
+
+          {loadingMessages ? (
+            <div className="chat-empty">
+              Cargando mensajes...
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="chat-empty">
+
+              <span>💬</span>
+
+              <p>
+                Todavía no hay mensajes.
+                Escribe el primero.
+              </p>
+
+            </div>
+          ) : (
+            messages.map(
+              (message) => {
+                const mine =
+                  message.sender_id ===
+                  loggedUser.id;
+
+                return (
+                  <div
+                    key={message.id}
+                    className={
+                      mine
+                        ? "message-row mine"
+                        : "message-row"
+                    }
+                  >
+                    <div className="message-bubble">
+
+                      <p>
+                        {message.message}
+                      </p>
+
+                      <small>
+                        {dateText(
+                          message.created_at
+                        )}
+                      </small>
+
+                    </div>
+                  </div>
+                );
+              }
+            )
+          )}
+
+        </div>
+
+        <form
+          className="chat-form"
+          onSubmit={sendMessage}
+        >
+
+          <input
+            value={messageText}
+            onChange={(event) =>
+              setMessageText(
+                event.target.value
+              )
+            }
+            placeholder="Escribe un mensaje..."
+            autoComplete="off"
+          />
+
+          <button
+            className="primary"
+            disabled={sendingMessage}
+            type="submit"
+          >
+            {sendingMessage
+              ? "..."
+              : "Enviar"}
+          </button>
+
+        </form>
+
+      </div>
+
+    </section>
+  );
+}
+
+/* =========================================================
+   PUBLICAR
+========================================================= */
+
+function PublishPage({
+  offer,
+  setOffer,
+  publishing,
+  publishService,
+}) {
+  return (
+    <section className="section page-section">
+
+      <div className="section-heading">
+
+        <div>
+
+          <span className="eyebrow">
+            OPORTUNIDAD
+          </span>
+
+          <h2>
+            Publicar servicio
+          </h2>
+
+          <p>
+            Presenta tus habilidades y permite que
+            nuevos clientes te encuentren.
+          </p>
+
+        </div>
+
+      </div>
+
+      <form
+        className="publish-form panel"
+        onSubmit={publishService}
+      >
+
+        <label>
+          Nombre del servicio
+
+          <input
+            value={offer.serviceTitle}
+            onChange={(event) =>
+              setOffer({
+                ...offer,
+                serviceTitle:
+                  event.target.value,
+              })
+            }
+            placeholder="Ej. Diseño de logotipos"
+          />
+        </label>
+
+        <label>
+          Categoría
+
+          <select
+            value={offer.category}
+            onChange={(event) =>
+              setOffer({
+                ...offer,
+                category:
+                  event.target.value,
+              })
+            }
+          >
+            {categories.map(
+              ([, name]) => (
+                <option
+                  value={name}
+                  key={name}
+                >
+                  {name}
+                </option>
+              )
+            )}
+          </select>
+        </label>
+
+        <label>
+          Descripción
+
+          <textarea
+            value={offer.description}
+            onChange={(event) =>
+              setOffer({
+                ...offer,
+                description:
+                  event.target.value,
+              })
+            }
+            rows="7"
+            placeholder="Describe claramente qué ofreces..."
+          />
+        </label>
+
+        <label>
+          Precio inicial
+
+          <input
+            type="number"
+            min="1"
+            step="0.01"
+            value={offer.price}
+            onChange={(event) =>
+              setOffer({
+                ...offer,
+                price:
+                  event.target.value,
+              })
+            }
+            placeholder="Ej. 50"
+          />
+        </label>
+
+        <div className="publish-note">
+
+          <strong>
+            💡 Importante
+          </strong>
+
+          <p>
+            RobLoren todavía no procesa pagos reales.
+            El precio solamente informa al cliente
+            del valor del servicio.
+          </p>
+
         </div>
 
         <button
-          className="primary"
-          onClick={() => onOpen(service)}
+          className="primary full"
+          disabled={publishing}
+          type="submit"
         >
-          Ver servicio
+          {publishing
+            ? "Publicando..."
+            : "Publicar servicio"}
         </button>
-      </div>
-    </article>
+
+      </form>
+
+    </section>
   );
 }
 
-function StatCard({ icon, value, label }) {
+/* =========================================================
+   AUTENTICACIÓN
+========================================================= */
+
+function AccountPage({
+  accountMode,
+  setAccountMode,
+  form,
+  setForm,
+  authLoading,
+  login,
+  register,
+}) {
   return (
-    <div className="stat-card">
-      <span>{icon}</span>
-      <strong>{value}</strong>
-      <small>{label}</small>
-    </div>
+    <section className="section page-section auth-page">
+
+      <div className="auth-card">
+
+        <div className="auth-heading">
+
+          <span className="brand-mark">
+            RL
+          </span>
+
+          <span className="eyebrow">
+            ROBLOREN
+          </span>
+
+          <h2>
+            {accountMode === "login"
+              ? "Bienvenido de nuevo"
+              : "Crea tu cuenta"}
+          </h2>
+
+          <p>
+            {accountMode === "login"
+              ? "Accede a tu cuenta para gestionar tus servicios y oportunidades."
+              : "Únete a RobLoren y conecta tu talento con nuevas oportunidades."}
+          </p>
+
+        </div>
+
+        {accountMode === "login" ? (
+          <form onSubmit={login}>
+
+            <label>
+              Correo electrónico
+
+              <input
+                type="email"
+                value={form.email}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    email:
+                      event.target.value,
+                  })
+                }
+                autoComplete="email"
+                placeholder="correo@ejemplo.com"
+              />
+            </label>
+
+            <label>
+              Contraseña
+
+              <input
+                type="password"
+                value={form.password}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    password:
+                      event.target.value,
+                  })
+                }
+                autoComplete="current-password"
+                placeholder="Tu contraseña"
+              />
+            </label>
+
+            <button
+              className="primary full"
+              disabled={authLoading}
+              type="submit"
+            >
+              {authLoading
+                ? "Entrando..."
+                : "Iniciar sesión"}
+            </button>
+
+            <button
+              type="button"
+              className="link-button"
+              onClick={() =>
+                setAccountMode("register")
+              }
+            >
+              ¿No tienes cuenta? Regístrate
+            </button>
+
+          </form>
+        ) : (
+          <form onSubmit={register}>
+
+            <label>
+              Nombre
+
+              <input
+                value={form.name}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    name:
+                      event.target.value,
+                  })
+                }
+                autoComplete="name"
+                placeholder="Tu nombre"
+              />
+            </label>
+
+            <label>
+              Correo electrónico
+
+              <input
+                type="email"
+                value={form.email}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    email:
+                      event.target.value,
+                  })
+                }
+                autoComplete="email"
+                placeholder="correo@ejemplo.com"
+              />
+            </label>
+
+            <label>
+              Contraseña
+
+              <input
+                type="password"
+                value={form.password}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    password:
+                      event.target.value,
+                  })
+                }
+                autoComplete="new-password"
+                placeholder="Mínimo 6 caracteres"
+              />
+            </label>
+
+            <label>
+              Profesión
+
+              <input
+                value={form.profession}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    profession:
+                      event.target.value,
+                  })
+                }
+                placeholder="Ej. Diseñador gráfico"
+              />
+            </label>
+
+            <label>
+              Biografía
+
+              <textarea
+                value={form.bio}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    bio:
+                      event.target.value,
+                  })
+                }
+                rows="4"
+                placeholder="Cuéntanos brevemente sobre ti..."
+              />
+            </label>
+
+            <button
+              className="primary full"
+              disabled={authLoading}
+              type="submit"
+            >
+              {authLoading
+                ? "Creando..."
+                : "Crear cuenta"}
+            </button>
+
+            <button
+              type="button"
+              className="link-button"
+              onClick={() =>
+                setAccountMode("login")
+              }
+            >
+              ← Ya tengo una cuenta
+            </button>
+
+          </form>
+        )}
+
+      </div>
+
+    </section>
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+/* =========================================================
+   INICIO REACT
+========================================================= */
+
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(
   <App />
 );
