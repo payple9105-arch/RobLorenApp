@@ -914,7 +914,9 @@ function App() {
     setPublishing(true);
 
     try {
-      const payload = {
+const payload = {
+  name: loggedUser.name || "Usuario",
+  profession: loggedUser.profession || "Profesional",
   service_title: form.title.trim(),
   description: form.description.trim(),
   category: form.category,
