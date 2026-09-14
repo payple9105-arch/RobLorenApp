@@ -915,13 +915,12 @@ function App() {
 
     try {
       const payload = {
-        title: form.title.trim(),
-        description: form.description.trim(),
-        category: form.category,
-        price: numericPrice || 0,
-    
-        user_id: loggedUser.id,
-      };
+  service_title: form.title.trim(),
+  description: form.description.trim(),
+  category: form.category,
+  price: numericPrice || 0,
+  user_id: loggedUser.id,
+};
 
       const { data, error } = await supabase
         .from("services")
