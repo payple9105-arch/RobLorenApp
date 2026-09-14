@@ -31,8 +31,13 @@ const demoServices = [
     category: "Tecnología",
     provider_name: "Carlos Rodríguez",
     provider_email: "carlos@robloren.demo",
+    provider_bio:
+      "Desarrollador web especializado en crear experiencias digitales modernas para negocios y proyectos personales.",
+    provider_location: "Disponible online",
+    provider_skills: "HTML, CSS, JavaScript, React",
     rating: 4.9,
     reviews: 27,
+    is_demo: true,
   },
   {
     id: "demo-2",
@@ -43,8 +48,13 @@ const demoServices = [
     category: "Diseño",
     provider_name: "Ana Martínez",
     provider_email: "ana@robloren.demo",
+    provider_bio:
+      "Diseñadora gráfica enfocada en identidad visual, contenido para redes y comunicación de marcas.",
+    provider_location: "Disponible online",
+    provider_skills: "Branding, Logos, Redes sociales, Diseño gráfico",
     rating: 4.8,
     reviews: 34,
+    is_demo: true,
   },
   {
     id: "demo-3",
@@ -55,8 +65,13 @@ const demoServices = [
     category: "Marketing",
     provider_name: "Luis Gómez",
     provider_email: "luis@robloren.demo",
+    provider_bio:
+      "Especialista en marketing digital y estrategias de crecimiento para pequeños negocios.",
+    provider_location: "Disponible online",
+    provider_skills: "Marketing digital, Redes sociales, Estrategia",
     rating: 4.9,
     reviews: 19,
+    is_demo: true,
   },
 ];
 
@@ -75,21 +90,77 @@ const defaultProfileForm = {
   skills: "",
 };
 
-function mapService(service) {
+const defaultAuthForm = {
+  email: "",
+  password: "",
+};
+
+function mapService(service, profile = null) {
+  const providerId =
+    service.provider_id ||
+    service.user_id ||
+    profile?.id ||
+    null;
+
+  const profileName =
+    profile?.full_name ||
+    profile?.username ||
+    "";
+
+  const profileEmail = profile?.email || "";
+
   return {
     ...service,
+    id: service.id,
     title: service.title || "Servicio profesional",
-    description: service.description || "Servicio ofrecido en RobLoren.",
+    description:
+      service.description || "Servicio ofrecido en RobLoren.",
     category: service.category || "Otros",
     price: Number(service.price || 0),
+
+    provider_id: providerId,
+
     provider_name:
       service.provider_name ||
+      profileName ||
       service.profiles?.full_name ||
       service.profiles?.username ||
       "Profesional RobLoren",
-    provider_email: service.provider_email || "",
+
+    provider_username:
+      service.provider_username ||
+      profile?.username ||
+      service.profiles?.username ||
+      "",
+
+    provider_email:
+      service.provider_email ||
+      profileEmail ||
+      service.profiles?.email ||
+      "",
+
+    provider_bio:
+      service.provider_bio ||
+      profile?.bio ||
+      service.profiles?.bio ||
+      "",
+
+    provider_location:
+      service.provider_location ||
+      profile?.location ||
+      service.profiles?.location ||
+      "",
+
+    provider_skills:
+      service.provider_skills ||
+      profile?.skills ||
+      service.profiles?.skills ||
+      "",
+
     rating: Number(service.rating || 4.8),
     reviews: Number(service.reviews || 0),
+
+    is_demo: Boolean(service.is_demo),
   };
 }
 
@@ -98,16 +169,19 @@ function makeUser(user, profile = null) {
 
   return {
     ...user,
+
     full_name:
       profile?.full_name ||
       user.user_metadata?.full_name ||
       user.email?.split("@")[0] ||
       "Usuario RobLoren",
+
     username:
       profile?.username ||
       user.user_metadata?.username ||
       user.email?.split("@")[0] ||
       "usuario",
+
     bio: profile?.bio || "",
     location: profile?.location || "",
     skills: profile?.skills || "",
@@ -141,16 +215,32 @@ function dateText(date) {
 }
 
 function getInitials(name = "RL") {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase())
-    .join("");
+  return (
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((word) => word[0]?.toUpperCase())
+      .join("") || "RL"
+  );
+}
+
+function normalizeSkills(skills = "") {
+  if (Array.isArray(skills)) {
+    return skills
+      .map((skill) => String(skill).trim())
+      .filter(Boolean);
+  }
+
+  return String(skills)
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
 }
 
 function App() {
   const [page, setPage] = useState("home");
+
   const [services, setServices] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
 
@@ -161,6 +251,8 @@ function App() {
   const [loggedUser, setLoggedUser] = useState(null);
   const [accountMode, setAccountMode] = useState("login");
   const [authLoading, setAuthLoading] = useState(false);
+
+  const [authForm, setAuthForm] = useState(defaultAuthForm);
 
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -178,7 +270,9 @@ function App() {
   const [savingProfile, setSavingProfile] = useState(false);
 
   const [form, setForm] = useState(defaultForm);
-  const [profileForm, setProfileForm] = useState(defaultProfileForm);
+  const [profileForm, setProfileForm] =
+    useState(defaultProfileForm);
+
   const [offer, setOffer] = useState("");
   const [publishing, setPublishing] = useState(false);
 
@@ -196,6 +290,13 @@ function App() {
     }));
   };
 
+  const updateAuthForm = (field, value) => {
+    setAuthForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
   const updateOffer = (value) => {
     setOffer(value);
   };
@@ -204,34 +305,50 @@ function App() {
     if (!user) return null;
 
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select(
+          "id,email,full_name,username,bio,location,skills"
+        )
         .eq("id", user.id)
         .maybeSingle();
 
-      if (data) return data;
+      if (!error && data) {
+        return data;
+      }
+
+      const username =
+        user.user_metadata?.username ||
+        user.email?.split("@")[0] ||
+        "usuario";
 
       const profile = {
         id: user.id,
-        email: user.email,
+        email: user.email || "",
         full_name:
           user.user_metadata?.full_name ||
           user.email?.split("@")[0] ||
           "Usuario RobLoren",
-        username:
-          user.user_metadata?.username ||
-          user.email?.split("@")[0] ||
-          "usuario",
+        username,
+        bio: "",
+        location: "",
+        skills: "",
       };
 
-      const { data: created } = await supabase
-        .from("profiles")
-        .insert(profile)
-        .select()
-        .maybeSingle();
+      const { data: created, error: createError } =
+        await supabase
+          .from("profiles")
+          .insert(profile)
+          .select(
+            "id,email,full_name,username,bio,location,skills"
+          )
+          .maybeSingle();
 
-      return created || profile;
+      if (!createError && created) {
+        return created;
+      }
+
+      return profile;
     } catch {
       return null;
     }
@@ -268,9 +385,56 @@ function App() {
 
       if (error || !data || data.length === 0) {
         setServices(demoServices);
-      } else {
-        setServices(data.map(mapService));
+        return;
       }
+
+      const providerIds = [
+        ...new Set(
+          data
+            .map(
+              (service) =>
+                service.provider_id ||
+                service.user_id
+            )
+            .filter(Boolean)
+        ),
+      ];
+
+      let profileMap = {};
+
+      if (providerIds.length > 0) {
+        try {
+          const { data: profileData } =
+            await supabase
+              .from("profiles")
+              .select(
+                "id,email,full_name,username,bio,location,skills"
+              )
+              .in("id", providerIds);
+
+          if (profileData) {
+            profileData.forEach((profile) => {
+              profileMap[profile.id] = profile;
+            });
+          }
+        } catch {
+          profileMap = {};
+        }
+      }
+
+      const enrichedServices = data.map((service) => {
+        const providerId =
+          service.provider_id ||
+          service.user_id ||
+          null;
+
+        return mapService(
+          service,
+          profileMap[providerId] || null
+        );
+      });
+
+      setServices(enrichedServices);
     } catch {
       setServices(demoServices);
     } finally {
@@ -293,7 +457,9 @@ function App() {
         .or(
           `client_id.eq.${loggedUser.id},provider_id.eq.${loggedUser.id}`
         )
-        .order("created_at", { ascending: false });
+        .order("created_at", {
+          ascending: false,
+        });
 
       if (!error && data) {
         setRequests(data);
@@ -308,7 +474,10 @@ function App() {
   };
 
   const loadMessages = async (contact) => {
-    if (!loggedUser || !contact) return;
+    if (!loggedUser || !contact?.id) {
+      setMessages([]);
+      return;
+    }
 
     setLoadingMessages(true);
 
@@ -319,7 +488,9 @@ function App() {
         .or(
           `and(sender_id.eq.${loggedUser.id},receiver_id.eq.${contact.id}),and(sender_id.eq.${contact.id},receiver_id.eq.${loggedUser.id})`
         )
-        .order("created_at", { ascending: true });
+        .order("created_at", {
+          ascending: true,
+        });
 
       if (!error && data) {
         setMessages(data);
@@ -334,7 +505,13 @@ function App() {
   };
 
   const sendMessage = async () => {
-    if (!loggedUser || !selectedContact || !messageText.trim()) return;
+    if (
+      !loggedUser ||
+      !selectedContact?.id ||
+      !messageText.trim()
+    ) {
+      return;
+    }
 
     setSendingMessage(true);
 
@@ -351,12 +528,21 @@ function App() {
         .select()
         .maybeSingle();
 
-      if (!error) {
-        setMessages((current) => [...current, data || payload]);
-        setMessageText("");
+      if (error) {
+        alert(
+          "No se pudo enviar el mensaje. Comprueba la configuración de mensajes."
+        );
+        return;
       }
+
+      setMessages((current) => [
+        ...current,
+        data || payload,
+      ]);
+
+      setMessageText("");
     } catch {
-      // Sin acción
+      alert("Ocurrió un error al enviar el mensaje.");
     } finally {
       setSendingMessage(false);
     }
@@ -369,26 +555,81 @@ function App() {
       return;
     }
 
+    const contactId =
+      contact?.id ||
+      contact?.provider_id ||
+      contact?.user_id ||
+      null;
+
+    if (!contactId) {
+      alert(
+        "Este servicio todavía no está asociado a un profesional registrado."
+      );
+      return;
+    }
+
+    if (contactId === loggedUser.id) {
+      alert(
+        "No puedes iniciar una conversación contigo mismo."
+      );
+      return;
+    }
+
     const normalized = {
-      id: contact.id || contact.provider_id,
+      id: contactId,
       full_name:
         contact.full_name ||
         contact.provider_name ||
         contact.username ||
         "Profesional",
-      username: contact.username || "",
-      email: contact.email || contact.provider_email || "",
+      username:
+        contact.username ||
+        contact.provider_username ||
+        "",
+      email:
+        contact.email ||
+        contact.provider_email ||
+        "",
     };
 
     setSelectedContact(normalized);
+    setMessages([]);
     setPage("messages");
     loadMessages(normalized);
   };
 
   const sendRequest = async () => {
-    if (!loggedUser || !selectedService) {
+    if (!loggedUser) {
       setPage("account");
       setAccountMode("login");
+      return;
+    }
+
+    if (!selectedService) return;
+
+    if (selectedService.is_demo) {
+      setRequestMessage(
+        "Este servicio de demostración todavía no está asociado a un profesional registrado."
+      );
+      return;
+    }
+
+    const providerId =
+      selectedService.provider_id ||
+      selectedService.user_id ||
+      null;
+
+    if (!providerId) {
+      setRequestMessage(
+        "Este servicio todavía no está asociado a un profesional registrado."
+      );
+      return;
+    }
+
+    if (providerId === loggedUser.id) {
+      setRequestMessage(
+        "No puedes contratar tu propio servicio."
+      );
       return;
     }
 
@@ -396,14 +637,13 @@ function App() {
     setRequestMessage("");
 
     try {
-      const providerId =
-        selectedService.provider_id || selectedService.user_id || null;
-
       const payload = {
         service_id: selectedService.id,
         client_id: loggedUser.id,
         provider_id: providerId,
-        message: offer.trim() || "Me interesa contratar este servicio.",
+        message:
+          offer.trim() ||
+          "Me interesa contratar este servicio.",
         status: "pending",
       };
 
@@ -415,21 +655,33 @@ function App() {
 
       if (error) {
         setRequestMessage(
-          "No se pudo enviar la solicitud. Comprueba que el servicio pertenezca a un profesional registrado."
+          "No se pudo enviar la solicitud. Comprueba que el servicio y el profesional estén correctamente configurados."
         );
       } else {
-        setRequests((current) => [data || payload, ...current]);
+        setRequests((current) => [
+          data || payload,
+          ...current,
+        ]);
+
         setOffer("");
-        setRequestMessage("Solicitud enviada correctamente.");
+
+        setRequestMessage(
+          "Solicitud enviada correctamente."
+        );
       }
     } catch {
-      setRequestMessage("Ocurrió un error al enviar la solicitud.");
+      setRequestMessage(
+        "Ocurrió un error al enviar la solicitud."
+      );
     } finally {
       setSendingRequest(false);
     }
   };
 
-  const changeRequestStatus = async (requestId, status) => {
+  const changeRequestStatus = async (
+    requestId,
+    status
+  ) => {
     if (!requestId) return;
 
     setUpdatingRequest(requestId);
@@ -448,7 +700,15 @@ function App() {
               : request
           )
         );
+      } else {
+        alert(
+          "No se pudo actualizar el estado de la solicitud."
+        );
       }
+    } catch {
+      alert(
+        "Ocurrió un error al actualizar la solicitud."
+      );
     } finally {
       setUpdatingRequest(null);
     }
@@ -456,6 +716,16 @@ function App() {
 
   const saveProfile = async () => {
     if (!loggedUser) return;
+
+    if (!profileForm.full_name.trim()) {
+      alert("Escribe tu nombre completo.");
+      return;
+    }
+
+    if (!profileForm.username.trim()) {
+      alert("Escribe un nombre de usuario.");
+      return;
+    }
 
     setSavingProfile(true);
 
@@ -473,18 +743,33 @@ function App() {
         .update(payload)
         .eq("id", loggedUser.id);
 
-      if (!error) {
-        setLoggedUser((current) => ({
-          ...current,
-          ...payload,
-        }));
+      if (error) {
+        alert(
+          "No se pudo guardar el perfil: " +
+            error.message
+        );
+        return;
       }
+
+      setLoggedUser((current) => ({
+        ...current,
+        ...payload,
+      }));
+
+      await loadServices();
+
+      alert("Perfil actualizado correctamente.");
+    } catch {
+      alert("Ocurrió un error al guardar el perfil.");
     } finally {
       setSavingProfile(false);
     }
   };
 
   const register = async () => {
+    const email = authForm.email.trim();
+    const password = authForm.password;
+
     if (!profileForm.full_name.trim()) {
       alert("Escribe tu nombre.");
       return;
@@ -495,27 +780,34 @@ function App() {
       return;
     }
 
-    if (!loggedUser && !form.description.trim()) {
-      alert("Escribe una contraseña en el campo correspondiente.");
+    if (!email) {
+      alert("Escribe tu correo electrónico.");
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      alert(
+        "La contraseña debe tener al menos 6 caracteres."
+      );
       return;
     }
 
     setAuthLoading(true);
 
     try {
-      const email = form.title.trim();
-      const password = form.description.trim();
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: profileForm.full_name.trim(),
-            username: profileForm.username.trim(),
+      const { data, error } =
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name:
+                profileForm.full_name.trim(),
+              username:
+                profileForm.username.trim(),
+            },
           },
-        },
-      });
+        });
 
       if (error) {
         alert(error.message);
@@ -524,16 +816,27 @@ function App() {
 
       if (data.user) {
         await refreshUser(data.user);
+
+        setAuthForm(defaultAuthForm);
+
         setPage("home");
+
+        if (!data.session) {
+          alert(
+            "Cuenta creada. Si Supabase tiene activada la confirmación de correo, revisa tu email para confirmar la cuenta."
+          );
+        }
       }
+    } catch {
+      alert("Ocurrió un error al crear la cuenta.");
     } finally {
       setAuthLoading(false);
     }
   };
 
   const login = async () => {
-    const email = form.title.trim();
-    const password = form.description.trim();
+    const email = authForm.email.trim();
+    const password = authForm.password;
 
     if (!email || !password) {
       alert("Escribe tu correo y contraseña.");
@@ -543,10 +846,11 @@ function App() {
     setAuthLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
       if (error) {
         alert(error.message);
@@ -555,8 +859,13 @@ function App() {
 
       if (data.user) {
         await refreshUser(data.user);
+
+        setAuthForm(defaultAuthForm);
+
         setPage("home");
       }
+    } catch {
+      alert("Ocurrió un error al iniciar sesión.");
     } finally {
       setAuthLoading(false);
     }
@@ -564,6 +873,7 @@ function App() {
 
   const logout = async () => {
     await supabase.auth.signOut();
+
     setLoggedUser(null);
     setRequests([]);
     setMessages([]);
@@ -578,8 +888,24 @@ function App() {
       return;
     }
 
-    if (!form.title.trim() || !form.description.trim()) {
-      alert("Completa el título y la descripción.");
+    if (!form.title.trim()) {
+      alert("Escribe el título del servicio.");
+      return;
+    }
+
+    if (!form.description.trim()) {
+      alert("Escribe una descripción.");
+      return;
+    }
+
+    const numericPrice = Number(form.price);
+
+    if (
+      form.price !== "" &&
+      (!Number.isFinite(numericPrice) ||
+        numericPrice < 0)
+    ) {
+      alert("Escribe un precio válido.");
       return;
     }
 
@@ -590,7 +916,7 @@ function App() {
         title: form.title.trim(),
         description: form.description.trim(),
         category: form.category,
-        price: Number(form.price) || 0,
+        price: numericPrice || 0,
         provider_id: loggedUser.id,
         user_id: loggedUser.id,
       };
@@ -602,16 +928,26 @@ function App() {
         .maybeSingle();
 
       if (error) {
-        alert(error.message);
+        alert(
+          "No se pudo publicar el servicio: " +
+            error.message
+        );
         return;
       }
 
       if (data) {
-        setServices((current) => [mapService(data), ...current]);
+        setServices((current) => [
+          mapService(data, loggedUser),
+          ...current,
+        ]);
       }
 
       setForm(defaultForm);
-      setPage("home");
+      setPage("services");
+
+      alert("Servicio publicado correctamente.");
+    } catch {
+      alert("Ocurrió un error al publicar el servicio.");
     } finally {
       setPublishing(false);
     }
@@ -621,12 +957,16 @@ function App() {
     let mounted = true;
 
     const initialize = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      if (mounted && session?.user) {
-        await refreshUser(session.user);
+        if (mounted && session?.user) {
+          await refreshUser(session.user);
+        }
+      } catch {
+        // Sin acción
       }
     };
 
@@ -635,13 +975,15 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        await refreshUser(session.user);
-      } else {
-        setLoggedUser(null);
+    } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          await refreshUser(session.user);
+        } else {
+          setLoggedUser(null);
+        }
       }
-    });
+    );
 
     return () => {
       mounted = false;
@@ -652,15 +994,20 @@ function App() {
   useEffect(() => {
     if (loggedUser) {
       loadRequests();
+    } else {
+      setRequests([]);
     }
   }, [loggedUser]);
 
   const filteredServices = useMemo(() => {
-    const text = deferredSearch.trim().toLowerCase();
+    const text = deferredSearch
+      .trim()
+      .toLowerCase();
 
     return services.filter((service) => {
       const matchesCategory =
-        category === "Todas" || service.category === category;
+        category === "Todas" ||
+        service.category === category;
 
       if (!text) return matchesCategory;
 
@@ -669,13 +1016,24 @@ function App() {
         service.description,
         service.category,
         service.provider_name,
+        service.provider_username,
+        service.provider_bio,
+        service.provider_location,
+        service.provider_skills,
       ]
         .join(" ")
         .toLowerCase();
 
-      return matchesCategory && content.includes(text);
+      return (
+        matchesCategory &&
+        content.includes(text)
+      );
     });
-  }, [services, deferredSearch, category]);
+  }, [
+    services,
+    deferredSearch,
+    category,
+  ]);
 
   const featuredServices = useMemo(
     () => filteredServices.slice(0, 3),
@@ -686,7 +1044,12 @@ function App() {
     const unique = new Map();
 
     filteredServices.forEach((service) => {
-      const key = service.provider_name || "Profesional";
+      const key =
+        service.provider_id ||
+        service.provider_username ||
+        service.provider_name ||
+        service.id;
+
       if (!unique.has(key)) {
         unique.set(key, service);
       }
@@ -720,7 +1083,10 @@ function App() {
           <div className="brand-mark">R</div>
 
           <div>
-            <div className="brand-name">RobLoren</div>
+            <div className="brand-name">
+              RobLoren
+            </div>
+
             <div className="brand-slogan">
               Conecta talento con oportunidades.
             </div>
@@ -729,14 +1095,22 @@ function App() {
 
         <nav className="nav">
           <button
-            className={page === "home" ? "nav-link active" : "nav-link"}
+            className={
+              page === "home"
+                ? "nav-link active"
+                : "nav-link"
+            }
             onClick={() => setPage("home")}
           >
             Inicio
           </button>
 
           <button
-            className={page === "services" ? "nav-link active" : "nav-link"}
+            className={
+              page === "services"
+                ? "nav-link active"
+                : "nav-link"
+            }
             onClick={() => setPage("services")}
           >
             Servicios
@@ -745,17 +1119,28 @@ function App() {
           {loggedUser && (
             <>
               <button
-                className={page === "requests" ? "nav-link active" : "nav-link"}
+                className={
+                  page === "requests"
+                    ? "nav-link active"
+                    : "nav-link"
+                }
                 onClick={() => setPage("requests")}
               >
                 Solicitudes
+
                 {pendingRequests > 0 && (
-                  <span className="nav-badge">{pendingRequests}</span>
+                  <span className="nav-badge">
+                    {pendingRequests}
+                  </span>
                 )}
               </button>
 
               <button
-                className={page === "messages" ? "nav-link active" : "nav-link"}
+                className={
+                  page === "messages"
+                    ? "nav-link active"
+                    : "nav-link"
+                }
                 onClick={() => setPage("messages")}
               >
                 Mensajes
@@ -772,14 +1157,20 @@ function App() {
                 onClick={() => setPage("account")}
               >
                 <span className="avatar small">
-                  {getInitials(loggedUser.full_name)}
+                  {getInitials(
+                    loggedUser.full_name
+                  )}
                 </span>
+
                 <span className="profile-mini-name">
                   {loggedUser.full_name}
                 </span>
               </button>
 
-              <button className="button ghost" onClick={logout}>
+              <button
+                className="button ghost"
+                onClick={logout}
+              >
                 Salir
               </button>
             </>
@@ -799,98 +1190,178 @@ function App() {
     </header>
   );
 
-  const Rating = ({ rating, reviews }) => (
-    <div className="rating">
-      <span className="stars">★★★★★</span>
-      <strong>{Number(rating || 4.8).toFixed(1)}</strong>
-      <span className="review-count">
-        ({Number(reviews || 0)} valoraciones)
-      </span>
-    </div>
-  );
-
-  const ServiceCard = ({ service, featured = false }) => (
-    <article
-      className={featured ? "service-card featured-card" : "service-card"}
-      onClick={() => {
-        setSelectedService(service);
-        setPage("service");
-      }}
-    >
-      <div className="service-card-top">
-        <span className="category-pill">
-          {categories.find((item) => item[1] === service.category)?.[0] || "✨"}{" "}
-          {service.category}
+  const Rating = memo(function Rating({
+    rating,
+    reviews,
+  }) {
+    return (
+      <div className="rating">
+        <span className="stars">
+          ★★★★★
         </span>
 
-        <span className="service-price">
-          ${Number(service.price || 0)}
+        <strong>
+          {Number(rating || 4.8).toFixed(1)}
+        </strong>
+
+        <span className="review-count">
+          ({Number(reviews || 0)} valoraciones)
         </span>
       </div>
+    );
+  });
 
-      <div className="service-icon">
-        {categories.find((item) => item[1] === service.category)?.[0] ||
-          "✨"}
-      </div>
+  const ServiceCard = memo(function ServiceCard({
+    service,
+    featured = false,
+  }) {
+    const icon =
+      categories.find(
+        (item) =>
+          item[1] === service.category
+      )?.[0] || "✨";
 
-      <h3>{service.title}</h3>
-
-      <p>{service.description}</p>
-
-      <Rating rating={service.rating} reviews={service.reviews} />
-
-      <div className="service-provider">
-        <span className="avatar">
-          {getInitials(service.provider_name)}
-        </span>
-
-        <div>
-          <strong>{service.provider_name}</strong>
-          <span>Profesional RobLoren</span>
-        </div>
-
-        <span className="arrow">→</span>
-      </div>
-    </article>
-  );
-
-  const ProfessionalCard = ({ service }) => (
-    <article className="professional-card">
-      <div className="professional-head">
-        <div className="avatar large">
-          {getInitials(service.provider_name)}
-        </div>
-
-        <div className="professional-info">
-          <h3>{service.provider_name}</h3>
-          <span className="professional-role">
-            {service.category} · Profesional
-          </span>
-
-          <Rating rating={service.rating} reviews={service.reviews} />
-        </div>
-      </div>
-
-      <p>
-        Profesional especializado en {service.category.toLowerCase()}.
-        Disponible para nuevos proyectos y colaboraciones.
-      </p>
-
-      <div className="skill-row">
-        <span>{service.category}</span>
-        <span>Proyectos profesionales</span>
-      </div>
-
-      <button
-        className="button outline full"
+    return (
+      <article
+        className={
+          featured
+            ? "service-card featured-card"
+            : "service-card"
+        }
         onClick={() => {
           setSelectedService(service);
+          setRequestMessage("");
           setPage("service");
         }}
       >
-        Ver perfil
-      </button>
-    </article>
+        <div className="service-card-top">
+          <span className="category-pill">
+            {icon} {service.category}
+          </span>
+
+          <span className="service-price">
+            ${Number(service.price || 0)}
+          </span>
+        </div>
+
+        <div className="service-icon">
+          {icon}
+        </div>
+
+        <h3>{service.title}</h3>
+
+        <p>{service.description}</p>
+
+        <Rating
+          rating={service.rating}
+          reviews={service.reviews}
+        />
+
+        <div className="service-provider">
+          <span className="avatar">
+            {getInitials(
+              service.provider_name
+            )}
+          </span>
+
+          <div>
+            <strong>
+              {service.provider_name}
+            </strong>
+
+            <span>
+              {service.provider_username
+                ? `@${service.provider_username}`
+                : service.provider_location ||
+                  "Profesional RobLoren"}
+            </span>
+          </div>
+
+          <span className="arrow">
+            →
+          </span>
+        </div>
+      </article>
+    );
+  });
+
+  const ProfessionalCard = memo(
+    function ProfessionalCard({ service }) {
+      const skills = normalizeSkills(
+        service.provider_skills
+      ).slice(0, 3);
+
+      return (
+        <article className="professional-card">
+          <div className="professional-head">
+            <div className="avatar large">
+              {getInitials(
+                service.provider_name
+              )}
+            </div>
+
+            <div className="professional-info">
+              <h3>
+                {service.provider_name}
+              </h3>
+
+              {service.provider_username && (
+                <span className="professional-username">
+                  @{service.provider_username}
+                </span>
+              )}
+
+              <span className="professional-role">
+                {service.category} · Profesional
+              </span>
+
+              {service.provider_location && (
+                <span className="professional-location">
+                  📍 {service.provider_location}
+                </span>
+              )}
+
+              <Rating
+                rating={service.rating}
+                reviews={service.reviews}
+              />
+            </div>
+          </div>
+
+          <p>
+            {service.provider_bio ||
+              `Profesional especializado en ${service.category.toLowerCase()}. Disponible para nuevos proyectos y colaboraciones.`}
+          </p>
+
+          <div className="skill-row">
+            {(skills.length > 0
+              ? skills
+              : [
+                  service.category,
+                  "Proyectos profesionales",
+                ]
+            ).map((skill) => (
+              <span key={skill}>
+                {skill}
+              </span>
+            ))}
+          </div>
+
+          <button
+            className="button outline full"
+            onClick={(event) => {
+              event.stopPropagation();
+
+              setSelectedService(service);
+              setRequestMessage("");
+              setPage("service");
+            }}
+          >
+            Ver perfil
+          </button>
+        </article>
+      );
+    }
   );
 
   const HomePage = () => (
@@ -898,27 +1369,36 @@ function App() {
       <section className="hero">
         <div className="hero-content">
           <div className="hero-badge">
-            <span>✦</span> El marketplace profesional de nueva generación
+            <span>✦</span>
+            El marketplace profesional de nueva
+            generación
           </div>
 
           <h1>
             Encuentra el talento.
             <br />
-            <span>Impulsa tus proyectos.</span>
+            <span>
+              Impulsa tus proyectos.
+            </span>
           </h1>
 
           <p>
-            RobLoren conecta clientes con profesionales capaces de convertir
-            ideas en resultados. Encuentra servicios, publica tu talento y
-            crea nuevas oportunidades.
+            RobLoren conecta clientes con
+            profesionales capaces de convertir ideas
+            en resultados. Encuentra servicios,
+            publica tu talento y crea nuevas
+            oportunidades.
           </p>
 
           <div className="hero-buttons">
             <button
               className="button primary large"
-              onClick={() => setPage("services")}
+              onClick={() =>
+                setPage("services")
+              }
             >
-              Explorar servicios <span>→</span>
+              Explorar servicios{" "}
+              <span>→</span>
             </button>
 
             <button
@@ -938,7 +1418,9 @@ function App() {
 
           <div className="hero-trust">
             <div>
-              <strong>Profesionales</strong>
+              <strong>
+                Profesionales
+              </strong>
               <span>conectados</span>
             </div>
 
@@ -958,40 +1440,63 @@ function App() {
           <div className="hero-glow"></div>
 
           <div className="floating-card card-one">
-            <span className="floating-icon">💻</span>
+            <span className="floating-icon">
+              💻
+            </span>
+
             <div>
-              <strong>Desarrollo web</strong>
-              <span>★★★★★ 4.9</span>
+              <strong>
+                Desarrollo web
+              </strong>
+              <span>
+                ★★★★★ 4.9
+              </span>
             </div>
           </div>
 
           <div className="floating-card card-two">
-            <span className="floating-icon">🎨</span>
+            <span className="floating-icon">
+              🎨
+            </span>
+
             <div>
-              <strong>Diseño creativo</strong>
-              <span>Disponible ahora</span>
+              <strong>
+                Diseño creativo
+              </strong>
+
+              <span>
+                Disponible ahora
+              </span>
             </div>
           </div>
 
           <div className="hero-orbit">
-            <div className="orbit-center">R</div>
+            <div className="orbit-center">
+              R
+            </div>
           </div>
         </div>
       </section>
 
       <section className="search-section">
         <div className="search-box">
-          <span className="search-icon">⌕</span>
+          <span className="search-icon">
+            ⌕
+          </span>
 
           <input
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
             placeholder="¿Qué servicio necesitas?"
           />
 
           <button
             className="button primary search-button"
-            onClick={() => setPage("services")}
+            onClick={() =>
+              setPage("services")
+            }
           >
             Buscar
           </button>
@@ -1001,50 +1506,75 @@ function App() {
       <section className="section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">EXPLORA</span>
-            <h2>Encuentra exactamente lo que necesitas</h2>
+            <span className="eyebrow">
+              EXPLORA
+            </span>
+
+            <h2>
+              Encuentra exactamente lo que
+              necesitas
+            </h2>
           </div>
 
           <button
             className="text-button"
-            onClick={() => setPage("services")}
+            onClick={() =>
+              setPage("services")
+            }
           >
             Ver todos →
           </button>
         </div>
 
         <div className="category-grid">
-          {categories.map(([icon, name]) => (
-            <button
-              className="category-card"
-              key={name}
-              onClick={() => {
-                setCategory(name);
-                setPage("services");
-              }}
-            >
-              <span className="category-big-icon">{icon}</span>
-              <strong>{name}</strong>
-              <span>Explorar →</span>
-            </button>
-          ))}
+          {categories.map(
+            ([icon, name]) => (
+              <button
+                className="category-card"
+                key={name}
+                onClick={() => {
+                  setCategory(name);
+                  setPage("services");
+                }}
+              >
+                <span className="category-big-icon">
+                  {icon}
+                </span>
+
+                <strong>{name}</strong>
+
+                <span>
+                  Explorar →
+                </span>
+              </button>
+            )
+          )}
         </div>
       </section>
 
       <section className="section soft-section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">SELECCIÓN ROBLOREN</span>
-            <h2>Servicios destacados</h2>
+            <span className="eyebrow">
+              SELECCIÓN ROBLOREN
+            </span>
+
+            <h2>
+              Servicios destacados
+            </h2>
+
             <p>
-              Una selección de servicios para ayudarte a comenzar tu próximo
+              Una selección de servicios para
+              ayudarte a comenzar tu próximo
               proyecto.
             </p>
           </div>
 
           <button
             className="text-button"
-            onClick={() => setPage("services")}
+            onClick={() =>
+              setPage("services")
+            }
           >
             Explorar servicios →
           </button>
@@ -1052,16 +1582,19 @@ function App() {
 
         <div className="services-grid">
           {featuredServices.length > 0 ? (
-            featuredServices.map((service) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                featured
-              />
-            ))
+            featuredServices.map(
+              (service) => (
+                <ServiceCard
+                  key={service.id}
+                  service={service}
+                  featured
+                />
+              )
+            )
           ) : (
             <div className="empty-state">
-              No encontramos servicios con esos criterios.
+              No encontramos servicios con esos
+              criterios.
             </div>
           )}
         </div>
@@ -1070,37 +1603,60 @@ function App() {
       <section className="section">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">TALENTO</span>
-            <h2>Profesionales destacados</h2>
+            <span className="eyebrow">
+              TALENTO
+            </span>
+
+            <h2>
+              Profesionales destacados
+            </h2>
+
             <p>
-              Conoce a las personas detrás de los servicios que pueden ayudarte.
+              Conoce a las personas detrás de los
+              servicios que pueden ayudarte.
             </p>
           </div>
         </div>
 
         <div className="professionals-grid">
-          {professionals.map((service) => (
-            <ProfessionalCard
-              key={service.provider_name}
-              service={service}
-            />
-          ))}
+          {professionals.map(
+            (service) => (
+              <ProfessionalCard
+                key={
+                  service.provider_id ||
+                  service.provider_name
+                }
+                service={service}
+              />
+            )
+          )}
         </div>
       </section>
 
       <section className="how-section">
         <div className="section-heading centered">
-          <span className="eyebrow">ASÍ DE FÁCIL</span>
-          <h2>Cómo funciona RobLoren</h2>
+          <span className="eyebrow">
+            ASÍ DE FÁCIL
+          </span>
+
+          <h2>
+            Cómo funciona RobLoren
+          </h2>
+
           <p>
-            Todo lo que necesitas para conectar talento y oportunidades en un
-            mismo lugar.
+            Todo lo que necesitas para conectar
+            talento y oportunidades en un mismo
+            lugar.
           </p>
         </div>
 
         <div className="steps-grid">
           {[
-            ["01", "Crea tu cuenta", "Regístrate como cliente o profesional."],
+            [
+              "01",
+              "Crea tu cuenta",
+              "Regístrate como cliente o profesional.",
+            ],
             [
               "02",
               "Encuentra o publica",
@@ -1116,45 +1672,87 @@ function App() {
               "Trabaja y crece",
               "Completa proyectos y construye tu reputación.",
             ],
-          ].map(([number, title, text]) => (
-            <div className="step-card" key={number}>
-              <span className="step-number">{number}</span>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </div>
-          ))}
+          ].map(
+            ([number, title, text]) => (
+              <div
+                className="step-card"
+                key={number}
+              >
+                <span className="step-number">
+                  {number}
+                </span>
+
+                <h3>{title}</h3>
+
+                <p>{text}</p>
+              </div>
+            )
+          )}
         </div>
       </section>
 
       <section className="benefits-section">
         <div className="benefits-content">
-          <span className="eyebrow">POR QUÉ ROBLOREN</span>
+          <span className="eyebrow">
+            POR QUÉ ROBLOREN
+          </span>
+
           <h2>
             Una plataforma creada para
-            <span> abrir oportunidades.</span>
+            <span>
+              {" "}
+              abrir oportunidades.
+            </span>
           </h2>
 
           <p>
-            RobLoren busca crear conexiones profesionales reales, dando
-            visibilidad al talento y facilitando que los clientes encuentren
-            las personas adecuadas para sus proyectos.
+            RobLoren busca crear conexiones
+            profesionales reales, dando visibilidad
+            al talento y facilitando que los clientes
+            encuentren las personas adecuadas para
+            sus proyectos.
           </p>
 
           <div className="benefits-list">
             {[
-              ["✓", "Talento profesional", "Encuentra personas con habilidades reales."],
-              ["✓", "Conexiones directas", "Comunícate sin complicaciones."],
-              ["✓", "Nuevas oportunidades", "Convierte tus habilidades en proyectos."],
-              ["✓", "Reputación profesional", "Construye confianza con cada trabajo."],
-            ].map(([icon, title, text]) => (
-              <div className="benefit-item" key={title}>
-                <span>{icon}</span>
-                <div>
-                  <strong>{title}</strong>
-                  <p>{text}</p>
+              [
+                "✓",
+                "Talento profesional",
+                "Encuentra personas con habilidades reales.",
+              ],
+              [
+                "✓",
+                "Conexiones directas",
+                "Comunícate sin complicaciones.",
+              ],
+              [
+                "✓",
+                "Nuevas oportunidades",
+                "Convierte tus habilidades en proyectos.",
+              ],
+              [
+                "✓",
+                "Reputación profesional",
+                "Construye confianza con cada trabajo.",
+              ],
+            ].map(
+              ([icon, title, text]) => (
+                <div
+                  className="benefit-item"
+                  key={title}
+                >
+                  <span>{icon}</span>
+
+                  <div>
+                    <strong>
+                      {title}
+                    </strong>
+
+                    <p>{text}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </div>
 
@@ -1164,22 +1762,42 @@ function App() {
             <div className="network-line line-b"></div>
             <div className="network-line line-c"></div>
 
-            <div className="network-person p1">👨‍💻</div>
-            <div className="network-person p2">👩‍🎨</div>
-            <div className="network-person p3">👨‍💼</div>
-            <div className="network-person p4">👩‍💻</div>
+            <div className="network-person p1">
+              👨‍💻
+            </div>
 
-            <div className="network-center">R</div>
+            <div className="network-person p2">
+              👩‍🎨
+            </div>
+
+            <div className="network-person p3">
+              👨‍💼
+            </div>
+
+            <div className="network-person p4">
+              👩‍💻
+            </div>
+
+            <div className="network-center">
+              R
+            </div>
           </div>
         </div>
       </section>
 
       <section className="cta-section">
         <div>
-          <span className="eyebrow">TU PRÓXIMA OPORTUNIDAD</span>
-          <h2>Tu talento puede llegar más lejos.</h2>
+          <span className="eyebrow">
+            TU PRÓXIMA OPORTUNIDAD
+          </span>
+
+          <h2>
+            Tu talento puede llegar más lejos.
+          </h2>
+
           <p>
-            Únete a RobLoren y comienza a conectar con nuevas oportunidades.
+            Únete a RobLoren y comienza a conectar
+            con nuevas oportunidades.
           </p>
         </div>
 
@@ -1203,76 +1821,120 @@ function App() {
   const ServicesPage = () => (
     <main className="page-container">
       <section className="page-header">
-        <span className="eyebrow">MARKETPLACE</span>
-        <h1>Servicios profesionales</h1>
+        <span className="eyebrow">
+          MARKETPLACE
+        </span>
+
+        <h1>
+          Servicios profesionales
+        </h1>
+
         <p>
-          Encuentra especialistas para llevar tus proyectos al siguiente nivel.
+          Encuentra especialistas para llevar tus
+          proyectos al siguiente nivel.
         </p>
       </section>
 
       <div className="filters-bar">
         <div className="search-box compact">
-          <span className="search-icon">⌕</span>
+          <span className="search-icon">
+            ⌕
+          </span>
 
           <input
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
             placeholder="Buscar servicios..."
           />
         </div>
 
         <div className="category-scroll">
           <button
-            className={category === "Todas" ? "filter active" : "filter"}
-            onClick={() => setCategory("Todas")}
+            className={
+              category === "Todas"
+                ? "filter active"
+                : "filter"
+            }
+            onClick={() =>
+              setCategory("Todas")
+            }
           >
             Todas
           </button>
 
-          {categories.map(([icon, name]) => (
-            <button
-              className={category === name ? "filter active" : "filter"}
-              key={name}
-              onClick={() => setCategory(name)}
-            >
-              {icon} {name}
-            </button>
-          ))}
+          {categories.map(
+            ([icon, name]) => (
+              <button
+                className={
+                  category === name
+                    ? "filter active"
+                    : "filter"
+                }
+                key={name}
+                onClick={() =>
+                  setCategory(name)
+                }
+              >
+                {icon} {name}
+              </button>
+            )
+          )}
         </div>
       </div>
 
       <div className="results-heading">
-        <strong>{filteredServices.length} servicios encontrados</strong>
+        <strong>
+          {filteredServices.length} servicios
+          encontrados
+        </strong>
 
-        {search && (
+        {(search || category !== "Todas") && (
           <button
             className="clear-button"
-            onClick={() => setSearch("")}
+            onClick={() => {
+              setSearch("");
+              setCategory("Todas");
+            }}
           >
-            Limpiar búsqueda
+            Limpiar filtros
           </button>
         )}
       </div>
 
       {servicesLoading ? (
-        <div className="loading-state">Cargando servicios...</div>
+        <div className="loading-state">
+          Cargando servicios...
+        </div>
       ) : (
         <div className="services-grid large-grid">
-          {filteredServices.map((service) => (
-            <ServiceCard key={service.id} service={service} />
-          ))}
+          {filteredServices.map(
+            (service) => (
+              <ServiceCard
+                key={service.id}
+                service={service}
+              />
+            )
+          )}
         </div>
       )}
 
-      {!servicesLoading && filteredServices.length === 0 && (
-        <div className="empty-state big">
-          <div>🔎</div>
-          <h3>No encontramos ese servicio</h3>
-          <p>
-            Prueba con otra búsqueda o selecciona una categoría diferente.
-          </p>
-        </div>
-      )}
+      {!servicesLoading &&
+        filteredServices.length === 0 && (
+          <div className="empty-state big">
+            <div>🔎</div>
+
+            <h3>
+              No encontramos ese servicio
+            </h3>
+
+            <p>
+              Prueba con otra búsqueda o
+              selecciona una categoría diferente.
+            </p>
+          </div>
+        )}
     </main>
   );
 
@@ -1286,46 +1948,79 @@ function App() {
             <div className="account-main">
               <div className="account-profile-head">
                 <div className="avatar profile-avatar">
-                  {getInitials(loggedUser.full_name)}
+                  {getInitials(
+                    loggedUser.full_name
+                  )}
                 </div>
 
                 <div>
-                  <span className="eyebrow">MI PERFIL</span>
-                  <h1>{loggedUser.full_name}</h1>
-                  <p>@{loggedUser.username}</p>
+                  <span className="eyebrow">
+                    MI PERFIL
+                  </span>
+
+                  <h1>
+                    {loggedUser.full_name}
+                  </h1>
+
+                  <p>
+                    @{loggedUser.username}
+                  </p>
                 </div>
               </div>
 
               <div className="dashboard-grid">
                 <div className="stat-card">
-                  <span>Servicios publicados</span>
-                  <strong>{publishedCount}</strong>
+                  <span>
+                    Servicios publicados
+                  </span>
+
+                  <strong>
+                    {publishedCount}
+                  </strong>
                 </div>
 
                 <div className="stat-card">
-                  <span>Solicitudes pendientes</span>
-                  <strong>{pendingRequests}</strong>
+                  <span>
+                    Solicitudes pendientes
+                  </span>
+
+                  <strong>
+                    {pendingRequests}
+                  </strong>
                 </div>
 
                 <div className="stat-card">
-                  <span>Trabajos aceptados</span>
-                  <strong>{acceptedRequests}</strong>
+                  <span>
+                    Trabajos aceptados
+                  </span>
+
+                  <strong>
+                    {acceptedRequests}
+                  </strong>
                 </div>
               </div>
 
               <div className="profile-form">
                 <div className="section-heading small">
                   <div>
-                    <span className="eyebrow">INFORMACIÓN PROFESIONAL</span>
-                    <h2>Tu perfil</h2>
+                    <span className="eyebrow">
+                      INFORMACIÓN PROFESIONAL
+                    </span>
+
+                    <h2>
+                      Tu perfil
+                    </h2>
                   </div>
                 </div>
 
                 <div className="form-grid">
                   <label>
                     Nombre completo
+
                     <input
-                      value={profileForm.full_name}
+                      value={
+                        profileForm.full_name
+                      }
                       onChange={(event) =>
                         updateProfileForm(
                           "full_name",
@@ -1337,8 +2032,11 @@ function App() {
 
                   <label>
                     Nombre de usuario
+
                     <input
-                      value={profileForm.username}
+                      value={
+                        profileForm.username
+                      }
                       onChange={(event) =>
                         updateProfileForm(
                           "username",
@@ -1350,8 +2048,11 @@ function App() {
 
                   <label>
                     Ubicación
+
                     <input
-                      value={profileForm.location}
+                      value={
+                        profileForm.location
+                      }
                       onChange={(event) =>
                         updateProfileForm(
                           "location",
@@ -1364,8 +2065,11 @@ function App() {
 
                   <label>
                     Habilidades
+
                     <input
-                      value={profileForm.skills}
+                      value={
+                        profileForm.skills
+                      }
                       onChange={(event) =>
                         updateProfileForm(
                           "skills",
@@ -1379,10 +2083,16 @@ function App() {
 
                 <label>
                   Sobre ti
+
                   <textarea
-                    value={profileForm.bio}
+                    value={
+                      profileForm.bio
+                    }
                     onChange={(event) =>
-                      updateProfileForm("bio", event.target.value)
+                      updateProfileForm(
+                        "bio",
+                        event.target.value
+                      )
                     }
                     placeholder="Cuéntales a otros profesionales y clientes quién eres y qué haces."
                   />
@@ -1391,9 +2101,13 @@ function App() {
                 <button
                   className="button primary"
                   onClick={saveProfile}
-                  disabled={savingProfile}
+                  disabled={
+                    savingProfile
+                  }
                 >
-                  {savingProfile ? "Guardando..." : "Guardar perfil"}
+                  {savingProfile
+                    ? "Guardando..."
+                    : "Guardar perfil"}
                 </button>
               </div>
             </div>
@@ -1401,10 +2115,17 @@ function App() {
         ) : (
           <div className="auth-layout">
             <div className="auth-brand">
-              <div className="brand-mark huge">R</div>
-              <h1>Bienvenido a RobLoren</h1>
+              <div className="brand-mark huge">
+                R
+              </div>
+
+              <h1>
+                Bienvenido a RobLoren
+              </h1>
+
               <p>
-                Conecta con profesionales, encuentra oportunidades y lleva tus
+                Conecta con profesionales,
+                encuentra oportunidades y lleva tus
                 proyectos más lejos.
               </p>
             </div>
@@ -1412,26 +2133,44 @@ function App() {
             <div className="auth-form">
               <div className="auth-tabs">
                 <button
-                  className={accountMode === "login" ? "active" : ""}
-                  onClick={() => setAccountMode("login")}
+                  className={
+                    accountMode === "login"
+                      ? "active"
+                      : ""
+                  }
+                  onClick={() =>
+                    setAccountMode("login")
+                  }
                 >
                   Iniciar sesión
                 </button>
 
                 <button
-                  className={accountMode === "register" ? "active" : ""}
-                  onClick={() => setAccountMode("register")}
+                  className={
+                    accountMode === "register"
+                      ? "active"
+                      : ""
+                  }
+                  onClick={() =>
+                    setAccountMode(
+                      "register"
+                    )
+                  }
                 >
                   Crear cuenta
                 </button>
               </div>
 
-              {accountMode === "register" && (
+              {accountMode ===
+                "register" && (
                 <>
                   <label>
                     Nombre completo
+
                     <input
-                      value={profileForm.full_name}
+                      value={
+                        profileForm.full_name
+                      }
                       onChange={(event) =>
                         updateProfileForm(
                           "full_name",
@@ -1444,8 +2183,11 @@ function App() {
 
                   <label>
                     Nombre de usuario
+
                     <input
-                      value={profileForm.username}
+                      value={
+                        profileForm.username
+                      }
                       onChange={(event) =>
                         updateProfileForm(
                           "username",
@@ -1460,25 +2202,40 @@ function App() {
 
               <label>
                 Correo electrónico
+
                 <input
                   type="email"
-                  value={form.title}
+                  value={authForm.email}
                   onChange={(event) =>
-                    updateForm("title", event.target.value)
+                    updateAuthForm(
+                      "email",
+                      event.target.value
+                    )
                   }
                   placeholder="tu@email.com"
+                  autoComplete="email"
                 />
               </label>
 
               <label>
                 Contraseña
+
                 <input
                   type="password"
-                  value={form.description}
+                  value={authForm.password}
                   onChange={(event) =>
-                    updateForm("description", event.target.value)
+                    updateAuthForm(
+                      "password",
+                      event.target.value
+                    )
                   }
                   placeholder="••••••••"
+                  autoComplete={
+                    accountMode ===
+                    "login"
+                      ? "current-password"
+                      : "new-password"
+                  }
                 />
               </label>
 
@@ -1486,19 +2243,24 @@ function App() {
                 className="button primary full large"
                 disabled={authLoading}
                 onClick={
-                  accountMode === "login" ? login : register
+                  accountMode ===
+                  "login"
+                    ? login
+                    : register
                 }
               >
                 {authLoading
                   ? "Procesando..."
-                  : accountMode === "login"
+                  : accountMode ===
+                    "login"
                   ? "Entrar a RobLoren"
                   : "Crear mi cuenta"}
               </button>
 
               <p className="form-note">
-                Al continuar aceptas utilizar RobLoren de manera responsable
-                y profesional.
+                Al continuar aceptas utilizar
+                RobLoren de manera responsable y
+                profesional.
               </p>
             </div>
           </div>
@@ -1512,10 +2274,15 @@ function App() {
       return (
         <main className="page-container">
           <div className="empty-state big">
-            <h3>Servicio no encontrado</h3>
+            <h3>
+              Servicio no encontrado
+            </h3>
+
             <button
               className="button primary"
-              onClick={() => setPage("services")}
+              onClick={() =>
+                setPage("services")
+              }
             >
               Volver a servicios
             </button>
@@ -1526,11 +2293,26 @@ function App() {
 
     const service = selectedService;
 
+    const skills = normalizeSkills(
+      service.provider_skills
+    );
+
+    const providerId =
+      service.provider_id ||
+      service.user_id ||
+      null;
+
+    const ownService =
+      loggedUser &&
+      providerId === loggedUser.id;
+
     return (
       <main className="page-container">
         <button
           className="back-button"
-          onClick={() => setPage("services")}
+          onClick={() =>
+            setPage("services")
+          }
         >
           ← Volver a servicios
         </button>
@@ -1538,8 +2320,11 @@ function App() {
         <div className="service-detail">
           <div className="service-detail-main">
             <span className="category-pill">
-              {categories.find((item) => item[1] === service.category)?.[0] ||
-                "✨"}{" "}
+              {categories.find(
+                (item) =>
+                  item[1] ===
+                  service.category
+              )?.[0] || "✨"}{" "}
               {service.category}
             </span>
 
@@ -1552,51 +2337,144 @@ function App() {
 
             <div className="detail-provider">
               <div className="avatar large">
-                {getInitials(service.provider_name)}
+                {getInitials(
+                  service.provider_name
+                )}
               </div>
 
-              <div>
-                <span className="eyebrow">PROFESIONAL</span>
-                <h3>{service.provider_name}</h3>
-                <p>
-                  Especialista en {service.category.toLowerCase()}
-                </p>
+              <div className="provider-detail-info">
+                <span className="eyebrow">
+                  PROFESIONAL
+                </span>
+
+                <h3>
+                  {service.provider_name}
+                </h3>
+
+                {service.provider_username && (
+                  <p>
+                    @
+                    {
+                      service.provider_username
+                    }
+                  </p>
+                )}
+
+                {service.provider_location && (
+                  <p>
+                    📍{" "}
+                    {
+                      service.provider_location
+                    }
+                  </p>
+                )}
               </div>
             </div>
 
-            <div className="detail-description">
-              <h2>Sobre este servicio</h2>
-              <p>{service.description}</p>
+            <div className="professional-profile-box">
+              <h2>
+                Sobre el profesional
+              </h2>
 
-              <h3>Qué puedes esperar</h3>
+              <p>
+                {service.provider_bio ||
+                  `Profesional especializado en ${service.category.toLowerCase()} y disponible para nuevos proyectos.`}
+              </p>
+
+              {skills.length > 0 && (
+                <>
+                  <h3>
+                    Habilidades
+                  </h3>
+
+                  <div className="profile-skills">
+                    {skills.map(
+                      (skill) => (
+                        <span
+                          key={skill}
+                        >
+                          {skill}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="detail-description">
+              <h2>
+                Sobre este servicio
+              </h2>
+
+              <p>
+                {service.description}
+              </p>
+
+              <h3>
+                Qué puedes esperar
+              </h3>
 
               <div className="expect-list">
-                <span>✓ Comunicación directa</span>
-                <span>✓ Trabajo profesional</span>
-                <span>✓ Atención personalizada</span>
-                <span>✓ Seguimiento del proyecto</span>
+                <span>
+                  ✓ Comunicación directa
+                </span>
+
+                <span>
+                  ✓ Trabajo profesional
+                </span>
+
+                <span>
+                  ✓ Atención personalizada
+                </span>
+
+                <span>
+                  ✓ Seguimiento del proyecto
+                </span>
               </div>
             </div>
           </div>
 
           <aside className="hire-card">
             <div className="hire-price">
-              <span>Desde</span>
-              <strong>${Number(service.price || 0)}</strong>
+              <span>
+                Desde
+              </span>
+
+              <strong>
+                $
+                {Number(
+                  service.price || 0
+                )}
+              </strong>
             </div>
 
             <div className="hire-divider"></div>
 
-            <h3>Solicitar este servicio</h3>
+            <h3>
+              Solicitar este servicio
+            </h3>
 
             <textarea
               value={offer}
-              onChange={(event) => updateOffer(event.target.value)}
+              onChange={(event) =>
+                updateOffer(
+                  event.target.value
+                )
+              }
               placeholder="Cuéntale al profesional qué necesitas..."
             />
 
             {requestMessage && (
-              <div className="request-message">
+              <div
+                className={
+                  requestMessage.includes(
+                    "correctamente"
+                  )
+                    ? "request-message success"
+                    : "request-message error"
+                }
+              >
                 {requestMessage}
               </div>
             )}
@@ -1604,9 +2482,19 @@ function App() {
             <button
               className="button primary full large"
               onClick={sendRequest}
-              disabled={sendingRequest}
+              disabled={
+                sendingRequest ||
+                Boolean(ownService) ||
+                Boolean(
+                  service.is_demo
+                )
+              }
             >
-              {sendingRequest
+              {service.is_demo
+                ? "Servicio de demostración"
+                : ownService
+                ? "Es tu propio servicio"
+                : sendingRequest
                 ? "Enviando..."
                 : "Solicitar servicio"}
             </button>
@@ -1615,17 +2503,31 @@ function App() {
               className="button outline full"
               onClick={() =>
                 openMessaging({
-                  provider_id: service.provider_id || service.user_id,
-                  provider_name: service.provider_name,
-                  provider_email: service.provider_email,
+                  id: providerId,
+                  provider_id:
+                    providerId,
+                  provider_name:
+                    service.provider_name,
+                  provider_username:
+                    service.provider_username,
+                  provider_email:
+                    service.provider_email,
                 })
+              }
+              disabled={
+                !providerId ||
+                Boolean(ownService) ||
+                Boolean(
+                  service.is_demo
+                )
               }
             >
               💬 Contactar profesional
             </button>
 
             <p className="secure-note">
-              🔒 Tu solicitud se gestiona de forma segura.
+              🔒 Tu solicitud se gestiona de
+              forma segura.
             </p>
           </aside>
         </div>
@@ -1633,99 +2535,167 @@ function App() {
     );
   };
 
-  const RequestColumn = ({ request }) => (
-    <article className="request-card">
-      <div className="request-head">
-        <div>
-          <span className="request-label">SOLICITUD</span>
-          <h3>{request.service_title || "Servicio solicitado"}</h3>
-        </div>
+  const RequestColumn = memo(
+    function RequestColumn({
+      request,
+    }) {
+      return (
+        <article className="request-card">
+          <div className="request-head">
+            <div>
+              <span className="request-label">
+                SOLICITUD
+              </span>
 
-        <span className={`status ${request.status || "pending"}`}>
-          {statusText(request.status)}
-        </span>
-      </div>
+              <h3>
+                {request.service_title ||
+                  "Servicio solicitado"}
+              </h3>
+            </div>
 
-      <p>{request.message || "Sin mensaje adicional."}</p>
-
-      <div className="request-meta">
-        <span>📅 {dateText(request.created_at)}</span>
-      </div>
-
-      {loggedUser?.id === request.provider_id &&
-        request.status === "pending" && (
-          <div className="request-actions">
-            <button
-              className="button primary"
-              disabled={updatingRequest === request.id}
-              onClick={() =>
-                changeRequestStatus(request.id, "accepted")
-              }
+            <span
+              className={`status ${
+                request.status ||
+                "pending"
+              }`}
             >
-              Aceptar
-            </button>
-
-            <button
-              className="button danger"
-              disabled={updatingRequest === request.id}
-              onClick={() =>
-                changeRequestStatus(request.id, "rejected")
-              }
-            >
-              Rechazar
-            </button>
+              {statusText(
+                request.status
+              )}
+            </span>
           </div>
-        )}
 
-      {loggedUser?.id === request.client_id &&
-        request.status === "accepted" && (
-          <button
-            className="button outline"
-            disabled={updatingRequest === request.id}
-            onClick={() =>
-              changeRequestStatus(request.id, "completed")
-            }
-          >
-            Marcar como completada
-          </button>
-        )}
-    </article>
+          <p>
+            {request.message ||
+              "Sin mensaje adicional."}
+          </p>
+
+          <div className="request-meta">
+            <span>
+              📅{" "}
+              {dateText(
+                request.created_at
+              )}
+            </span>
+          </div>
+
+          {loggedUser?.id ===
+            request.provider_id &&
+            request.status ===
+              "pending" && (
+              <div className="request-actions">
+                <button
+                  className="button primary"
+                  disabled={
+                    updatingRequest ===
+                    request.id
+                  }
+                  onClick={() =>
+                    changeRequestStatus(
+                      request.id,
+                      "accepted"
+                    )
+                  }
+                >
+                  Aceptar
+                </button>
+
+                <button
+                  className="button danger"
+                  disabled={
+                    updatingRequest ===
+                    request.id
+                  }
+                  onClick={() =>
+                    changeRequestStatus(
+                      request.id,
+                      "rejected"
+                    )
+                  }
+                >
+                  Rechazar
+                </button>
+              </div>
+            )}
+
+          {loggedUser?.id ===
+            request.client_id &&
+            request.status ===
+              "accepted" && (
+            <button
+              className="button outline"
+              disabled={
+                updatingRequest ===
+                request.id
+              }
+              onClick={() =>
+                changeRequestStatus(
+                  request.id,
+                  "completed"
+                )
+              }
+            >
+              Marcar como completada
+            </button>
+          )}
+        </article>
+      );
+    }
   );
 
   const RequestsPage = () => (
     <main className="page-container">
       <section className="page-header">
-        <span className="eyebrow">GESTIÓN</span>
-        <h1>Mis solicitudes</h1>
+        <span className="eyebrow">
+          GESTIÓN
+        </span>
+
+        <h1>
+          Mis solicitudes
+        </h1>
+
         <p>
-          Administra tus proyectos y solicitudes de servicios.
+          Administra tus proyectos y solicitudes
+          de servicios.
         </p>
       </section>
 
       {loadingRequests ? (
-        <div className="loading-state">Cargando solicitudes...</div>
+        <div className="loading-state">
+          Cargando solicitudes...
+        </div>
       ) : requests.length === 0 ? (
         <div className="empty-state big">
           <div>💼</div>
-          <h3>Aún no tienes solicitudes</h3>
+
+          <h3>
+            Aún no tienes solicitudes
+          </h3>
+
           <p>
-            Cuando solicites o recibas un servicio, aparecerá aquí.
+            Cuando solicites o recibas un servicio,
+            aparecerá aquí.
           </p>
+
           <button
             className="button primary"
-            onClick={() => setPage("services")}
+            onClick={() =>
+              setPage("services")
+            }
           >
             Explorar servicios
           </button>
         </div>
       ) : (
         <div className="requests-grid">
-          {requests.map((request) => (
-            <RequestColumn
-              request={request}
-              key={request.id}
-            />
-          ))}
+          {requests.map(
+            (request) => (
+              <RequestColumn
+                request={request}
+                key={request.id}
+              />
+            )
+          )}
         </div>
       )}
     </main>
@@ -1734,28 +2704,46 @@ function App() {
   const MessagesPage = () => (
     <main className="page-container messages-page">
       <section className="page-header">
-        <span className="eyebrow">COMUNICACIÓN</span>
+        <span className="eyebrow">
+          COMUNICACIÓN
+        </span>
+
         <h1>Mensajes</h1>
-        <p>Conecta directamente con otros usuarios de RobLoren.</p>
+
+        <p>
+          Conecta directamente con otros usuarios
+          de RobLoren.
+        </p>
       </section>
 
       <div className="messages-layout">
         <aside className="contacts-panel">
-          <div className="contacts-title">Conversaciones</div>
+          <div className="contacts-title">
+            Conversaciones
+          </div>
 
           {selectedContact ? (
             <button className="contact active">
               <span className="avatar">
-                {getInitials(selectedContact.full_name)}
+                {getInitials(
+                  selectedContact.full_name
+                )}
               </span>
+
               <span>
-                <strong>{selectedContact.full_name}</strong>
-                <small>Conversación activa</small>
+                <strong>
+                  {selectedContact.full_name}
+                </strong>
+
+                <small>
+                  Conversación activa
+                </small>
               </span>
             </button>
           ) : (
             <div className="contacts-empty">
-              Selecciona un profesional desde un servicio para comenzar una
+              Selecciona un profesional desde un
+              servicio para comenzar una
               conversación.
             </div>
           )}
@@ -1766,12 +2754,23 @@ function App() {
             <>
               <div className="chat-header">
                 <span className="avatar">
-                  {getInitials(selectedContact.full_name)}
+                  {getInitials(
+                    selectedContact.full_name
+                  )}
                 </span>
 
                 <div>
-                  <strong>{selectedContact.full_name}</strong>
-                  <span>RobLoren</span>
+                  <strong>
+                    {
+                      selectedContact.full_name
+                    }
+                  </strong>
+
+                  <span>
+                    {selectedContact.username
+                      ? `@${selectedContact.username}`
+                      : "RobLoren"}
+                  </span>
                 </div>
               </div>
 
@@ -1780,35 +2779,58 @@ function App() {
                   <div className="loading-state">
                     Cargando mensajes...
                   </div>
-                ) : messages.length === 0 ? (
+                ) : messages.length ===
+                  0 ? (
                   <div className="chat-empty">
                     <div>💬</div>
-                    <h3>Comienza la conversación</h3>
+
+                    <h3>
+                      Comienza la conversación
+                    </h3>
+
                     <p>
-                      Escribe un mensaje para conectar con este profesional.
+                      Escribe un mensaje para
+                      conectar con este
+                      profesional.
                     </p>
                   </div>
                 ) : (
-                  messages.map((message, index) => {
-                    const mine =
-                      message.sender_id === loggedUser.id;
+                  messages.map(
+                    (
+                      message,
+                      index
+                    ) => {
+                      const mine =
+                        message.sender_id ===
+                        loggedUser.id;
 
-                    return (
-                      <div
-                        key={message.id || index}
-                        className={
-                          mine
-                            ? "message mine"
-                            : "message"
-                        }
-                      >
-                        <div>{message.content}</div>
-                        <small>
-                          {dateText(message.created_at)}
-                        </small>
-                      </div>
-                    );
-                  })
+                      return (
+                        <div
+                          key={
+                            message.id ||
+                            index
+                          }
+                          className={
+                            mine
+                              ? "message mine"
+                              : "message"
+                          }
+                        >
+                          <div>
+                            {
+                              message.content
+                            }
+                          </div>
+
+                          <small>
+                            {dateText(
+                              message.created_at
+                            )}
+                          </small>
+                        </div>
+                      );
+                    }
+                  )
                 )}
               </div>
 
@@ -1816,10 +2838,16 @@ function App() {
                 <input
                   value={messageText}
                   onChange={(event) =>
-                    setMessageText(event.target.value)
+                    setMessageText(
+                      event.target.value
+                    )
                   }
                   onKeyDown={(event) => {
-                    if (event.key === "Enter") {
+                    if (
+                      event.key ===
+                      "Enter"
+                    ) {
+                      event.preventDefault();
                       sendMessage();
                     }
                   }}
@@ -1829,9 +2857,12 @@ function App() {
                 <button
                   className="button primary"
                   disabled={
-                    sendingMessage || !messageText.trim()
+                    sendingMessage ||
+                    !messageText.trim()
                   }
-                  onClick={sendMessage}
+                  onClick={
+                    sendMessage
+                  }
                 >
                   →
                 </button>
@@ -1840,9 +2871,14 @@ function App() {
           ) : (
             <div className="chat-empty full">
               <div>💬</div>
-              <h3>Tus conversaciones aparecerán aquí</h3>
+
+              <h3>
+                Tus conversaciones aparecerán aquí
+              </h3>
+
               <p>
-                Entra en un servicio y pulsa “Contactar profesional”.
+                Entra en un servicio y pulsa
+                “Contactar profesional”.
               </p>
             </div>
           )}
@@ -1854,11 +2890,17 @@ function App() {
   const OfferPage = () => (
     <main className="page-container">
       <section className="page-header">
-        <span className="eyebrow">PROFESIONALES</span>
-        <h1>Publica tu servicio</h1>
+        <span className="eyebrow">
+          PROFESIONALES
+        </span>
+
+        <h1>
+          Publica tu servicio
+        </h1>
+
         <p>
-          Muestra tus habilidades y conecta con clientes que necesitan lo que
-          sabes hacer.
+          Muestra tus habilidades y conecta con
+          clientes que necesitan lo que sabes hacer.
         </p>
       </section>
 
@@ -1866,10 +2908,14 @@ function App() {
         <div className="offer-form">
           <label>
             Título del servicio
+
             <input
               value={form.title}
               onChange={(event) =>
-                updateForm("title", event.target.value)
+                updateForm(
+                  "title",
+                  event.target.value
+                )
               }
               placeholder="Ej. Diseño de logo profesional"
             />
@@ -1877,26 +2923,39 @@ function App() {
 
           <label>
             Categoría
+
             <select
               value={form.category}
               onChange={(event) =>
-                updateForm("category", event.target.value)
+                updateForm(
+                  "category",
+                  event.target.value
+                )
               }
             >
-              {categories.map(([icon, name]) => (
-                <option key={name} value={name}>
-                  {icon} {name}
-                </option>
-              ))}
+              {categories.map(
+                ([icon, name]) => (
+                  <option
+                    key={name}
+                    value={name}
+                  >
+                    {icon} {name}
+                  </option>
+                )
+              )}
             </select>
           </label>
 
           <label>
             Describe tu servicio
+
             <textarea
               value={form.description}
               onChange={(event) =>
-                updateForm("description", event.target.value)
+                updateForm(
+                  "description",
+                  event.target.value
+                )
               }
               placeholder="Explica qué ofreces, qué incluye y qué puede esperar el cliente."
             />
@@ -1904,14 +2963,19 @@ function App() {
 
           <label>
             Precio inicial
+
             <div className="price-input">
               <span>$</span>
+
               <input
                 type="number"
                 min="0"
                 value={form.price}
                 onChange={(event) =>
-                  updateForm("price", event.target.value)
+                  updateForm(
+                    "price",
+                    event.target.value
+                  )
                 }
                 placeholder="50"
               />
@@ -1921,19 +2985,27 @@ function App() {
           <button
             className="button primary large"
             disabled={publishing}
-            onClick={publishService}
+            onClick={
+              publishService
+            }
           >
-            {publishing ? "Publicando..." : "Publicar servicio →"}
+            {publishing
+              ? "Publicando..."
+              : "Publicar servicio →"}
           </button>
         </div>
 
         <div className="preview-card">
-          <span className="eyebrow">VISTA PREVIA</span>
+          <span className="eyebrow">
+            VISTA PREVIA
+          </span>
 
           <div className="preview-service">
             <div className="service-icon">
               {categories.find(
-                (item) => item[1] === form.category
+                (item) =>
+                  item[1] ===
+                  form.category
               )?.[0] || "✨"}
             </div>
 
@@ -1942,7 +3014,8 @@ function App() {
             </span>
 
             <h2>
-              {form.title || "Título de tu servicio"}
+              {form.title ||
+                "Título de tu servicio"}
             </h2>
 
             <p>
@@ -1950,12 +3023,18 @@ function App() {
                 "Aquí aparecerá la descripción de tu servicio."}
             </p>
 
-            <Rating rating={5} reviews={0} />
+            <Rating
+              rating={5}
+              reviews={0}
+            />
 
             <div className="preview-price">
               Desde{" "}
               <strong>
-                ${Number(form.price || 0)}
+                $
+                {Number(
+                  form.price || 0
+                )}
               </strong>
             </div>
           </div>
@@ -1968,16 +3047,22 @@ function App() {
     switch (page) {
       case "services":
         return <ServicesPage />;
+
       case "account":
         return <AccountPage />;
+
       case "service":
         return <ServicePage />;
+
       case "requests":
         return <RequestsPage />;
+
       case "messages":
         return <MessagesPage />;
+
       case "offer":
         return <OfferPage />;
+
       default:
         return <HomePage />;
     }
@@ -2714,9 +3799,13 @@ function App() {
 
         .professional-head {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           gap: 15px;
           margin-bottom: 18px;
+        }
+
+        .professional-info {
+          min-width: 0;
         }
 
         .professional-info h3 {
@@ -2725,9 +3814,22 @@ function App() {
           font-size: 17px;
         }
 
-        .professional-role {
+        .professional-role,
+        .professional-username,
+        .professional-location {
+          display: block;
           color: #8490a2;
           font-size: 11px;
+          margin-top: 3px;
+        }
+
+        .professional-username {
+          color: #2866bf;
+          font-weight: 800;
+        }
+
+        .professional-location {
+          color: #738196;
         }
 
         .professional-card > p {
@@ -2744,7 +3846,8 @@ function App() {
           margin: 15px 0;
         }
 
-        .skill-row span {
+        .skill-row span,
+        .profile-skills span {
           padding: 6px 9px;
           border-radius: 7px;
           background: #f1f5f9;
@@ -3068,6 +4171,42 @@ function App() {
           font-size: 12px;
         }
 
+        .provider-detail-info p {
+          margin: 4px 0 0;
+        }
+
+        .professional-profile-box {
+          background: #f5f8fc;
+          border: 1px solid #e5ebf2;
+          border-radius: 15px;
+          padding: 20px;
+          margin-bottom: 25px;
+        }
+
+        .professional-profile-box h2 {
+          color: #233958;
+          font-size: 19px;
+          margin: 0 0 10px;
+        }
+
+        .professional-profile-box h3 {
+          color: #2c405e;
+          margin: 20px 0 10px;
+          font-size: 14px;
+        }
+
+        .professional-profile-box > p {
+          color: #718096;
+          line-height: 1.7;
+          margin: 0;
+        }
+
+        .profile-skills {
+          display: flex;
+          gap: 7px;
+          flex-wrap: wrap;
+        }
+
         .detail-description h2 {
           color: #233958;
           font-size: 21px;
@@ -3157,9 +4296,18 @@ function App() {
           margin-top: 10px;
           padding: 10px;
           border-radius: 8px;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+
+        .request-message.success {
           background: #edf7ef;
           color: #28753b;
-          font-size: 12px;
+        }
+
+        .request-message.error {
+          background: #fff2f2;
+          color: #bd3f3f;
         }
 
         .secure-note,
@@ -3691,6 +4839,30 @@ function App() {
           color: #344861;
         }
 
+        .footer {
+          width: 100%;
+          padding: 35px max(20px, calc((100% - 1240px)/2));
+          border-top: 1px solid #e2e8f0;
+          background: white;
+          display: flex;
+          justify-content: space-between;
+          gap: 20px;
+          align-items: center;
+          color: #8a96a6;
+          font-size: 11px;
+        }
+
+        .footer div {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .footer strong {
+          color: #203958;
+          font-size: 15px;
+        }
+
         @media (max-width: 1000px) {
           .nav {
             display: none;
@@ -3923,21 +5095,42 @@ function App() {
           .preview-card {
             position: static;
           }
+
+          .footer {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .professional-head {
+            align-items: center;
+          }
         }
       `}</style>
 
       <Header />
+
       {renderPage()}
 
       <footer className="footer">
         <div>
-          <strong>RobLoren</strong>
-          <span>Conecta talento con oportunidades.</span>
+          <strong>
+            RobLoren
+          </strong>
+
+          <span>
+            Conecta talento con oportunidades.
+          </span>
         </div>
-        <span>© {new Date().getFullYear()} RobLoren. Todos los derechos reservados.</span>
+
+        <span>
+          © {new Date().getFullYear()} RobLoren.
+          Todos los derechos reservados.
+        </span>
       </footer>
     </>
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(
+  document.getElementById("root")
+).render(<App />);
