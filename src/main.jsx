@@ -800,7 +800,9 @@ function App() {
           email,
           password,
           options: {
-            data: {
+  emailRedirectTo:
+    "https://payple9105-arch.github.io/RobLorenApp/",
+  data: {
               full_name:
                 profileForm.full_name.trim(),
               username:
