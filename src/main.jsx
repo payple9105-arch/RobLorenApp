@@ -41,10 +41,10 @@ const demoServices = [
     id: 2,
     name: "Ana Martínez",
     profession: "Diseñadora Gráfica",
-    service: "Diseño de logotipos",
+    service: "Diseño de logotipos profesionales",
     category: "Diseño",
     description:
-      "Diseño logotipos modernos y profesionales para marcas y emprendimientos.",
+      "Diseño logotipos modernos y profesionales para marcas, negocios y emprendimientos.",
     price: 35,
     rating: 4.8,
     reviews: 19,
@@ -60,7 +60,7 @@ const demoServices = [
     service: "Marketing para redes sociales",
     category: "Marketing",
     description:
-      "Ayudo a negocios a mejorar su presencia y alcance en redes sociales.",
+      "Ayudo a negocios a mejorar su presencia, contenido y alcance en redes sociales.",
     price: 50,
     rating: 4.7,
     reviews: 16,
@@ -136,36 +136,58 @@ function stars(rating) {
     .join("");
 }
 
+function categoryIcon(category) {
+  const found = categories.find(
+    ([, name]) => name === category
+  );
+
+  return found?.[0] || "✦";
+}
+
 function App() {
   const [page, setPage] = useState("home");
   const [services, setServices] = useState(demoServices);
-  const [selectedService, setSelectedService] = useState(null);
+  const [selectedService, setSelectedService] =
+    useState(null);
 
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
-
   const [category, setCategory] = useState("Todas");
-  const [sortBy, setSortBy] = useState("recommended");
+  const [sortBy, setSortBy] =
+    useState("recommended");
 
   const [loggedUser, setLoggedUser] = useState(null);
-  const [accountMode, setAccountMode] = useState("login");
-  const [authLoading, setAuthLoading] = useState(true);
+  const [accountMode, setAccountMode] =
+    useState("login");
+  const [authLoading, setAuthLoading] =
+    useState(true);
 
   const [requests, setRequests] = useState([]);
-  const [loadingRequests, setLoadingRequests] = useState(false);
-  const [updatingRequest, setUpdatingRequest] = useState(null);
-  const [requestMessage, setRequestMessage] = useState("");
-  const [sendingRequest, setSendingRequest] = useState(false);
+  const [loadingRequests, setLoadingRequests] =
+    useState(false);
+  const [updatingRequest, setUpdatingRequest] =
+    useState(null);
+  const [requestMessage, setRequestMessage] =
+    useState("");
+  const [sendingRequest, setSendingRequest] =
+    useState(false);
 
-  const [selectedContact, setSelectedContact] = useState(null);
+  const [selectedContact, setSelectedContact] =
+    useState(null);
   const [messages, setMessages] = useState([]);
-  const [messageText, setMessageText] = useState("");
-  const [loadingMessages, setLoadingMessages] = useState(false);
-  const [sendingMessage, setSendingMessage] = useState(false);
+  const [messageText, setMessageText] =
+    useState("");
+  const [loadingMessages, setLoadingMessages] =
+    useState(false);
+  const [sendingMessage, setSendingMessage] =
+    useState(false);
 
-  const [servicesLoading, setServicesLoading] = useState(true);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [publishing, setPublishing] = useState(false);
+  const [servicesLoading, setServicesLoading] =
+    useState(true);
+  const [savingProfile, setSavingProfile] =
+    useState(false);
+  const [publishing, setPublishing] =
+    useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -175,11 +197,12 @@ function App() {
     bio: "",
   });
 
-  const [profileForm, setProfileForm] = useState({
-    name: "",
-    profession: "",
-    bio: "",
-  });
+  const [profileForm, setProfileForm] =
+    useState({
+      name: "",
+      profession: "",
+      bio: "",
+    });
 
   const [offer, setOffer] = useState({
     serviceTitle: "",
@@ -232,16 +255,19 @@ function App() {
         user.user_metadata?.full_name ||
         "Usuario",
       profession:
-        user.user_metadata?.profession || "Profesional",
+        user.user_metadata?.profession ||
+        "Profesional",
       bio: user.user_metadata?.bio || "",
     };
 
-    const { data: created, error: createError } =
-      await supabase
-        .from("profiles")
-        .insert(profile)
-        .select()
-        .single();
+    const {
+      data: created,
+      error: createError,
+    } = await supabase
+      .from("profiles")
+      .insert(profile)
+      .select()
+      .single();
 
     if (createError) {
       console.error(createError);
@@ -277,7 +303,9 @@ function App() {
       .select(
         "id,created_at,name,profession,service_title,category,description,price,user_id"
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", {
+        ascending: false,
+      });
 
     if (error) {
       console.error(error);
@@ -289,19 +317,27 @@ function App() {
     const rows = data || [];
 
     const ids = [
-      ...new Set(rows.map((x) => x.user_id).filter(Boolean)),
+      ...new Set(
+        rows
+          .map((x) => x.user_id)
+          .filter(Boolean)
+      ),
     ];
 
     let profiles = {};
 
     if (ids.length) {
-      const { data: profileRows } = await supabase
-        .from("profiles")
-        .select("id,name,profession,bio")
-        .in("id", ids);
+      const { data: profileRows } =
+        await supabase
+          .from("profiles")
+          .select("id,name,profession,bio")
+          .in("id", ids);
 
       profiles = Object.fromEntries(
-        (profileRows || []).map((p) => [p.id, p])
+        (profileRows || []).map((p) => [
+          p.id,
+          p,
+        ])
       );
     }
 
@@ -327,7 +363,9 @@ function App() {
       .or(
         `client_id.eq.${loggedUser.id},provider_id.eq.${loggedUser.id}`
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", {
+        ascending: false,
+      });
 
     if (error) {
       console.error(error);
@@ -341,14 +379,19 @@ function App() {
     const profileIds = [
       ...new Set(
         rows
-          .flatMap((r) => [r.client_id, r.provider_id])
+          .flatMap((r) => [
+            r.client_id,
+            r.provider_id,
+          ])
           .filter(Boolean)
       ),
     ];
 
     const serviceIds = [
       ...new Set(
-        rows.map((r) => r.service_id).filter(Boolean)
+        rows
+          .map((r) => r.service_id)
+          .filter(Boolean)
       ),
     ];
 
@@ -356,34 +399,45 @@ function App() {
     let serviceRows = {};
 
     if (profileIds.length) {
-      const { data: ps } = await supabase
-        .from("profiles")
-        .select("id,name,profession,bio")
-        .in("id", profileIds);
+      const { data: ps } =
+        await supabase
+          .from("profiles")
+          .select("id,name,profession,bio")
+          .in("id", profileIds);
 
       profiles = Object.fromEntries(
-        (ps || []).map((p) => [p.id, p])
+        (ps || []).map((p) => [
+          p.id,
+          p,
+        ])
       );
     }
 
     if (serviceIds.length) {
-      const { data: ss } = await supabase
-        .from("services")
-        .select(
-          "id,service_title,category,description,price,user_id"
-        )
-        .in("id", serviceIds);
+      const { data: ss } =
+        await supabase
+          .from("services")
+          .select(
+            "id,service_title,category,description,price,user_id"
+          )
+          .in("id", serviceIds);
 
       serviceRows = Object.fromEntries(
-        (ss || []).map((s) => [s.id, s])
+        (ss || []).map((s) => [
+          s.id,
+          s,
+        ])
       );
     }
 
     setRequests(
       rows.map((r) => {
-        const service = serviceRows[r.service_id];
-        const client = profiles[r.client_id];
-        const provider = profiles[r.provider_id];
+        const service =
+          serviceRows[r.service_id];
+        const client =
+          profiles[r.client_id];
+        const provider =
+          profiles[r.provider_id];
 
         return {
           ...r,
@@ -398,10 +452,12 @@ function App() {
               ? loggedUser.name
               : "Profesional"),
           serviceTitle:
-            service?.service_title || "Servicio profesional",
+            service?.service_title ||
+            "Servicio profesional",
           serviceCategory:
             service?.category || "Otros",
-          servicePrice: Number(service?.price) || 0,
+          servicePrice:
+            Number(service?.price) || 0,
         };
       })
     );
@@ -425,7 +481,9 @@ function App() {
       .or(
         `and(sender_id.eq.${loggedUser.id},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${loggedUser.id})`
       )
-      .order("created_at", { ascending: true });
+      .order("created_at", {
+        ascending: true,
+      });
 
     if (error) {
       console.error(error);
@@ -448,16 +506,18 @@ function App() {
 
     setSendingMessage(true);
 
-    const { data, error } = await supabase
-      .from("messages")
-      .insert({
-        sender_id: loggedUser.id,
-        receiver_id: selectedContact.id,
-        request_id: selectedContact.requestId || null,
-        message: text,
-      })
-      .select()
-      .single();
+    const { data, error } =
+      await supabase
+        .from("messages")
+        .insert({
+          sender_id: loggedUser.id,
+          receiver_id: selectedContact.id,
+          request_id:
+            selectedContact.requestId || null,
+          message: text,
+        })
+        .select()
+        .single();
 
     if (error) {
       alert(error.message);
@@ -465,7 +525,11 @@ function App() {
       return;
     }
 
-    setMessages((current) => [...current, data]);
+    setMessages((current) => [
+      ...current,
+      data,
+    ]);
+
     setMessageText("");
     setSendingMessage(false);
   }
@@ -494,8 +558,10 @@ function App() {
     const contactData = {
       id: contact.userId,
       name: contact.name || "Profesional",
-      profession: contact.profession || "Profesional",
-      requestId: contact.requestId || null,
+      profession:
+        contact.profession || "Profesional",
+      requestId:
+        contact.requestId || null,
     };
 
     setSelectedContact(contactData);
@@ -520,8 +586,13 @@ function App() {
       return;
     }
 
-    if (selectedService.userId === loggedUser.id) {
-      alert("No puedes solicitar tu propio servicio.");
+    if (
+      selectedService.userId ===
+      loggedUser.id
+    ) {
+      alert(
+        "No puedes solicitar tu propio servicio."
+      );
       return;
     }
 
@@ -532,7 +603,8 @@ function App() {
       .insert({
         service_id: selectedService.id,
         client_id: loggedUser.id,
-        provider_id: selectedService.userId,
+        provider_id:
+          selectedService.userId,
         status: "pending",
         message:
           requestMessage.trim() ||
@@ -554,7 +626,10 @@ function App() {
     setPage("requests");
   }
 
-  async function changeRequestStatus(id, status) {
+  async function changeRequestStatus(
+    id,
+    status
+  ) {
     if (!loggedUser) return;
 
     setUpdatingRequest(id);
@@ -586,17 +661,19 @@ function App() {
 
     setSavingProfile(true);
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .update({
-        name: profileForm.name.trim(),
-        profession:
-          profileForm.profession.trim() || "Profesional",
-        bio: profileForm.bio.trim(),
-      })
-      .eq("id", loggedUser.id)
-      .select()
-      .single();
+    const { data, error } =
+      await supabase
+        .from("profiles")
+        .update({
+          name: profileForm.name.trim(),
+          profession:
+            profileForm.profession.trim() ||
+            "Profesional",
+          bio: profileForm.bio.trim(),
+        })
+        .eq("id", loggedUser.id)
+        .select()
+        .single();
 
     if (error) {
       alert(error.message);
@@ -634,29 +711,35 @@ function App() {
       !form.email.trim() ||
       !form.password
     ) {
-      alert("Completa nombre, correo y contraseña.");
+      alert(
+        "Completa nombre, correo y contraseña."
+      );
       return;
     }
 
     if (form.password.length < 6) {
-      alert("La contraseña debe tener al menos 6 caracteres.");
+      alert(
+        "La contraseña debe tener al menos 6 caracteres."
+      );
       return;
     }
 
     setAuthLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email.trim(),
-      password: form.password,
-      options: {
-        data: {
-          name: form.name.trim(),
-          profession:
-            form.profession.trim() || "Profesional",
-          bio: form.bio.trim(),
+    const { data, error } =
+      await supabase.auth.signUp({
+        email: form.email.trim(),
+        password: form.password,
+        options: {
+          data: {
+            name: form.name.trim(),
+            profession:
+              form.profession.trim() ||
+              "Profesional",
+            bio: form.bio.trim(),
+          },
         },
-      },
-    });
+      });
 
     if (error) {
       alert(error.message);
@@ -687,8 +770,13 @@ function App() {
   async function login(event) {
     event.preventDefault();
 
-    if (!form.email.trim() || !form.password) {
-      alert("Escribe tu correo y contraseña.");
+    if (
+      !form.email.trim() ||
+      !form.password
+    ) {
+      alert(
+        "Escribe tu correo y contraseña."
+      );
       return;
     }
 
@@ -721,7 +809,8 @@ function App() {
   }
 
   async function logout() {
-    const { error } = await supabase.auth.signOut();
+    const { error } =
+      await supabase.auth.signOut();
 
     if (error) {
       alert(error.message);
@@ -749,23 +838,30 @@ function App() {
       !offer.description.trim() ||
       !offer.price
     ) {
-      alert("Completa título, descripción y precio.");
+      alert(
+        "Completa título, descripción y precio."
+      );
       return;
     }
 
     setPublishing(true);
 
-    const { error } = await supabase
-      .from("services")
-      .insert({
-        name: loggedUser.name,
-        profession: loggedUser.profession || "Profesional",
-        service_title: offer.serviceTitle.trim(),
-        category: offer.category,
-        description: offer.description.trim(),
-        price: Number(offer.price),
-        user_id: loggedUser.id,
-      });
+    const { error } =
+      await supabase
+        .from("services")
+        .insert({
+          name: loggedUser.name,
+          profession:
+            loggedUser.profession ||
+            "Profesional",
+          service_title:
+            offer.serviceTitle.trim(),
+          category: offer.category,
+          description:
+            offer.description.trim(),
+          price: Number(offer.price),
+          user_id: loggedUser.id,
+        });
 
     if (error) {
       alert(error.message);
@@ -795,7 +891,8 @@ function App() {
     if (loggedUser) {
       setProfileForm({
         name: loggedUser.name || "",
-        profession: loggedUser.profession || "",
+        profession:
+          loggedUser.profession || "",
         bio: loggedUser.bio || "",
       });
     }
@@ -818,13 +915,26 @@ function App() {
     setPage("service");
   }
 
+  function goToServices() {
+    setPage("home");
+
+    setTimeout(() => {
+      document
+        .getElementById("services")
+        ?.scrollIntoView({
+          behavior: "smooth",
+        });
+    }, 100);
+  }
+
   useEffect(() => {
     async function startAuth() {
       setAuthLoading(true);
 
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } =
+        await supabase.auth.getSession();
 
       if (session?.user) {
         await refreshUser(session.user);
@@ -837,17 +947,21 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          await refreshUser(session.user);
-        } else {
-          setLoggedUser(null);
+    } =
+      supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          if (session?.user) {
+            await refreshUser(
+              session.user
+            );
+          } else {
+            setLoggedUser(null);
+          }
         }
-      }
-    );
+      );
 
-    return () => subscription.unsubscribe();
+    return () =>
+      subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -861,29 +975,35 @@ function App() {
   }, [loggedUser?.id]);
 
   const filteredServices = useMemo(() => {
-    const q = deferredSearch.trim().toLowerCase();
+    const q = deferredSearch
+      .trim()
+      .toLowerCase();
 
-    const result = services.filter((service) => {
-      const categoryMatch =
-        category === "Todas" ||
-        service.category === category;
+    const result = services.filter(
+      (service) => {
+        const categoryMatch =
+          category === "Todas" ||
+          service.category === category;
 
-      if (!categoryMatch) return false;
+        if (!categoryMatch) return false;
 
-      if (!q) return true;
+        if (!q) return true;
 
-      return [
-        service.name,
-        service.profession,
-        service.service,
-        service.category,
-        service.description,
-      ]
-        .filter(Boolean)
-        .some((value) =>
-          String(value).toLowerCase().includes(q)
-        );
-    });
+        return [
+          service.name,
+          service.profession,
+          service.service,
+          service.category,
+          service.description,
+        ]
+          .filter(Boolean)
+          .some((value) =>
+            String(value)
+              .toLowerCase()
+              .includes(q)
+          );
+      }
+    );
 
     if (sortBy === "priceLow") {
       return [...result].sort(
@@ -912,11 +1032,13 @@ function App() {
   ]);
 
   const received = requests.filter(
-    (r) => r.provider_id === loggedUser?.id
+    (r) =>
+      r.provider_id === loggedUser?.id
   );
 
   const sent = requests.filter(
-    (r) => r.client_id === loggedUser?.id
+    (r) =>
+      r.client_id === loggedUser?.id
   );
 
   const pending = requests.filter(
@@ -941,7 +1063,9 @@ function App() {
             className="logoButton"
             onClick={() => setPage("home")}
           >
-            <span className="logoMark">R</span>
+            <span className="logoMark">
+              R
+            </span>
 
             <span className="logoText">
               Rob<span>Loren</span>
@@ -958,17 +1082,7 @@ function App() {
 
             <button
               className="navButton"
-              onClick={() => {
-                setPage("home");
-
-                setTimeout(() => {
-                  document
-                    .getElementById("services")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                    });
-                }, 100);
-              }}
+              onClick={goToServices}
             >
               Servicios
             </button>
@@ -986,7 +1100,9 @@ function App() {
               className="navAccount"
               onClick={openAccount}
             >
-              {loggedUser ? "Mi cuenta" : "Entrar"}
+              {loggedUser
+                ? "Mi cuenta"
+                : "Entrar"}
             </button>
           </nav>
         </div>
@@ -1000,25 +1116,36 @@ function App() {
 
     const professionals = [];
 
-    filteredServices.forEach((service) => {
-      const exists = professionals.some(
-        (person) => person.name === service.name
-      );
+    filteredServices.forEach(
+      (service) => {
+        const exists =
+          professionals.some(
+            (person) =>
+              person.name === service.name
+          );
 
-      if (!exists) {
-        professionals.push({
-          name: service.name,
-          profession: service.profession,
-          category: service.category,
-          userId: service.userId,
-          service: service,
-          rating: service.rating,
-          reviews: service.reviews,
-          jobs: service.jobs,
-          experience: service.experience,
-        });
+        if (!exists) {
+          professionals.push({
+            name: service.name,
+            profession:
+              service.profession,
+            category:
+              service.category,
+            userId: service.userId,
+            service,
+            rating: service.rating,
+            reviews: service.reviews,
+            jobs: service.jobs,
+            experience:
+              service.experience,
+          });
+        }
       }
-    });
+    );
+
+    const totalRealServices =
+      services.filter((s) => !s.demo)
+        .length;
 
     return (
       <>
@@ -1032,25 +1159,23 @@ function App() {
               <h1>
                 Conecta talento
                 <br />
-                <span>con oportunidades.</span>
+                <span>
+                  con oportunidades.
+                </span>
               </h1>
 
               <p>
-                Encuentra profesionales, publica tus
-                servicios y conecta con clientes dentro de
-                una plataforma creada para crecer.
+                Encuentra profesionales,
+                publica tus servicios y
+                conecta con clientes dentro
+                de una plataforma creada para
+                crecer.
               </p>
 
               <div className="heroActions">
                 <button
                   className="primary"
-                  onClick={() =>
-                    document
-                      .getElementById("services")
-                      ?.scrollIntoView({
-                        behavior: "smooth",
-                      })
-                  }
+                  onClick={goToServices}
                 >
                   Explorar servicios
                 </button>
@@ -1059,7 +1184,9 @@ function App() {
                   className="secondary"
                   onClick={() => {
                     if (!loggedUser) {
-                      setAccountMode("register");
+                      setAccountMode(
+                        "register"
+                      );
                       setPage("account");
                     } else {
                       setPage("offer");
@@ -1069,41 +1196,90 @@ function App() {
                   Ofrecer mis servicios
                 </button>
               </div>
+
+              <div className="heroTrust">
+                <span>✓ Perfiles profesionales</span>
+                <span>✓ Contacto directo</span>
+                <span>✓ Sin pagos implementados todavía</span>
+              </div>
             </div>
 
             <div className="heroCard">
-              <div className="heroCardTitle">
-                🔎 Encuentra talento
+              <div className="heroCardHeader">
+                <div>
+                  <span className="heroSmall">
+                    ROBLOREN
+                  </span>
+
+                  <h3>
+                    Encuentra talento
+                  </h3>
+                </div>
+
+                <div className="heroRound">
+                  🔎
+                </div>
               </div>
 
-              <div
+              <button
                 className="heroSearch"
-                onClick={() =>
-                  document
-                    .getElementById("services")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                    })
-                }
+                onClick={goToServices}
               >
-                ¿Qué servicio buscas?
-              </div>
+                <span>🔎</span>
+                <span>
+                  ¿Qué servicio buscas?
+                </span>
+                <b>→</b>
+              </button>
 
               <div className="tags">
-                <span>💻 Tecnología</span>
-                <span>🎨 Diseño</span>
-                <span>📣 Marketing</span>
+                <button
+                  onClick={() =>
+                    setCategory(
+                      "Tecnología"
+                    )
+                  }
+                >
+                  💻 Tecnología
+                </button>
+
+                <button
+                  onClick={() =>
+                    setCategory("Diseño")
+                  }
+                >
+                  🎨 Diseño
+                </button>
+
+                <button
+                  onClick={() =>
+                    setCategory(
+                      "Marketing"
+                    )
+                  }
+                >
+                  📣 Marketing
+                </button>
               </div>
 
               <div className="miniStats">
                 <div>
-                  <strong>+100</strong>
+                  <strong>
+                    +{totalRealServices + 100}
+                  </strong>
                   <span>Servicios</span>
                 </div>
 
                 <div>
-                  <strong>+50</strong>
-                  <span>Profesionales</span>
+                  <strong>
+                    +{Math.max(
+                      50,
+                      professionals.length
+                    )}
+                  </strong>
+                  <span>
+                    Profesionales
+                  </span>
                 </div>
 
                 <div>
@@ -1118,15 +1294,18 @@ function App() {
         <section className="categories">
           <div className="container">
             <span className="eyebrow">
-              EXPLORA
+              EXPLORA CATEGORÍAS
             </span>
 
             <h2>
-              Encuentra el servicio que necesitas
+              Encuentra el servicio que
+              necesitas
             </h2>
 
             <p className="muted">
-              Profesionales listos para ayudarte.
+              Explora diferentes especialidades
+              y encuentra talento para tu
+              próximo proyecto.
             </p>
 
             <div className="categoryGrid">
@@ -1136,26 +1315,47 @@ function App() {
                     ? "category active"
                     : "category"
                 }
-                onClick={() => setCategory("Todas")}
+                onClick={() =>
+                  setCategory("Todas")
+                }
               >
                 <span>✨</span>
-                Todas
+                <strong>Todas</strong>
+                <small>
+                  {services.length}
+                </small>
               </button>
 
-              {categories.map(([icon, name]) => (
-                <button
-                  key={name}
-                  className={
-                    category === name
-                      ? "category active"
-                      : "category"
-                  }
-                  onClick={() => setCategory(name)}
-                >
-                  <span>{icon}</span>
-                  {name}
-                </button>
-              ))}
+              {categories.map(
+                ([icon, name]) => {
+                  const count =
+                    services.filter(
+                      (service) =>
+                        service.category ===
+                        name
+                    ).length;
+
+                  return (
+                    <button
+                      key={name}
+                      className={
+                        category === name
+                          ? "category active"
+                          : "category"
+                      }
+                      onClick={() =>
+                        setCategory(name)
+                      }
+                    >
+                      <span>{icon}</span>
+                      <strong>{name}</strong>
+                      <small>
+                        {count} servicios
+                      </small>
+                    </button>
+                  );
+                }
+              )}
             </div>
           </div>
         </section>
@@ -1169,84 +1369,101 @@ function App() {
                 </span>
 
                 <h2>
-                  Servicios que pueden ayudarte
+                  Servicios que pueden
+                  ayudarte
                 </h2>
 
                 <p className="muted">
-                  Descubre talento disponible en RobLoren.
+                  Descubre algunas de las
+                  mejores opciones disponibles.
                 </p>
               </div>
 
               <button
                 className="linkButton"
-                onClick={() =>
-                  document
-                    .getElementById("services")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                    })
-                }
+                onClick={goToServices}
               >
                 Ver todos →
               </button>
             </div>
 
             <div className="featuredGrid">
-              {featuredServices.map((service) => (
-                <article
-                  key={`featured-${service.demo}-${service.id}`}
-                  className="featuredCard"
-                  onClick={() => openService(service)}
-                >
-                  <div className="featuredTop">
-                    <div className="featuredIcon">
-                      {service.category === "Tecnología"
-                        ? "💻"
-                        : service.category === "Diseño"
-                        ? "🎨"
-                        : service.category === "Marketing"
-                        ? "📣"
-                        : "✦"}
+              {featuredServices.map(
+                (service) => (
+                  <article
+                    key={`featured-${service.demo}-${service.id}`}
+                    className="featuredCard"
+                    onClick={() =>
+                      openService(
+                        service
+                      )
+                    }
+                  >
+                    <div className="featuredTop">
+                      <div className="featuredIcon">
+                        {categoryIcon(
+                          service.category
+                        )}
+                      </div>
+
+                      <span className="featuredBadge">
+                        ⭐ DESTACADO
+                      </span>
                     </div>
 
-                    <span className="featuredBadge">
-                      ⭐ Destacado
-                    </span>
-                  </div>
-
-                  <span className="featuredCategory">
-                    {service.category}
-                  </span>
-
-                  <h3>{service.service}</h3>
-
-                  <p>{service.description}</p>
-
-                  <div className="ratingLine">
-                    <strong>
-                      {stars(service.rating)}
-                    </strong>
-
-                    <span>
-                      {service.rating.toFixed(1)}
+                    <span className="featuredCategory">
+                      {service.category}
                     </span>
 
-                    <small>
-                      ({service.reviews} reseñas)
-                    </small>
-                  </div>
+                    <h3>
+                      {service.service}
+                    </h3>
 
-                  <div className="featuredBottom">
-                    <span>
-                      {service.name}
-                    </span>
+                    <p>
+                      {service.description}
+                    </p>
 
-                    <strong>
-                      Desde ${service.price}
-                    </strong>
-                  </div>
-                </article>
-              ))}
+                    <div className="ratingLine">
+                      <strong>
+                        {stars(
+                          service.rating
+                        )}
+                      </strong>
+
+                      <b>
+                        {service.rating.toFixed(
+                          1
+                        )}
+                      </b>
+
+                      <span>
+                        {service.reviews}{" "}
+                        reseñas
+                      </span>
+                    </div>
+
+                    <div className="featuredBottom">
+                      <div className="miniProvider">
+                        <div className="tinyAvatar">
+                          {service.name
+                            ?.charAt(0)
+                            ?.toUpperCase() ||
+                            "R"}
+                        </div>
+
+                        <span>
+                          {service.name}
+                        </span>
+                      </div>
+
+                      <strong>
+                        Desde $
+                        {service.price}
+                      </strong>
+                    </div>
+                  </article>
+                )
+              )}
             </div>
           </div>
         </section>
@@ -1254,7 +1471,7 @@ function App() {
         <section className="professionals">
           <div className="container">
             <span className="eyebrow">
-              TALENTO
+              TALENTO ROBLOREN
             </span>
 
             <h2>
@@ -1262,66 +1479,94 @@ function App() {
             </h2>
 
             <p className="muted">
-              Personas con habilidades listas para crear
-              nuevas oportunidades.
+              Conoce algunos de los
+              profesionales disponibles.
             </p>
 
             <div className="professionalGrid">
-              {professionals.slice(0, 3).map((person) => (
-                <article
-                  className="professionalCard"
-                  key={person.name}
-                  onClick={() =>
-                    openService(person.service)
-                  }
-                >
-                  <div className="professionalAvatar">
-                    {person.name
-                      ?.charAt(0)
-                      ?.toUpperCase() || "R"}
-                  </div>
-
-                  <div className="professionalInfo">
-                    <h3>{person.name}</h3>
-
-                    <p>{person.profession}</p>
-
-                    <div className="professionalRating">
-                      <strong>
-                        {stars(person.rating)}
-                      </strong>
-
-                      <span>
-                        {person.rating.toFixed(1)}
-                      </span>
-                    </div>
-
-                    <div className="professionalMeta">
-                      <span>
-                        {person.jobs}+ trabajos
-                      </span>
-
-                      <span>
-                        {person.experience}
-                      </span>
-                    </div>
-
-                    <span className="professionalCategory">
-                      {person.category}
-                    </span>
-                  </div>
-
-                  <button
-                    className="smallView"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      openService(person.service);
-                    }}
+              {professionals
+                .slice(0, 3)
+                .map((person) => (
+                  <article
+                    className="professionalCard"
+                    key={person.name}
+                    onClick={() =>
+                      openService(
+                        person.service
+                      )
+                    }
                   >
-                    Ver perfil →
-                  </button>
-                </article>
-              ))}
+                    <div className="professionalAvatar">
+                      {person.name
+                        ?.charAt(0)
+                        ?.toUpperCase() ||
+                        "R"}
+                    </div>
+
+                    <div className="professionalInfo">
+                      <div className="verified">
+                        ✓ Profesional
+                      </div>
+
+                      <h3>
+                        {person.name}
+                      </h3>
+
+                      <p>
+                        {person.profession}
+                      </p>
+
+                      <div className="professionalRating">
+                        <strong>
+                          {stars(
+                            person.rating
+                          )}
+                        </strong>
+
+                        <span>
+                          {person.rating.toFixed(
+                            1
+                          )}
+                        </span>
+
+                        <small>
+                          ({person.reviews})
+                        </small>
+                      </div>
+
+                      <div className="professionalMeta">
+                        <span>
+                          ✓ {person.jobs}+
+                          trabajos
+                        </span>
+
+                        <span>
+                          🕐{" "}
+                          {person.experience}
+                        </span>
+                      </div>
+
+                      <span className="professionalCategory">
+                        {categoryIcon(
+                          person.category
+                        )}{" "}
+                        {person.category}
+                      </span>
+                    </div>
+
+                    <button
+                      className="smallView"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openService(
+                          person.service
+                        );
+                      }}
+                    >
+                      Ver perfil →
+                    </button>
+                  </article>
+                ))}
             </div>
           </div>
         </section>
@@ -1334,91 +1579,62 @@ function App() {
               </span>
 
               <h2>
-                Conectar talento nunca fue tan sencillo
+                Conectar talento nunca fue
+                tan sencillo
               </h2>
 
               <p className="muted">
-                Una plataforma para convertir talento en
-                oportunidades.
+                Una plataforma pensada para
+                facilitar cada paso.
               </p>
             </div>
 
             <div className="steps">
-              <div className="step">
-                <div className="stepNumber">
-                  01
-                </div>
+              {[
+                [
+                  "01",
+                  "👤",
+                  "Crea tu cuenta",
+                  "Regístrate y crea un perfil profesional.",
+                ],
+                [
+                  "02",
+                  "🔎",
+                  "Encuentra o publica",
+                  "Busca servicios o presenta tus propias habilidades.",
+                ],
+                [
+                  "03",
+                  "💬",
+                  "Conecta directamente",
+                  "Habla con clientes y profesionales.",
+                ],
+                [
+                  "04",
+                  "🚀",
+                  "Trabaja y crece",
+                  "Gestiona oportunidades y construye reputación.",
+                ],
+              ].map(
+                (step) => (
+                  <div
+                    className="step"
+                    key={step[0]}
+                  >
+                    <div className="stepNumber">
+                      {step[0]}
+                    </div>
 
-                <div className="stepIcon">
-                  👤
-                </div>
+                    <div className="stepIcon">
+                      {step[1]}
+                    </div>
 
-                <h3>
-                  Crea tu cuenta
-                </h3>
+                    <h3>{step[2]}</h3>
 
-                <p>
-                  Regístrate como cliente o profesional y
-                  crea tu perfil.
-                </p>
-              </div>
-
-              <div className="step">
-                <div className="stepNumber">
-                  02
-                </div>
-
-                <div className="stepIcon">
-                  🔎
-                </div>
-
-                <h3>
-                  Encuentra o publica
-                </h3>
-
-                <p>
-                  Busca el servicio que necesitas o
-                  muestra tus propias habilidades.
-                </p>
-              </div>
-
-              <div className="step">
-                <div className="stepNumber">
-                  03
-                </div>
-
-                <div className="stepIcon">
-                  💬
-                </div>
-
-                <h3>
-                  Conecta directamente
-                </h3>
-
-                <p>
-                  Habla con profesionales y clientes para
-                  definir cada proyecto.
-                </p>
-              </div>
-
-              <div className="step">
-                <div className="stepNumber">
-                  04
-                </div>
-
-                <div className="stepIcon">
-                  🚀
-                </div>
-
-                <h3>
-                  Trabaja y crece
-                </h3>
-
-                <p>
-                  Gestiona solicitudes, construye tu
-                  reputación y encuentra nuevas oportunidades.
-                </p>
-              </div>
+                    <p>{step[3]}</p>
+                  </div>
+                )
+              )}
             </div>
           </div>
         </section>
@@ -1431,72 +1647,56 @@ function App() {
               </span>
 
               <h2>
-                Una plataforma creada para crecer contigo
+                Una plataforma creada para
+                crecer contigo
               </h2>
 
               <p>
-                RobLoren busca hacer más sencilla la conexión
-                entre quienes necesitan talento y quienes
-                tienen talento para ofrecer.
+                RobLoren busca hacer más
+                sencilla la conexión entre
+                quienes necesitan talento y
+                quienes tienen talento para
+                ofrecer.
               </p>
             </div>
 
             <div className="benefitGrid">
-              <div className="benefit">
-                <span>✓</span>
-                <div>
-                  <h3>
-                    Talento profesional
-                  </h3>
+              {[
+                [
+                  "✓",
+                  "Talento profesional",
+                  "Descubre personas con diferentes habilidades y especialidades.",
+                ],
+                [
+                  "⚡",
+                  "Conexiones directas",
+                  "Comunícate directamente para entender cada necesidad.",
+                ],
+                [
+                  "🌎",
+                  "Nuevas oportunidades",
+                  "Conecta con clientes y profesionales dentro y fuera de tu entorno.",
+                ],
+                [
+                  "⭐",
+                  "Reputación profesional",
+                  "Construye confianza mediante tu perfil, servicios y futuras valoraciones.",
+                ],
+              ].map(
+                (item) => (
+                  <div
+                    className="benefit"
+                    key={item[1]}
+                  >
+                    <span>{item[0]}</span>
 
-                  <p>
-                    Descubre personas con diferentes
-                    habilidades y especialidades.
-                  </p>
-                </div>
-              </div>
-
-              <div className="benefit">
-                <span>⚡</span>
-                <div>
-                  <h3>
-                    Conexiones directas
-                  </h3>
-
-                  <p>
-                    Comunícate directamente para entender
-                    cada necesidad.
-                  </p>
-                </div>
-              </div>
-
-              <div className="benefit">
-                <span>🌎</span>
-                <div>
-                  <h3>
-                    Nuevas oportunidades
-                  </h3>
-
-                  <p>
-                    Conecta con clientes y profesionales
-                    dentro y fuera de tu entorno.
-                  </p>
-                </div>
-              </div>
-
-              <div className="benefit">
-                <span>⭐</span>
-                <div>
-                  <h3>
-                    Reputación profesional
-                  </h3>
-
-                  <p>
-                    Construye confianza a través de tu
-                    perfil, servicios y futuras valoraciones.
-                  </p>
-                </div>
-              </div>
+                    <div>
+                      <h3>{item[1]}</h3>
+                      <p>{item[2]}</p>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           </div>
         </section>
@@ -1517,145 +1717,256 @@ function App() {
                 </h2>
 
                 <p className="muted">
-                  Explora, compara y encuentra el servicio
-                  adecuado para ti.
+                  Explora, compara y encuentra
+                  el servicio adecuado.
                 </p>
               </div>
 
-              <div className="serviceTools">
-                <div className="searchBox">
-                  🔎
+              <div className="resultsBadge">
+                {filteredServices.length}{" "}
+                resultados
+              </div>
+            </div>
 
-                  <input
-                    value={search}
-                    onChange={(e) =>
-                      setSearch(e.target.value)
-                    }
-                    placeholder="Buscar servicios..."
-                    autoComplete="off"
-                    spellCheck="false"
-                  />
-                </div>
+            <div className="filterPanel">
+              <div className="searchBox">
+                <span>🔎</span>
 
-                <select
-                  className="sortSelect"
-                  value={sortBy}
+                <input
+                  value={search}
                   onChange={(e) =>
-                    setSortBy(e.target.value)
+                    setSearch(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Buscar servicios, profesionales o categorías..."
+                  autoComplete="off"
+                  spellCheck="false"
+                />
+
+                {search && (
+                  <button
+                    className="clearSearch"
+                    onClick={() =>
+                      setSearch("")
+                    }
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              <select
+                className="sortSelect"
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(
+                    e.target.value
+                  )
+                }
+              >
+                <option value="recommended">
+                  Recomendados
+                </option>
+
+                <option value="rating">
+                  ⭐ Mejor valorados
+                </option>
+
+                <option value="priceLow">
+                  Precio menor
+                </option>
+
+                <option value="priceHigh">
+                  Precio mayor
+                </option>
+              </select>
+            </div>
+
+            <div className="activeFilters">
+              <span>
+                Filtrando por:
+              </span>
+
+              <button
+                className="filterChip active"
+                onClick={() =>
+                  setCategory("Todas")
+                }
+              >
+                {category === "Todas"
+                  ? "✨ Todas"
+                  : `${categoryIcon(
+                      category
+                    )} ${category}`}
+              </button>
+
+              {category !== "Todas" && (
+                <button
+                  className="filterReset"
+                  onClick={() =>
+                    setCategory("Todas")
                   }
                 >
-                  <option value="recommended">
-                    Recomendados
-                  </option>
-
-                  <option value="rating">
-                    Mejor valorados
-                  </option>
-
-                  <option value="priceLow">
-                    Precio menor
-                  </option>
-
-                  <option value="priceHigh">
-                    Precio mayor
-                  </option>
-                </select>
-              </div>
+                  Limpiar filtro
+                </button>
+              )}
             </div>
 
             {servicesLoading ? (
               <div className="empty">
-                Cargando servicios...
+                <div className="loadingIcon">
+                  ⏳
+                </div>
+
+                <strong>
+                  Cargando servicios...
+                </strong>
+
+                <p>
+                  Estamos buscando talento
+                  disponible.
+                </p>
               </div>
-            ) : filteredServices.length === 0 ? (
+            ) : filteredServices.length ===
+              0 ? (
               <div className="empty">
+                <div className="emptyIcon">
+                  🔎
+                </div>
+
                 <strong>
                   No encontramos servicios
                 </strong>
 
                 <p>
-                  Prueba con otra búsqueda o categoría.
+                  Prueba con otra búsqueda o
+                  categoría.
                 </p>
+
+                <button
+                  className="secondary"
+                  onClick={() => {
+                    setSearch("");
+                    setCategory("Todas");
+                  }}
+                >
+                  Ver todos los servicios
+                </button>
               </div>
             ) : (
               <div className="serviceGrid">
-                {filteredServices.map((service) => (
-                  <article
-                    key={`${service.demo ? "demo" : "real"}-${service.id}`}
-                    className="serviceCard"
-                  >
-                    <div className="provider">
-                      <div className="avatar">
-                        {service.name
-                          ?.charAt(0)
-                          ?.toUpperCase() || "R"}
+                {filteredServices.map(
+                  (service) => (
+                    <article
+                      key={`${service.demo ? "demo" : "real"}-${service.id}`}
+                      className="serviceCard"
+                    >
+                      <div className="serviceCategoryIcon">
+                        {categoryIcon(
+                          service.category
+                        )}
+
+                        {service.demo && (
+                          <span>
+                            DEMO
+                          </span>
+                        )}
                       </div>
 
-                      <div>
-                        <strong>
-                          {service.name}
-                        </strong>
+                      <div className="provider">
+                        <div className="avatar">
+                          {service.name
+                            ?.charAt(0)
+                            ?.toUpperCase() ||
+                            "R"}
+                        </div>
 
-                        <span>
-                          {service.profession}
+                        <div>
+                          <strong>
+                            {service.name}
+                          </strong>
+
+                          <span>
+                            {
+                              service.profession
+                            }
+                          </span>
+                        </div>
+
+                        <span className="verifiedDot">
+                          ✓
                         </span>
                       </div>
 
-                      <small>
+                      <span className="serviceCategoryLabel">
                         {service.category}
-                      </small>
-                    </div>
-
-                    <h3>{service.service}</h3>
-
-                    <p>
-                      {service.description}
-                    </p>
-
-                    <div className="serviceRating">
-                      <strong>
-                        {stars(service.rating)}
-                      </strong>
-
-                      <b>
-                        {service.rating.toFixed(1)}
-                      </b>
-
-                      <span>
-                        ({service.reviews} reseñas)
-                      </span>
-                    </div>
-
-                    <div className="serviceMeta">
-                      <span>
-                        ✓ {service.jobs} trabajos
                       </span>
 
-                      <span>
-                        🕐 {service.experience}
-                      </span>
-                    </div>
+                      <h3>
+                        {service.service}
+                      </h3>
 
-                    <div className="serviceBottom">
-                      <div>
-                        <small>Desde</small>
+                      <p>
+                        {service.description}
+                      </p>
 
+                      <div className="serviceRating">
                         <strong>
-                          ${service.price}
+                          {stars(
+                            service.rating
+                          )}
                         </strong>
+
+                        <b>
+                          {service.rating.toFixed(
+                            1
+                          )}
+                        </b>
+
+                        <span>
+                          {service.reviews}{" "}
+                          reseñas
+                        </span>
                       </div>
 
-                      <button
-                        className="view"
-                        onClick={() =>
-                          openService(service)
-                        }
-                      >
-                        Ver servicio →
-                      </button>
-                    </div>
-                  </article>
-                ))}
+                      <div className="serviceMeta">
+                        <span>
+                          ✓ {service.jobs}{" "}
+                          trabajos
+                        </span>
+
+                        <span>
+                          🕐{" "}
+                          {service.experience}
+                        </span>
+                      </div>
+
+                      <div className="serviceBottom">
+                        <div>
+                          <small>
+                            Precio inicial
+                          </small>
+
+                          <strong>
+                            ${service.price}
+                          </strong>
+                        </div>
+
+                        <button
+                          className="view"
+                          onClick={() =>
+                            openService(
+                              service
+                            )
+                          }
+                        >
+                          Ver servicio →
+                        </button>
+                      </div>
+                    </article>
+                  )
+                )}
               </div>
             )}
           </div>
@@ -1668,12 +1979,13 @@ function App() {
             </span>
 
             <h2>
-              Tu talento merece nuevas oportunidades.
+              Tu talento merece nuevas
+              oportunidades.
             </h2>
 
             <p>
-              Crea tu perfil y comienza a ofrecer tus
-              servicios.
+              Crea tu perfil y comienza a
+              ofrecer tus servicios.
             </p>
           </div>
 
@@ -1681,7 +1993,9 @@ function App() {
             className="ctaButton"
             onClick={() => {
               if (!loggedUser) {
-                setAccountMode("register");
+                setAccountMode(
+                  "register"
+                );
                 setPage("account");
               } else {
                 setPage("offer");
@@ -1715,7 +2029,8 @@ function App() {
             </h1>
 
             <p className="muted">
-              Conecta talento con oportunidades.
+              Conecta talento con
+              oportunidades.
             </p>
 
             <div className="tabs">
@@ -1734,12 +2049,15 @@ function App() {
 
               <button
                 className={
-                  accountMode === "register"
+                  accountMode ===
+                  "register"
                     ? "tab active"
                     : "tab"
                 }
                 onClick={() =>
-                  setAccountMode("register")
+                  setAccountMode(
+                    "register"
+                  )
                 }
               >
                 Crear cuenta
@@ -1773,7 +2091,9 @@ function App() {
 
                   <input
                     type="password"
-                    value={form.password}
+                    value={
+                      form.password
+                    }
                     onChange={(e) =>
                       updateForm(
                         "password",
@@ -1837,7 +2157,9 @@ function App() {
 
                   <input
                     type="password"
-                    value={form.password}
+                    value={
+                      form.password
+                    }
                     onChange={(e) =>
                       updateForm(
                         "password",
@@ -1853,7 +2175,9 @@ function App() {
                   Profesión
 
                   <input
-                    value={form.profession}
+                    value={
+                      form.profession
+                    }
                     onChange={(e) =>
                       updateForm(
                         "profession",
@@ -1908,8 +2232,9 @@ function App() {
               </h1>
 
               <p>
-                Gestiona tu perfil, servicios y
-                oportunidades desde un solo lugar.
+                Gestiona tu perfil,
+                servicios y oportunidades
+                desde un solo lugar.
               </p>
             </div>
 
@@ -1923,8 +2248,12 @@ function App() {
           <div className="stats">
             <div className="stat">
               <span>📋</span>
-              <strong>{requests.length}</strong>
-              <small>Solicitudes</small>
+              <strong>
+                {requests.length}
+              </strong>
+              <small>
+                Solicitudes
+              </small>
             </div>
 
             <div className="stat">
@@ -1942,17 +2271,26 @@ function App() {
             <div className="stat">
               <span>🛠️</span>
               <strong>{published}</strong>
-              <small>Servicios publicados</small>
+              <small>
+                Servicios publicados
+              </small>
             </div>
           </div>
 
           <div className="dashboardGrid">
             <div className="panel">
               <span className="eyebrow">
-                PERFIL
+                PERFIL PROFESIONAL
               </span>
 
-              <h2>Tu información</h2>
+              <h2>
+                Tu información
+              </h2>
+
+              <p className="panelIntro">
+                Esta información ayudará a
+                los clientes a conocerte.
+              </p>
 
               <form
                 onSubmit={saveProfile}
@@ -1962,7 +2300,9 @@ function App() {
                   Nombre
 
                   <input
-                    value={profileForm.name}
+                    value={
+                      profileForm.name
+                    }
                     onChange={(e) =>
                       updateProfileForm(
                         "name",
@@ -1976,7 +2316,9 @@ function App() {
                   Profesión
 
                   <input
-                    value={profileForm.profession}
+                    value={
+                      profileForm.profession
+                    }
                     onChange={(e) =>
                       updateProfileForm(
                         "profession",
@@ -1990,19 +2332,24 @@ function App() {
                   Biografía
 
                   <textarea
-                    value={profileForm.bio}
+                    value={
+                      profileForm.bio
+                    }
                     onChange={(e) =>
                       updateProfileForm(
                         "bio",
                         e.target.value
                       )
                     }
+                    placeholder="Describe tu experiencia y especialidades..."
                   />
                 </label>
 
                 <button
                   className="primary"
-                  disabled={savingProfile}
+                  disabled={
+                    savingProfile
+                  }
                 >
                   {savingProfile
                     ? "Guardando..."
@@ -2016,10 +2363,17 @@ function App() {
                 <div className="profileAvatar">
                   {loggedUser.name
                     ?.charAt(0)
-                    ?.toUpperCase() || "R"}
+                    ?.toUpperCase() ||
+                    "R"}
                 </div>
 
-                <h3>{loggedUser.name}</h3>
+                <span className="profileVerified">
+                  ✓ Perfil activo
+                </span>
+
+                <h3>
+                  {loggedUser.name}
+                </h3>
 
                 <p>
                   {loggedUser.profession}
@@ -2035,13 +2389,31 @@ function App() {
                   </span>
                 </div>
 
-                <span>
-                  ✓ Cuenta activa
-                </span>
+                <div className="profileStats">
+                  <div>
+                    <strong>
+                      {published}
+                    </strong>
+                    <small>
+                      Servicios
+                    </small>
+                  </div>
+
+                  <div>
+                    <strong>
+                      {accepted}
+                    </strong>
+                    <small>
+                      Aceptadas
+                    </small>
+                  </div>
+                </div>
               </div>
 
               <div className="quick">
-                <h3>Acciones rápidas</h3>
+                <h3>
+                  Acciones rápidas
+                </h3>
 
                 <button
                   onClick={() =>
@@ -2051,7 +2423,11 @@ function App() {
                   ➕ Publicar servicio
                 </button>
 
-                <button onClick={openRequests}>
+                <button
+                  onClick={
+                    openRequests
+                  }
+                >
                   📋 Ver solicitudes
                 </button>
 
@@ -2078,26 +2454,38 @@ function App() {
   }
 
   function ServicePage() {
-    if (!selectedService) return null;
+    if (!selectedService)
+      return null;
 
     return (
       <section className="page">
         <div className="detail">
           <button
             className="back"
-            onClick={() => setPage("home")}
+            onClick={() =>
+              setPage("home")
+            }
           >
             ← Volver a servicios
           </button>
 
           <div className="detailGrid">
             <div className="panel">
+              <div className="serviceHeroIcon">
+                {categoryIcon(
+                  selectedService.category
+                )}
+              </div>
+
               <div className="detailTop">
                 <span className="eyebrow">
-                  {selectedService.category}
+                  {
+                    selectedService.category
+                  }
                 </span>
 
-                {selectedService.rating >= 4.8 && (
+                {selectedService.rating >=
+                  4.8 && (
                   <span className="topRated">
                     🏆 Mejor valorado
                   </span>
@@ -2108,11 +2496,12 @@ function App() {
                 {selectedService.service}
               </h1>
 
-              <div className="provider">
+              <div className="provider detailProvider">
                 <div className="avatar">
                   {selectedService.name
                     ?.charAt(0)
-                    ?.toUpperCase() || "R"}
+                    ?.toUpperCase() ||
+                    "R"}
                 </div>
 
                 <div>
@@ -2121,55 +2510,83 @@ function App() {
                   </strong>
 
                   <span>
-                    {selectedService.profession}
+                    {
+                      selectedService.profession
+                    }
                   </span>
                 </div>
+
+                <span className="verifiedBadge">
+                  ✓ Verificado
+                </span>
               </div>
 
               <div className="detailRating">
                 <strong>
-                  {stars(selectedService.rating)}
+                  {stars(
+                    selectedService.rating
+                  )}
                 </strong>
 
                 <b>
-                  {selectedService.rating.toFixed(1)}
+                  {selectedService.rating.toFixed(
+                    1
+                  )}
                 </b>
 
                 <span>
-                  {selectedService.reviews} reseñas
+                  {selectedService.reviews}{" "}
+                  reseñas
                 </span>
               </div>
 
               <hr />
 
-              <h2>Sobre este servicio</h2>
+              <h2>
+                Sobre este servicio
+              </h2>
 
-              <p>
-                {selectedService.description}
+              <p className="detailDescription">
+                {
+                  selectedService.description
+                }
               </p>
 
               <div className="infoGrid">
                 <div>
-                  <small>Precio inicial</small>
+                  <small>
+                    Precio inicial
+                  </small>
 
                   <strong>
-                    ${selectedService.price}
+                    $
+                    {
+                      selectedService.price
+                    }
                   </strong>
                 </div>
 
                 <div>
-                  <small>Trabajos realizados</small>
+                  <small>
+                    Trabajos realizados
+                  </small>
 
                   <strong>
-                    {selectedService.jobs}
+                    {
+                      selectedService.jobs
+                    }
                   </strong>
                 </div>
 
                 <div>
-                  <small>Experiencia</small>
+                  <small>
+                    Experiencia
+                  </small>
 
                   <strong>
-                    {selectedService.experience}
+                    {
+                      selectedService.experience
+                    }
                   </strong>
                 </div>
               </div>
@@ -2181,14 +2598,50 @@ function App() {
 
                 <div>
                   <strong>
-                    {selectedService.name}
+                    {
+                      selectedService.name
+                    }
                   </strong>
 
                   <p>
-                    Profesional especializado en{" "}
+                    Profesional especializado
+                    en{" "}
                     {selectedService.category.toLowerCase()}.
-                    Disponible para nuevos proyectos.
+                    Disponible para nuevos
+                    proyectos.
                   </p>
+                </div>
+              </div>
+
+              <div className="reviewsPreview">
+                <div>
+                  <span className="eyebrow">
+                    VALORACIONES
+                  </span>
+
+                  <h3>
+                    Lo que destaca de este
+                    profesional
+                  </h3>
+                </div>
+
+                <div className="reviewScore">
+                  <strong>
+                    {selectedService.rating.toFixed(
+                      1
+                    )}
+                  </strong>
+
+                  <span>
+                    {stars(
+                      selectedService.rating
+                    )}
+                  </span>
+
+                  <small>
+                    {selectedService.reviews}{" "}
+                    reseñas
+                  </small>
                 </div>
               </div>
             </div>
@@ -2203,7 +2656,8 @@ function App() {
               </h2>
 
               <div className="requestPrice">
-                Desde ${selectedService.price}
+                Desde $
+                {selectedService.price}
               </div>
 
               <div className="trustBox">
@@ -2215,9 +2669,14 @@ function App() {
                   </strong>
 
                   <small>
-                    {selectedService.rating.toFixed(1)}
+                    {selectedService.rating.toFixed(
+                      1
+                    )}
                     /5 ·{" "}
-                    {selectedService.reviews} reseñas
+                    {
+                      selectedService.reviews
+                    }{" "}
+                    reseñas
                   </small>
                 </div>
               </div>
@@ -2229,18 +2688,21 @@ function App() {
                   </strong>
 
                   <p>
-                    Los servicios publicados por
-                    usuarios sí pueden recibir
-                    solicitudes.
+                    Los servicios publicados
+                    por usuarios sí pueden
+                    recibir solicitudes.
                   </p>
                 </div>
               ) : (
                 <>
                   <label>
-                    Mensaje para el profesional
+                    Mensaje para el
+                    profesional
 
                     <textarea
-                      value={requestMessage}
+                      value={
+                        requestMessage
+                      }
                       onChange={(e) =>
                         setRequestMessage(
                           e.target.value
@@ -2252,8 +2714,12 @@ function App() {
 
                   <button
                     className="primary full"
-                    onClick={sendRequest}
-                    disabled={sendingRequest}
+                    onClick={
+                      sendRequest
+                    }
+                    disabled={
+                      sendingRequest
+                    }
                   >
                     {sendingRequest
                       ? "Enviando..."
@@ -2314,18 +2780,24 @@ function App() {
               <div className="requestTop">
                 <span
                   className={
-                    request.status === "accepted"
+                    request.status ===
+                    "accepted"
                       ? "status accepted"
-                      : request.status === "rejected"
+                      : request.status ===
+                        "rejected"
                       ? "status rejected"
                       : "status"
                   }
                 >
-                  {statusText(request.status)}
+                  {statusText(
+                    request.status
+                  )}
                 </span>
 
                 <small>
-                  {dateText(request.created_at)}
+                  {dateText(
+                    request.created_at
+                  )}
                 </small>
               </div>
 
@@ -2334,12 +2806,16 @@ function App() {
               </h3>
 
               <p>
-                <strong>Cliente:</strong>{" "}
+                <strong>
+                  Cliente:
+                </strong>{" "}
                 {request.clientName}
               </p>
 
               <p>
-                <strong>Profesional:</strong>{" "}
+                <strong>
+                  Profesional:
+                </strong>{" "}
                 {request.providerName}
               </p>
 
@@ -2349,7 +2825,8 @@ function App() {
 
               <div className="requestActions">
                 {received &&
-                  request.status === "pending" && (
+                  request.status ===
+                    "pending" && (
                     <>
                       <button
                         className="accept"
@@ -2401,7 +2878,8 @@ function App() {
                         received
                           ? "Cliente"
                           : "Profesional",
-                      requestId: request.id,
+                      requestId:
+                        request.id,
                     })
                   }
                 >
@@ -2461,25 +2939,29 @@ function App() {
   }
 
   function MessagesPage() {
-    const contacts = requests.map((request) => {
-      const provider =
-        request.provider_id === loggedUser?.id;
+    const contacts = requests.map(
+      (request) => {
+        const provider =
+          request.provider_id ===
+          loggedUser?.id;
 
-      return {
-        id: request.id,
-        contactId: provider
-          ? request.client_id
-          : request.provider_id,
-        name: provider
-          ? request.clientName
-          : request.providerName,
-        profession: provider
-          ? "Cliente"
-          : "Profesional",
-        requestId: request.id,
-        serviceTitle: request.serviceTitle,
-      };
-    });
+        return {
+          id: request.id,
+          contactId: provider
+            ? request.client_id
+            : request.provider_id,
+          name: provider
+            ? request.clientName
+            : request.providerName,
+          profession: provider
+            ? "Cliente"
+            : "Profesional",
+          requestId: request.id,
+          serviceTitle:
+            request.serviceTitle,
+        };
+      }
+    );
 
     return (
       <section className="page">
@@ -2499,49 +2981,57 @@ function App() {
 
               <h2>Mensajes</h2>
 
-              {contacts.length === 0 ? (
+              {contacts.length ===
+              0 ? (
                 <div className="empty small">
-                  Aún no tienes conversaciones.
+                  Aún no tienes
+                  conversaciones.
                 </div>
               ) : (
-                contacts.map((contact) => (
-                  <button
-                    key={contact.id}
-                    className={
-                      selectedContact?.id ===
-                      contact.contactId
-                        ? "contact active"
-                        : "contact"
-                    }
-                    onClick={() =>
-                      openMessaging({
-                        userId:
-                          contact.contactId,
-                        name: contact.name,
-                        profession:
-                          contact.profession,
-                        requestId:
-                          contact.requestId,
-                      })
-                    }
-                  >
-                    <div className="avatar">
-                      {contact.name
-                        ?.charAt(0)
-                        ?.toUpperCase() || "R"}
-                    </div>
+                contacts.map(
+                  (contact) => (
+                    <button
+                      key={contact.id}
+                      className={
+                        selectedContact?.id ===
+                        contact.contactId
+                          ? "contact active"
+                          : "contact"
+                      }
+                      onClick={() =>
+                        openMessaging({
+                          userId:
+                            contact.contactId,
+                          name:
+                            contact.name,
+                          profession:
+                            contact.profession,
+                          requestId:
+                            contact.requestId,
+                        })
+                      }
+                    >
+                      <div className="avatar">
+                        {contact.name
+                          ?.charAt(0)
+                          ?.toUpperCase() ||
+                          "R"}
+                      </div>
 
-                    <div>
-                      <strong>
-                        {contact.name}
-                      </strong>
+                      <div>
+                        <strong>
+                          {contact.name}
+                        </strong>
 
-                      <span>
-                        {contact.serviceTitle}
-                      </span>
-                    </div>
-                  </button>
-                ))
+                        <span>
+                          {
+                            contact.serviceTitle
+                          }
+                        </span>
+                      </div>
+                    </button>
+                  )
+                )
               )}
             </aside>
 
@@ -2551,11 +3041,13 @@ function App() {
                   <span>💬</span>
 
                   <h2>
-                    Selecciona una conversación
+                    Selecciona una
+                    conversación
                   </h2>
 
                   <p>
-                    Elige un contacto para comenzar.
+                    Elige un contacto para
+                    comenzar.
                   </p>
                 </div>
               ) : (
@@ -2564,16 +3056,21 @@ function App() {
                     <div className="avatar">
                       {selectedContact.name
                         ?.charAt(0)
-                        ?.toUpperCase() || "R"}
+                        ?.toUpperCase() ||
+                        "R"}
                     </div>
 
                     <div>
                       <strong>
-                        {selectedContact.name}
+                        {
+                          selectedContact.name
+                        }
                       </strong>
 
                       <span>
-                        {selectedContact.profession}
+                        {
+                          selectedContact.profession
+                        }
                       </span>
                     </div>
                   </div>
@@ -2583,53 +3080,62 @@ function App() {
                       <div className="empty small">
                         Cargando mensajes...
                       </div>
-                    ) : messages.length === 0 ? (
+                    ) : messages.length ===
+                      0 ? (
                       <div className="chatEmpty">
                         <span>👋</span>
 
                         <strong>
-                          Inicia la conversación
+                          Inicia la
+                          conversación
                         </strong>
 
                         <p>
-                          Escribe un mensaje para comenzar.
+                          Escribe un mensaje
+                          para comenzar.
                         </p>
                       </div>
                     ) : (
-                      messages.map((message) => {
-                        const mine =
-                          message.sender_id ===
-                          loggedUser?.id;
+                      messages.map(
+                        (message) => {
+                          const mine =
+                            message.sender_id ===
+                            loggedUser?.id;
 
-                        return (
-                          <div
-                            key={message.id}
-                            className={
-                              mine
-                                ? "bubbleRow mine"
-                                : "bubbleRow"
-                            }
-                          >
+                          return (
                             <div
+                              key={
+                                message.id
+                              }
                               className={
                                 mine
-                                  ? "bubble mine"
-                                  : "bubble"
+                                  ? "bubbleRow mine"
+                                  : "bubbleRow"
                               }
                             >
-                              <p>
-                                {message.message}
-                              </p>
+                              <div
+                                className={
+                                  mine
+                                    ? "bubble mine"
+                                    : "bubble"
+                                }
+                              >
+                                <p>
+                                  {
+                                    message.message
+                                  }
+                                </p>
 
-                              <small>
-                                {dateText(
-                                  message.created_at
-                                )}
-                              </small>
+                                <small>
+                                  {dateText(
+                                    message.created_at
+                                  )}
+                                </small>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })
+                          );
+                        }
+                      )
                     )}
                   </div>
 
@@ -2638,7 +3144,9 @@ function App() {
                     className="messageForm"
                   >
                     <textarea
-                      value={messageText}
+                      value={
+                        messageText
+                      }
                       onChange={(e) =>
                         setMessageText(
                           e.target.value
@@ -2651,7 +3159,9 @@ function App() {
 
                     <button
                       className="primary"
-                      disabled={sendingMessage}
+                      disabled={
+                        sendingMessage
+                      }
                     >
                       {sendingMessage
                         ? "..."
@@ -2682,40 +3192,54 @@ function App() {
             NUEVA OFERTA
           </span>
 
-          <h1>Publica tu servicio</h1>
+          <h1>
+            Publica tu servicio
+          </h1>
 
           <p className="muted">
-            Presenta tu talento de forma profesional
-            y conecta con nuevos clientes.
+            Presenta tu talento de forma
+            profesional y conecta con nuevos
+            clientes.
           </p>
 
           <form
-            className="panel form"
+            className="panel form offerForm"
             onSubmit={publishService}
           >
-            <div className="offerUser">
-              <div className="avatar">
-                {loggedUser?.name
-                  ?.charAt(0)
-                  ?.toUpperCase() || "R"}
+            <div className="offerHeader">
+              <div className="offerUser">
+                <div className="avatar">
+                  {loggedUser?.name
+                    ?.charAt(0)
+                    ?.toUpperCase() ||
+                    "R"}
+                </div>
+
+                <div>
+                  <strong>
+                    {loggedUser?.name}
+                  </strong>
+
+                  <span>
+                    {
+                      loggedUser?.profession
+                    }
+                  </span>
+                </div>
               </div>
 
-              <div>
-                <strong>
-                  {loggedUser?.name}
-                </strong>
-
-                <span>
-                  {loggedUser?.profession}
-                </span>
-              </div>
+              <span className="offerStatus">
+                ✓ Perfil activo
+              </span>
             </div>
 
             <label>
               Título del servicio
 
               <input
-                value={offer.serviceTitle}
+                value={
+                  offer.serviceTitle
+                }
                 onChange={(e) =>
                   updateOffer(
                     "serviceTitle",
@@ -2738,14 +3262,16 @@ function App() {
                   )
                 }
               >
-                {categories.map(([, name]) => (
-                  <option
-                    key={name}
-                    value={name}
-                  >
-                    {name}
-                  </option>
-                ))}
+                {categories.map(
+                  ([icon, name]) => (
+                    <option
+                      key={name}
+                      value={name}
+                    >
+                      {icon} {name}
+                    </option>
+                  )
+                )}
               </select>
             </label>
 
@@ -2753,14 +3279,16 @@ function App() {
               Descripción
 
               <textarea
-                value={offer.description}
+                value={
+                  offer.description
+                }
                 onChange={(e) =>
                   updateOffer(
                     "description",
                     e.target.value
                   )
                 }
-                placeholder="Describe qué ofreces..."
+                placeholder="Describe qué ofreces, qué incluye tu servicio y qué puede esperar el cliente..."
               />
             </label>
 
@@ -2782,6 +3310,17 @@ function App() {
                 inputMode="numeric"
               />
             </label>
+
+            <div className="publishNote">
+              <span>💡</span>
+
+              <p>
+                Un título claro y una buena
+                descripción ayudan a que los
+                clientes entiendan mejor tu
+                servicio.
+              </p>
+            </div>
 
             <button
               className="primary full"
@@ -2820,7 +3359,6 @@ function App() {
             "Segoe UI",
             sans-serif;
           -webkit-font-smoothing: antialiased;
-          text-rendering: optimizeLegibility;
         }
 
         button,
@@ -2835,16 +3373,35 @@ function App() {
           -webkit-tap-highlight-color: transparent;
         }
 
-        input,
-        textarea,
-        select {
-          -webkit-appearance: none;
-          appearance: none;
-        }
-
         button:disabled {
           cursor: not-allowed;
           opacity: .65;
+        }
+
+        input,
+        textarea,
+        select {
+          width: 100%;
+          border: 1px solid #D7E0E9;
+          border-radius: 11px;
+          padding: 12px 13px;
+          outline: 0;
+          background: white;
+          color: #0F172A;
+          font-size: 16px;
+          line-height: 1.4;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+          border-color: #2563EB;
+          box-shadow: 0 0 0 3px #DBEAFE;
+        }
+
+        textarea {
+          min-height: 110px;
+          resize: vertical;
         }
 
         .header {
@@ -2881,7 +3438,7 @@ function App() {
           place-items: center;
           background: #0F172A;
           color: white;
-          font-weight: 800;
+          font-weight: 900;
         }
 
         .logoMark {
@@ -2892,7 +3449,7 @@ function App() {
 
         .logoText {
           font-size: 22px;
-          font-weight: 800;
+          font-weight: 900;
           color: #0F172A;
         }
 
@@ -2932,6 +3489,11 @@ function App() {
 
         .hero {
           background:
+            radial-gradient(
+              circle at 85% 20%,
+              #DBEAFE,
+              transparent 30%
+            ),
             linear-gradient(
               135deg,
               #EFF6FF,
@@ -2942,7 +3504,7 @@ function App() {
 
         .heroInner {
           max-width: 1180px;
-          min-height: 570px;
+          min-height: 590px;
           margin: auto;
           padding: 70px 24px;
           display: grid;
@@ -2954,7 +3516,7 @@ function App() {
         }
 
         .heroCopy {
-          max-width: 650px;
+          max-width: 670px;
         }
 
         .badge {
@@ -2963,17 +3525,16 @@ function App() {
           border-radius: 999px;
           background: #DBEAFE;
           color: #1E3A8A;
-          font-size: 12px;
-          font-weight: 800;
+          font-size: 11px;
+          font-weight: 900;
           margin-bottom: 18px;
         }
 
         .hero h1 {
           margin: 0;
-          font-size: clamp(42px,6vw,72px);
-          line-height: 1.02;
+          font-size: clamp(43px,6vw,72px);
+          line-height: 1.01;
           letter-spacing: -3px;
-          color: #0F172A;
         }
 
         .hero h1 span {
@@ -3023,8 +3584,24 @@ function App() {
           width: 100%;
         }
 
+        .heroTrust {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          margin-top: 23px;
+          color: #64748B;
+          font-size: 10px;
+          font-weight: 700;
+        }
+
+        .heroTrust span {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
         .heroCard {
-          background: white;
+          background: rgba(255,255,255,.96);
           border: 1px solid #DBEAFE;
           border-radius: 24px;
           padding: 28px;
@@ -3032,20 +3609,51 @@ function App() {
             0 25px 70px rgba(15,23,42,.10);
         }
 
-        .heroCardTitle {
-          font-size: 15px;
-          line-height: 1.35;
-          font-weight: 800;
-          margin-bottom: 18px;
+        .heroCardHeader {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .heroSmall {
+          color: #2563EB;
+          font-size: 9px;
+          font-weight: 900;
+          letter-spacing: 1.5px;
+        }
+
+        .heroCard h3 {
+          margin: 4px 0 0;
+          font-size: 21px;
+        }
+
+        .heroRound {
+          width: 42px;
+          height: 42px;
+          display: grid;
+          place-items: center;
+          background: #EFF6FF;
+          border-radius: 12px;
         }
 
         .heroSearch {
+          width: 100%;
           border: 1px solid #DCE4ED;
+          background: white;
           border-radius: 12px;
           padding: 15px;
+          display: flex;
+          align-items: center;
+          gap: 9px;
           color: #8591A0;
           font-size: 13px;
-          cursor: pointer;
+          text-align: left;
+        }
+
+        .heroSearch b {
+          margin-left: auto;
+          color: #2563EB;
         }
 
         .tags {
@@ -3055,7 +3663,8 @@ function App() {
           margin-top: 14px;
         }
 
-        .tags span {
+        .tags button {
+          border: 0;
           background: #EFF6FF;
           color: #1E3A8A;
           padding: 7px 9px;
@@ -3072,8 +3681,7 @@ function App() {
           padding-top: 20px;
         }
 
-        .miniStats div,
-        .stat {
+        .miniStats div {
           display: flex;
           flex-direction: column;
           gap: 3px;
@@ -3094,27 +3702,18 @@ function App() {
         .professionals,
         .how,
         .benefits {
-          padding: 65px 0;
+          padding: 68px 0;
         }
 
-        .categories {
-          background: white;
-        }
-
-        .services {
-          background: #F8FAFC;
-        }
-
-        .featured {
-          background: white;
-        }
-
-        .professionals {
-          background: #F8FAFC;
-        }
-
+        .categories,
+        .featured,
         .how {
           background: white;
+        }
+
+        .services,
+        .professionals {
+          background: #F8FAFC;
         }
 
         .benefits {
@@ -3147,7 +3746,7 @@ function App() {
         }
 
         h2 {
-          font-size: 29px;
+          font-size: 30px;
           letter-spacing: -.7px;
           margin: 0 0 10px;
         }
@@ -3159,33 +3758,49 @@ function App() {
         .categoryGrid {
           display: grid;
           grid-template-columns:
-            repeat(auto-fit,minmax(125px,1fr));
+            repeat(5,minmax(0,1fr));
           gap: 11px;
-          margin-top: 25px;
+          margin-top: 27px;
         }
 
         .category {
           border: 1px solid #DCE4ED;
           background: white;
-          border-radius: 14px;
-          padding: 13px 8px;
+          border-radius: 15px;
+          padding: 15px 8px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 7px;
-          font-weight: 700;
-          font-size: 12px;
+          gap: 5px;
           color: #405269;
         }
 
+        .category:hover {
+          border-color: #93C5FD;
+          transform: translateY(-1px);
+        }
+
         .category span {
-          font-size: 21px;
+          font-size: 22px;
+        }
+
+        .category strong {
+          font-size: 11px;
+        }
+
+        .category small {
+          color: #94A3B8;
+          font-size: 9px;
         }
 
         .category.active {
           background: #0F172A;
           border-color: #0F172A;
           color: white;
+        }
+
+        .category.active small {
+          color: #CBD5E1;
         }
 
         .sectionHeading,
@@ -3208,12 +3823,12 @@ function App() {
           display: grid;
           grid-template-columns:
             repeat(3,minmax(0,1fr));
-          gap: 17px;
+          gap: 18px;
         }
 
         .featuredCard {
           border: 1px solid #E0E7EF;
-          border-radius: 18px;
+          border-radius: 19px;
           padding: 22px;
           background: white;
           cursor: pointer;
@@ -3221,10 +3836,10 @@ function App() {
         }
 
         .featuredCard:hover {
-          transform: translateY(-3px);
+          transform: translateY(-4px);
           border-color: #BFDBFE;
           box-shadow:
-            0 15px 35px rgba(15,23,42,.07);
+            0 18px 40px rgba(15,23,42,.08);
         }
 
         .featuredTop {
@@ -3235,14 +3850,13 @@ function App() {
         }
 
         .featuredIcon {
-          width: 48px;
-          height: 48px;
+          width: 50px;
+          height: 50px;
           border-radius: 14px;
           display: grid;
           place-items: center;
           background: #EFF6FF;
-          font-size: 22px;
-          margin-bottom: 14px;
+          font-size: 23px;
         }
 
         .featuredBadge {
@@ -3254,17 +3868,24 @@ function App() {
           font-weight: 900;
         }
 
-        .featuredCategory {
+        .featuredCategory,
+        .serviceCategoryLabel {
           color: #2563EB;
-          font-size: 10px;
+          font-size: 9px;
           font-weight: 900;
           text-transform: uppercase;
           letter-spacing: 1px;
         }
 
+        .featuredCategory {
+          display: block;
+          margin-top: 15px;
+        }
+
         .featuredCard h3 {
-          margin: 9px 0;
+          margin: 8px 0;
           font-size: 18px;
+          line-height: 1.3;
         }
 
         .featuredCard p {
@@ -3292,16 +3913,15 @@ function App() {
           font-size: 12px;
         }
 
-        .ratingLine span,
+        .ratingLine b,
         .serviceRating b,
         .professionalRating span,
         .detailRating b {
           font-weight: 900;
           font-size: 12px;
-          color: #334155;
         }
 
-        .ratingLine small,
+        .ratingLine span,
         .serviceRating span,
         .detailRating span {
           color: #7A899B;
@@ -3318,13 +3938,35 @@ function App() {
           align-items: center;
         }
 
-        .featuredBottom span {
-          color: #64748B;
-          font-size: 11px;
+        .featuredBottom > strong {
+          font-size: 14px;
         }
 
-        .featuredBottom strong {
-          font-size: 14px;
+        .miniProvider {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          min-width: 0;
+        }
+
+        .miniProvider span {
+          color: #64748B;
+          font-size: 10px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .tinyAvatar {
+          width: 27px;
+          height: 27px;
+          border-radius: 8px;
+          display: grid;
+          place-items: center;
+          background: #DBEAFE;
+          color: #1E3A8A;
+          font-size: 10px;
+          font-weight: 900;
         }
 
         .professionalGrid {
@@ -3332,7 +3974,7 @@ function App() {
           grid-template-columns:
             repeat(3,minmax(0,1fr));
           gap: 17px;
-          margin-top: 25px;
+          margin-top: 27px;
         }
 
         .professionalCard {
@@ -3341,25 +3983,27 @@ function App() {
           gap: 13px;
           background: white;
           border: 1px solid #E0E7EF;
-          border-radius: 17px;
-          padding: 18px;
+          border-radius: 18px;
+          padding: 19px;
           cursor: pointer;
         }
 
         .professionalCard:hover {
-          border-color: #BFDBFE;
+          border-color: #93C5FD;
+          box-shadow:
+            0 12px 30px rgba(15,23,42,.06);
         }
 
         .professionalAvatar {
-          width: 52px;
-          height: 52px;
+          width: 55px;
+          height: 55px;
           flex: 0 0 auto;
-          border-radius: 15px;
+          border-radius: 16px;
           display: grid;
           place-items: center;
           background: #0F172A;
           color: white;
-          font-size: 20px;
+          font-size: 21px;
           font-weight: 900;
         }
 
@@ -3368,8 +4012,15 @@ function App() {
           min-width: 0;
         }
 
+        .verified {
+          color: #267348;
+          font-size: 8px;
+          font-weight: 900;
+          margin-bottom: 4px;
+        }
+
         .professionalInfo h3 {
-          margin: 0 0 4px;
+          margin: 0 0 3px;
           font-size: 15px;
         }
 
@@ -3381,6 +4032,11 @@ function App() {
 
         .professionalRating {
           margin-bottom: 8px;
+        }
+
+        .professionalRating small {
+          color: #94A3B8;
+          font-size: 9px;
         }
 
         .professionalMeta {
@@ -3412,7 +4068,7 @@ function App() {
           border: 0;
           background: transparent;
           color: #2563EB;
-          font-size: 10px;
+          font-size: 9px;
           font-weight: 900;
           white-space: nowrap;
         }
@@ -3423,10 +4079,6 @@ function App() {
           margin: 0 auto 35px;
         }
 
-        .centerHeading h2 {
-          margin-bottom: 8px;
-        }
-
         .steps {
           display: grid;
           grid-template-columns:
@@ -3435,7 +4087,6 @@ function App() {
         }
 
         .step {
-          position: relative;
           border: 1px solid #E0E7EF;
           border-radius: 17px;
           padding: 22px;
@@ -3446,7 +4097,6 @@ function App() {
           color: #2563EB;
           font-size: 11px;
           font-weight: 900;
-          letter-spacing: 1px;
         }
 
         .stepIcon {
@@ -3519,12 +4169,20 @@ function App() {
           line-height: 1.5;
         }
 
-        .serviceTools {
+        .resultsBadge {
+          background: white;
+          border: 1px solid #DCE4ED;
+          color: #64748B;
+          padding: 9px 12px;
+          border-radius: 999px;
+          font-size: 10px;
+          font-weight: 800;
+        }
+
+        .filterPanel {
           display: flex;
-          align-items: center;
-          gap: 9px;
-          width: 440px;
-          max-width: 100%;
+          gap: 10px;
+          margin-bottom: 12px;
         }
 
         .searchBox {
@@ -3532,33 +4190,69 @@ function App() {
           min-width: 0;
           background: white;
           border: 1px solid #DCE4ED;
-          border-radius: 11px;
+          border-radius: 12px;
           padding: 0 13px;
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 13px;
         }
 
         .searchBox:focus-within {
           border-color: #2563EB;
-          box-shadow: 0 0 0 3px #DBEAFE;
+          box-shadow:
+            0 0 0 3px #DBEAFE;
         }
 
         .searchBox input {
           border: 0;
           outline: 0;
-          width: 100%;
           padding: 13px 0;
           background: transparent;
           box-shadow: none;
         }
 
+        .clearSearch {
+          border: 0;
+          background: #F1F5F9;
+          color: #64748B;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          font-weight: 900;
+        }
+
         .sortSelect {
-          width: 150px;
-          padding: 12px 10px;
+          width: 180px;
           font-size: 11px;
           font-weight: 700;
+        }
+
+        .activeFilters {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 23px;
+          flex-wrap: wrap;
+          color: #94A3B8;
+          font-size: 10px;
+        }
+
+        .filterChip {
+          border: 0;
+          background: #EFF6FF;
+          color: #1E3A8A;
+          padding: 6px 10px;
+          border-radius: 999px;
+          font-size: 10px;
+          font-weight: 800;
+        }
+
+        .filterReset {
+          border: 0;
+          background: transparent;
+          color: #2563EB;
+          font-size: 10px;
+          font-weight: 800;
         }
 
         .serviceGrid {
@@ -3580,17 +4274,39 @@ function App() {
         }
 
         .serviceCard {
-          transition:
-            transform .2s ease,
-            box-shadow .2s ease,
-            border-color .2s ease;
+          position: relative;
+          transition: .2s ease;
         }
 
         .serviceCard:hover {
-          transform: translateY(-2px);
+          transform: translateY(-3px);
           border-color: #BFDBFE;
           box-shadow:
             0 14px 35px rgba(15,23,42,.07);
+        }
+
+        .serviceCategoryIcon {
+          width: 45px;
+          height: 45px;
+          display: grid;
+          place-items: center;
+          background: #EFF6FF;
+          border-radius: 13px;
+          font-size: 20px;
+          margin-bottom: 14px;
+          position: relative;
+        }
+
+        .serviceCategoryIcon span {
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          background: #0F172A;
+          color: white;
+          padding: 3px 5px;
+          border-radius: 5px;
+          font-size: 6px;
+          font-weight: 900;
         }
 
         .provider {
@@ -3615,15 +4331,6 @@ function App() {
           font-size: 11px;
         }
 
-        .provider small {
-          background: #EFF6FF;
-          color: #1E3A8A;
-          padding: 5px 8px;
-          border-radius: 999px;
-          font-size: 9px;
-          font-weight: 800;
-        }
-
         .avatar {
           width: 43px;
           height: 43px;
@@ -3636,8 +4343,25 @@ function App() {
           color: #1E3A8A;
         }
 
+        .verifiedDot {
+          width: 20px;
+          height: 20px;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          background: #E4F5EB;
+          color: #267348 !important;
+          font-size: 9px !important;
+          font-weight: 900;
+        }
+
+        .serviceCategoryLabel {
+          display: inline-block;
+          margin-top: 15px;
+        }
+
         .serviceCard h3 {
-          margin: 17px 0 8px;
+          margin: 8px 0;
           font-size: 17px;
           line-height: 1.3;
         }
@@ -3647,11 +4371,6 @@ function App() {
           font-size: 13px;
           line-height: 1.55;
           margin: 0;
-        }
-
-        .panel p {
-          color: #6C7C90;
-          line-height: 1.6;
         }
 
         .serviceRating {
@@ -3704,10 +4423,14 @@ function App() {
           font-size: 11px;
         }
 
+        .view:hover {
+          background: #DBEAFE;
+        }
+
         .cta {
           background: #0F172A;
           color: white;
-          padding: 65px max(24px,calc((100% - 1120px)/2));
+          padding: 68px max(24px,calc((100% - 1120px)/2));
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -3733,6 +4456,10 @@ function App() {
           padding: 14px 20px;
           font-weight: 900;
           white-space: nowrap;
+        }
+
+        .ctaButton:hover {
+          background: #EFF6FF;
         }
 
         .page {
@@ -3794,32 +4521,6 @@ function App() {
           font-weight: 800;
         }
 
-        input,
-        textarea,
-        select {
-          width: 100%;
-          border: 1px solid #D7E0E9;
-          border-radius: 10px;
-          padding: 12px 13px;
-          outline: 0;
-          background: white;
-          color: #0F172A;
-          font-size: 16px;
-          line-height: 1.4;
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-          border-color: #2563EB;
-          box-shadow: 0 0 0 3px #DBEAFE;
-        }
-
-        textarea {
-          min-height: 110px;
-          resize: vertical;
-        }
-
         .dashboardHeader {
           display: flex;
           justify-content: space-between;
@@ -3857,6 +4558,9 @@ function App() {
         }
 
         .stat {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
           background: white;
           border: 1px solid #E0E7EF;
           border-radius: 15px;
@@ -3884,11 +4588,8 @@ function App() {
           gap: 20px;
         }
 
-        .requestColumns {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 20px;
-          margin-top: 25px;
+        .panelIntro {
+          margin-bottom: 20px;
         }
 
         .profileBox {
@@ -3901,18 +4602,22 @@ function App() {
 
         .profileBox h3 {
           color: white;
+          margin-bottom: 5px;
         }
 
         .profileBox p {
           color: #BDC8D5;
         }
 
-        .profileBox > span {
+        .profileVerified {
+          display: inline-block;
+          margin-top: 13px;
           background: rgba(37,99,235,.28);
           color: #DBEAFE;
           padding: 6px 10px;
           border-radius: 999px;
-          font-size: 10px;
+          font-size: 9px;
+          font-weight: 900;
         }
 
         .profileAvatar {
@@ -3934,7 +4639,7 @@ function App() {
           align-items: center;
           flex-direction: column;
           gap: 4px;
-          margin: 13px 0 15px;
+          margin: 13px 0;
         }
 
         .profileRating strong {
@@ -3945,6 +4650,30 @@ function App() {
         .profileRating span {
           color: #AEB9C7;
           font-size: 10px;
+        }
+
+        .profileStats {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          border-top: 1px solid rgba(255,255,255,.1);
+          padding-top: 15px;
+          margin-top: 12px;
+        }
+
+        .profileStats div {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .profileStats strong {
+          color: white;
+          font-size: 19px;
+        }
+
+        .profileStats small {
+          color: #94A3B8;
+          font-size: 9px;
         }
 
         .quick {
@@ -3968,6 +4697,11 @@ function App() {
           text-align: left;
         }
 
+        .quick button:hover {
+          background: #F8FAFC;
+          border-color: #BFDBFE;
+        }
+
         .quick .logout {
           color: #A34D4D;
         }
@@ -3979,6 +4713,17 @@ function App() {
           font-weight: 800;
           padding: 0;
           margin-bottom: 25px;
+        }
+
+        .serviceHeroIcon {
+          width: 58px;
+          height: 58px;
+          border-radius: 17px;
+          background: #EFF6FF;
+          display: grid;
+          place-items: center;
+          font-size: 27px;
+          margin-bottom: 17px;
         }
 
         .detailTop {
@@ -3997,8 +4742,31 @@ function App() {
           font-weight: 900;
         }
 
+        .detailProvider {
+          margin-top: 20px;
+        }
+
+        .verifiedBadge {
+          background: #E4F5EB;
+          color: #267348 !important;
+          padding: 5px 8px;
+          border-radius: 999px;
+          font-size: 9px !important;
+          font-weight: 900;
+        }
+
         .detailRating {
           margin-top: 16px;
+        }
+
+        .detailDescription {
+          font-size: 15px;
+        }
+
+        hr {
+          border: 0;
+          border-top: 1px solid #EDF1F5;
+          margin: 25px 0;
         }
 
         .profileSummary {
@@ -4054,8 +4822,46 @@ function App() {
           font-size: 14px;
         }
 
+        .reviewsPreview {
+          margin-top: 25px;
+          padding: 18px;
+          border: 1px solid #E5EAF0;
+          border-radius: 14px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .reviewsPreview h3 {
+          margin: 0;
+          font-size: 14px;
+        }
+
+        .reviewScore {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 3px;
+        }
+
+        .reviewScore strong {
+          font-size: 25px;
+        }
+
+        .reviewScore span {
+          color: #E3A500;
+          letter-spacing: 1px;
+          font-size: 11px;
+        }
+
+        .reviewScore small {
+          color: #94A3B8;
+          font-size: 9px;
+        }
+
         .requestPrice {
-          font-size: 24px;
+          font-size: 25px;
           font-weight: 900;
           margin: 15px 0;
         }
@@ -4167,6 +4973,13 @@ function App() {
         .messageBtn {
           background: #EFF6FF;
           color: #1E3A8A;
+        }
+
+        .requestColumns {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin-top: 25px;
         }
 
         .messagesLayout {
@@ -4288,17 +5101,55 @@ function App() {
           font-size: 32px;
         }
 
+        .offerForm {
+          margin-top: 25px;
+        }
+
+        .offerHeader {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 15px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #EDF1F5;
+        }
+
         .offerUser {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding-bottom: 5px;
         }
 
         .offerUser div:last-child {
           display: flex;
           flex-direction: column;
           gap: 3px;
+        }
+
+        .offerStatus {
+          background: #E4F5EB;
+          color: #267348;
+          padding: 6px 9px;
+          border-radius: 999px;
+          font-size: 9px;
+          font-weight: 900;
+        }
+
+        .publishNote {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          background: #EFF6FF;
+          border: 1px solid #DBEAFE;
+          padding: 12px;
+          border-radius: 11px;
+        }
+
+        .publishNote p {
+          margin: 0;
+          color: #64748B;
+          font-size: 10px;
+          line-height: 1.5;
         }
 
         .empty {
@@ -4310,11 +5161,42 @@ function App() {
           color: #718096;
         }
 
+        .empty strong {
+          display: block;
+          color: #334155;
+          margin-bottom: 5px;
+        }
+
         .empty.small {
           padding: 30px 15px;
         }
 
+        .emptyIcon,
+        .loadingIcon {
+          font-size: 30px;
+          margin-bottom: 10px;
+        }
+
+        @media (max-width: 1050px) {
+          .categoryGrid {
+            grid-template-columns:
+              repeat(5,1fr);
+          }
+        }
+
         @media (max-width: 900px) {
+          .heroInner,
+          .dashboardGrid,
+          .detailGrid {
+            grid-template-columns: 1fr;
+          }
+
+          .heroCard {
+            max-width: 600px;
+            width: 100%;
+            margin: auto;
+          }
+
           .featuredGrid,
           .professionalGrid {
             grid-template-columns: 1fr;
@@ -4322,6 +5204,15 @@ function App() {
 
           .steps {
             grid-template-columns: repeat(2,1fr);
+          }
+
+          .categoryGrid {
+            grid-template-columns:
+              repeat(5,1fr);
+          }
+
+          .requestColumns {
+            grid-template-columns: 1fr;
           }
         }
 
@@ -4348,7 +5239,6 @@ function App() {
           }
 
           .heroInner {
-            grid-template-columns: 1fr;
             padding: 48px 17px;
             min-height: auto;
             gap: 35px;
@@ -4369,6 +5259,11 @@ function App() {
 
           .heroActions button {
             width: 100%;
+          }
+
+          .heroTrust {
+            display: grid;
+            gap: 7px;
           }
 
           .heroCard {
@@ -4401,7 +5296,8 @@ function App() {
           }
 
           .categoryGrid {
-            grid-template-columns: repeat(2,1fr);
+            grid-template-columns:
+              repeat(2,1fr);
           }
 
           .sectionTop,
@@ -4412,17 +5308,11 @@ function App() {
             flex-direction: column;
           }
 
-          .serviceTools {
-            width: 100%;
+          .filterPanel {
             flex-direction: column;
-            align-items: stretch;
           }
 
           .sortSelect {
-            width: 100%;
-          }
-
-          .searchBox {
             width: 100%;
           }
 
@@ -4432,12 +5322,6 @@ function App() {
 
           .stats {
             grid-template-columns: repeat(2,1fr);
-          }
-
-          .dashboardGrid,
-          .detailGrid,
-          .requestColumns {
-            grid-template-columns: 1fr;
           }
 
           .bigAvatar {
@@ -4450,6 +5334,15 @@ function App() {
 
           .infoGrid {
             grid-template-columns: 1fr;
+          }
+
+          .reviewsPreview {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .reviewScore {
+            align-items: flex-start;
           }
 
           .messagesLayout {
@@ -4499,18 +5392,30 @@ function App() {
             padding: 20px;
           }
 
-          input,
-          textarea,
-          select {
-            font-size: 16px;
-          }
-
           .professionalCard {
             align-items: flex-start;
           }
 
           .smallView {
             font-size: 9px;
+          }
+
+          .offerHeader {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+
+          .detailTop {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+
+          .detailProvider {
+            flex-wrap: wrap;
+          }
+
+          .verifiedBadge {
+            margin-left: 53px;
           }
         }
       `}</style>
@@ -4519,16 +5424,43 @@ function App() {
 
       {authLoading && !loggedUser ? (
         <div className="empty">
-          Cargando RobLoren...
+          <div className="loadingIcon">
+            ⏳
+          </div>
+
+          <strong>
+            Cargando RobLoren...
+          </strong>
+
+          <p>
+            Preparando la plataforma.
+          </p>
         </div>
       ) : (
         <>
-          {page === "home" && <HomePage />}
-          {page === "account" && <AccountPage />}
-          {page === "service" && <ServicePage />}
-          {page === "requests" && <RequestsPage />}
-          {page === "messages" && <MessagesPage />}
-          {page === "offer" && <OfferPage />}
+          {page === "home" && (
+            <HomePage />
+          )}
+
+          {page === "account" && (
+            <AccountPage />
+          )}
+
+          {page === "service" && (
+            <ServicePage />
+          )}
+
+          {page === "requests" && (
+            <RequestsPage />
+          )}
+
+          {page === "messages" && (
+            <MessagesPage />
+          )}
+
+          {page === "offer" && (
+            <OfferPage />
+          )}
         </>
       )}
     </>
