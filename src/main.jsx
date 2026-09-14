@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  memo,
+  useDeferredValue,
+} from "react";
 import ReactDOM from "react-dom/client";
 import { supabase } from "./supabaseClient";
 
@@ -103,12 +109,18 @@ function dateText(value) {
   });
 }
 
+/* =========================================================
+   COMPONENTE PRINCIPAL
+   ========================================================= */
+
 function App() {
   const [page, setPage] = useState("home");
   const [services, setServices] = useState(demoServices);
   const [selectedService, setSelectedService] = useState(null);
 
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
+
   const [category, setCategory] = useState("Todas");
 
   const [loggedUser, setLoggedUser] = useState(null);
@@ -152,6 +164,35 @@ function App() {
   });
 
   const [publishing, setPublishing] = useState(false);
+
+  /* =========================================================
+     FUNCIONES DE ESTADO OPTIMIZADAS
+     ========================================================= */
+
+  const updateForm = (field, value) => {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const updateProfileForm = (field, value) => {
+    setProfileForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const updateOffer = (field, value) => {
+    setOffer((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  /* =========================================================
+     PERFIL
+     ========================================================= */
 
   async function ensureProfile(user) {
     if (!user) return null;
@@ -213,6 +254,10 @@ function App() {
     });
   }
 
+  /* =========================================================
+     SERVICIOS
+     ========================================================= */
+
   async function loadServices() {
     setServicesLoading(true);
 
@@ -256,6 +301,10 @@ function App() {
     setServices([...real, ...demoServices]);
     setServicesLoading(false);
   }
+
+  /* =========================================================
+     SOLICITUDES
+     ========================================================= */
 
   async function loadRequests() {
     if (!loggedUser?.id) {
@@ -352,6 +401,10 @@ function App() {
 
     setLoadingRequests(false);
   }
+
+  /* =========================================================
+     MENSAJES
+     ========================================================= */
 
   async function loadMessages(contactId) {
     if (!loggedUser?.id || !contactId) {
@@ -450,6 +503,10 @@ function App() {
     await loadMessages(contactData.id);
   }
 
+  /* =========================================================
+     SOLICITAR SERVICIO
+     ========================================================= */
+
   async function sendRequest() {
     if (!loggedUser) {
       setAccountMode("login");
@@ -518,6 +575,10 @@ function App() {
     setUpdatingRequest(null);
   }
 
+  /* =========================================================
+     GUARDAR PERFIL
+     ========================================================= */
+
   async function saveProfile(event) {
     event.preventDefault();
 
@@ -570,10 +631,18 @@ function App() {
     await loadServices();
   }
 
+  /* =========================================================
+     REGISTRO
+     ========================================================= */
+
   async function register(event) {
     event.preventDefault();
 
-    if (!form.name.trim() || !form.email.trim() || !form.password) {
+    if (
+      !form.name.trim() ||
+      !form.email.trim() ||
+      !form.password
+    ) {
       alert("Completa nombre, correo y contraseña.");
       return;
     }
@@ -624,6 +693,10 @@ function App() {
     setAuthLoading(false);
   }
 
+  /* =========================================================
+     LOGIN
+     ========================================================= */
+
   async function login(event) {
     event.preventDefault();
 
@@ -660,6 +733,10 @@ function App() {
     setAuthLoading(false);
   }
 
+  /* =========================================================
+     LOGOUT
+     ========================================================= */
+
   async function logout() {
     const { error } = await supabase.auth.signOut();
 
@@ -674,6 +751,10 @@ function App() {
     setSelectedContact(null);
     setPage("home");
   }
+
+  /* =========================================================
+     PUBLICAR SERVICIO
+     ========================================================= */
 
   async function publishService(event) {
     event.preventDefault();
@@ -729,6 +810,10 @@ function App() {
     setPage("home");
   }
 
+  /* =========================================================
+     NAVEGACIÓN
+     ========================================================= */
+
   function openAccount() {
     setPage("account");
 
@@ -757,6 +842,10 @@ function App() {
     setRequestMessage("");
     setPage("service");
   }
+
+  /* =========================================================
+     EFECTOS
+     ========================================================= */
 
   useEffect(() => {
     async function startAuth() {
@@ -800,8 +889,12 @@ function App() {
     }
   }, [loggedUser?.id]);
 
+  /* =========================================================
+     FILTRO
+     ========================================================= */
+
   const filteredServices = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = deferredSearch.trim().toLowerCase();
 
     return services.filter((service) => {
       const categoryMatch =
@@ -824,7 +917,7 @@ function App() {
           String(value).toLowerCase().includes(q)
         );
     });
-  }, [services, search, category]);
+  }, [services, deferredSearch, category]);
 
   const received = requests.filter(
     (r) => r.provider_id === loggedUser?.id
@@ -847,6 +940,10 @@ function App() {
       !s.demo &&
       s.userId === loggedUser?.id
   ).length;
+
+  /* =========================================================
+     HEADER
+     ========================================================= */
 
   function Header() {
     return (
@@ -908,6 +1005,10 @@ function App() {
       </header>
     );
   }
+
+  /* =========================================================
+     HOME
+     ========================================================= */
 
   function HomePage() {
     return (
@@ -1066,6 +1167,8 @@ function App() {
                     setSearch(e.target.value)
                   }
                   placeholder="Buscar servicios..."
+                  autoComplete="off"
+                  spellCheck="false"
                 />
               </div>
             </div>
@@ -1178,6 +1281,10 @@ function App() {
     );
   }
 
+  /* =========================================================
+     CUENTA
+     ========================================================= */
+
   function AccountPage() {
     if (!loggedUser) {
       return (
@@ -1241,12 +1348,13 @@ function App() {
                     type="email"
                     value={form.email}
                     onChange={(e) =>
-                      setForm({
-                        ...form,
-                        email: e.target.value,
-                      })
+                      updateForm(
+                        "email",
+                        e.target.value
+                      )
                     }
                     placeholder="tu@email.com"
+                    autoComplete="email"
                   />
                 </label>
 
@@ -1257,12 +1365,13 @@ function App() {
                     type="password"
                     value={form.password}
                     onChange={(e) =>
-                      setForm({
-                        ...form,
-                        password: e.target.value,
-                      })
+                      updateForm(
+                        "password",
+                        e.target.value
+                      )
                     }
                     placeholder="Tu contraseña"
+                    autoComplete="current-password"
                   />
                 </label>
 
@@ -1286,12 +1395,13 @@ function App() {
                   <input
                     value={form.name}
                     onChange={(e) =>
-                      setForm({
-                        ...form,
-                        name: e.target.value,
-                      })
+                      updateForm(
+                        "name",
+                        e.target.value
+                      )
                     }
                     placeholder="Tu nombre"
+                    autoComplete="name"
                   />
                 </label>
 
@@ -1302,12 +1412,13 @@ function App() {
                     type="email"
                     value={form.email}
                     onChange={(e) =>
-                      setForm({
-                        ...form,
-                        email: e.target.value,
-                      })
+                      updateForm(
+                        "email",
+                        e.target.value
+                      )
                     }
                     placeholder="tu@email.com"
+                    autoComplete="email"
                   />
                 </label>
 
@@ -1318,12 +1429,13 @@ function App() {
                     type="password"
                     value={form.password}
                     onChange={(e) =>
-                      setForm({
-                        ...form,
-                        password: e.target.value,
-                      })
+                      updateForm(
+                        "password",
+                        e.target.value
+                      )
                     }
                     placeholder="Mínimo 6 caracteres"
+                    autoComplete="new-password"
                   />
                 </label>
 
@@ -1333,10 +1445,10 @@ function App() {
                   <input
                     value={form.profession}
                     onChange={(e) =>
-                      setForm({
-                        ...form,
-                        profession: e.target.value,
-                      })
+                      updateForm(
+                        "profession",
+                        e.target.value
+                      )
                     }
                     placeholder="Ej. Diseñador gráfico"
                   />
@@ -1348,10 +1460,10 @@ function App() {
                   <textarea
                     value={form.bio}
                     onChange={(e) =>
-                      setForm({
-                        ...form,
-                        bio: e.target.value,
-                      })
+                      updateForm(
+                        "bio",
+                        e.target.value
+                      )
                     }
                     placeholder="Cuéntanos sobre ti..."
                   />
@@ -1442,10 +1554,10 @@ function App() {
                   <input
                     value={profileForm.name}
                     onChange={(e) =>
-                      setProfileForm({
-                        ...profileForm,
-                        name: e.target.value,
-                      })
+                      updateProfileForm(
+                        "name",
+                        e.target.value
+                      )
                     }
                   />
                 </label>
@@ -1456,10 +1568,10 @@ function App() {
                   <input
                     value={profileForm.profession}
                     onChange={(e) =>
-                      setProfileForm({
-                        ...profileForm,
-                        profession: e.target.value,
-                      })
+                      updateProfileForm(
+                        "profession",
+                        e.target.value
+                      )
                     }
                   />
                 </label>
@@ -1470,10 +1582,10 @@ function App() {
                   <textarea
                     value={profileForm.bio}
                     onChange={(e) =>
-                      setProfileForm({
-                        ...profileForm,
-                        bio: e.target.value,
-                      })
+                      updateProfileForm(
+                        "bio",
+                        e.target.value
+                      )
                     }
                   />
                 </label>
@@ -1544,6 +1656,10 @@ function App() {
       </section>
     );
   }
+
+  /* =========================================================
+     SERVICIO
+     ========================================================= */
 
   function ServicePage() {
     if (!selectedService) return null;
@@ -1693,6 +1809,10 @@ function App() {
       </section>
     );
   }
+
+  /* =========================================================
+     SOLICITUDES
+     ========================================================= */
 
   function RequestsPage() {
     return (
@@ -1869,6 +1989,10 @@ function App() {
       </div>
     );
   }
+
+  /* =========================================================
+     MENSAJES
+     ========================================================= */
 
   function MessagesPage() {
     const contacts = requests.map((request) => {
@@ -2056,6 +2180,7 @@ function App() {
                       }
                       placeholder="Escribe tu mensaje..."
                       rows={2}
+                      autoComplete="off"
                     />
 
                     <button
@@ -2075,6 +2200,10 @@ function App() {
       </section>
     );
   }
+
+  /* =========================================================
+     OFRECER SERVICIO
+     ========================================================= */
 
   function OfferPage() {
     return (
@@ -2126,11 +2255,10 @@ function App() {
               <input
                 value={offer.serviceTitle}
                 onChange={(e) =>
-                  setOffer({
-                    ...offer,
-                    serviceTitle:
-                      e.target.value,
-                  })
+                  updateOffer(
+                    "serviceTitle",
+                    e.target.value
+                  )
                 }
                 placeholder="Ej. Diseño de logotipo profesional"
               />
@@ -2142,10 +2270,10 @@ function App() {
               <select
                 value={offer.category}
                 onChange={(e) =>
-                  setOffer({
-                    ...offer,
-                    category: e.target.value,
-                  })
+                  updateOffer(
+                    "category",
+                    e.target.value
+                  )
                 }
               >
                 {categories.map(([, name]) => (
@@ -2165,11 +2293,10 @@ function App() {
               <textarea
                 value={offer.description}
                 onChange={(e) =>
-                  setOffer({
-                    ...offer,
-                    description:
-                      e.target.value,
-                  })
+                  updateOffer(
+                    "description",
+                    e.target.value
+                  )
                 }
                 placeholder="Describe qué ofreces..."
               />
@@ -2184,12 +2311,13 @@ function App() {
                 step="1"
                 value={offer.price}
                 onChange={(e) =>
-                  setOffer({
-                    ...offer,
-                    price: e.target.value,
-                  })
+                  updateOffer(
+                    "price",
+                    e.target.value
+                  )
                 }
                 placeholder="0"
+                inputMode="numeric"
               />
             </label>
 
@@ -2207,6 +2335,10 @@ function App() {
     );
   }
 
+  /* =========================================================
+     ESTILOS
+     ========================================================= */
+
   return (
     <>
       <style>{`
@@ -2216,6 +2348,7 @@ function App() {
 
         html {
           scroll-behavior: smooth;
+          -webkit-text-size-adjust: 100%;
         }
 
         body {
@@ -2228,6 +2361,8 @@ function App() {
             BlinkMacSystemFont,
             "Segoe UI",
             sans-serif;
+          -webkit-font-smoothing: antialiased;
+          text-rendering: optimizeLegibility;
         }
 
         button,
@@ -2239,6 +2374,14 @@ function App() {
 
         button {
           cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        input,
+        textarea,
+        select {
+          -webkit-appearance: none;
+          appearance: none;
         }
 
         button:disabled {
@@ -2611,6 +2754,7 @@ function App() {
           width: 100%;
           padding: 13px 0;
           background: transparent;
+          box-shadow: none;
         }
 
         .serviceGrid {
@@ -2855,6 +2999,8 @@ function App() {
           outline: 0;
           background: white;
           color: #0F172A;
+          font-size: 16px;
+          line-height: 1.4;
         }
 
         input:focus,
@@ -3487,6 +3633,12 @@ function App() {
             margin-left: 15px;
             margin-right: 15px;
             padding: 20px;
+          }
+
+          input,
+          textarea,
+          select {
+            font-size: 16px;
           }
         }
       `}</style>
