@@ -2214,10 +2214,14 @@ function App() {
           box-sizing: border-box;
         }
 
+        html {
+          scroll-behavior: smooth;
+        }
+
         body {
           margin: 0;
-          background: #f7f9fc;
-          color: #17263a;
+          background: #F8FAFC;
+          color: #0F172A;
           font-family:
             Inter,
             -apple-system,
@@ -2237,12 +2241,17 @@ function App() {
           cursor: pointer;
         }
 
+        button:disabled {
+          cursor: not-allowed;
+          opacity: .65;
+        }
+
         .header {
           position: sticky;
           top: 0;
           z-index: 50;
           background: rgba(255,255,255,.97);
-          border-bottom: 1px solid #e5eaf0;
+          border-bottom: 1px solid #E2E8F0;
           backdrop-filter: blur(12px);
         }
 
@@ -2269,7 +2278,7 @@ function App() {
         .accountLogo {
           display: grid;
           place-items: center;
-          background: #132238;
+          background: #0F172A;
           color: white;
           font-weight: 800;
         }
@@ -2283,10 +2292,11 @@ function App() {
         .logoText {
           font-size: 22px;
           font-weight: 800;
+          color: #0F172A;
         }
 
         .logoText span {
-          color: #58718c;
+          color: #2563EB;
         }
 
         .nav {
@@ -2300,23 +2310,32 @@ function App() {
           border: 0;
           background: transparent;
           padding: 10px 12px;
-          color: #56657a;
+          color: #475569;
           font-weight: 700;
         }
 
+        .navButton:hover {
+          color: #2563EB;
+        }
+
         .navAccount {
-          background: #132238;
+          background: #0F172A;
           color: white;
           border-radius: 10px;
+        }
+
+        .navAccount:hover,
+        .primary:hover {
+          background: #1E3A8A;
         }
 
         .hero {
           background:
             linear-gradient(
               135deg,
-              #f0f5fa,
-              #fff 55%,
-              #edf3f9
+              #EFF6FF,
+              #FFFFFF 55%,
+              #F1F5F9
             );
         }
 
@@ -2341,9 +2360,9 @@ function App() {
           display: inline-block;
           padding: 8px 13px;
           border-radius: 999px;
-          background: #e7eef6;
-          color: #38536e;
-          font-size: 13px;
+          background: #DBEAFE;
+          color: #1E3A8A;
+          font-size: 12px;
           font-weight: 800;
           margin-bottom: 18px;
         }
@@ -2353,15 +2372,16 @@ function App() {
           font-size: clamp(42px,6vw,72px);
           line-height: 1.02;
           letter-spacing: -3px;
+          color: #0F172A;
         }
 
         .hero h1 span {
-          color: #506b86;
+          color: #2563EB;
         }
 
         .hero p {
           max-width: 570px;
-          color: #64758a;
+          color: #64748B;
           font-size: 18px;
           line-height: 1.65;
           margin: 25px 0;
@@ -2378,18 +2398,24 @@ function App() {
           border-radius: 10px;
           padding: 13px 18px;
           font-weight: 800;
+          transition: .2s ease;
         }
 
         .primary {
           border: 0;
-          background: #132238;
+          background: #0F172A;
           color: white;
         }
 
         .secondary {
-          border: 1px solid #ccd7e2;
+          border: 1px solid #CBD5E1;
           background: white;
-          color: #21364d;
+          color: #1E3A8A;
+        }
+
+        .secondary:hover {
+          border-color: #2563EB;
+          background: #EFF6FF;
         }
 
         .full {
@@ -2398,26 +2424,27 @@ function App() {
 
         .heroCard {
           background: white;
-          border: 1px solid #dfe7ef;
+          border: 1px solid #DBEAFE;
           border-radius: 24px;
           padding: 28px;
           box-shadow:
-            0 25px 70px rgba(20,32,51,.1);
+            0 25px 70px rgba(15,23,42,.10);
         }
 
         .heroCardTitle {
-          font-size: 16px;
+          font-size: 15px;
           line-height: 1.35;
           font-weight: 800;
           margin-bottom: 18px;
+          color: #0F172A;
         }
 
         .heroSearch {
-          border: 1px solid #dce4ed;
+          border: 1px solid #DCE4ED;
           border-radius: 12px;
           padding: 15px;
-          color: #8591a0;
-          font-size: 14px;
+          color: #8591A0;
+          font-size: 13px;
         }
 
         .tags {
@@ -2428,7 +2455,8 @@ function App() {
         }
 
         .tags span {
-          background: #f0f4f8;
+          background: #EFF6FF;
+          color: #1E3A8A;
           padding: 7px 9px;
           border-radius: 999px;
           font-size: 11px;
@@ -2438,7 +2466,7 @@ function App() {
           display: grid;
           grid-template-columns: repeat(3,1fr);
           gap: 10px;
-          border-top: 1px solid #edf1f5;
+          border-top: 1px solid #EDF1F5;
           margin-top: 24px;
           padding-top: 20px;
         }
@@ -2451,12 +2479,13 @@ function App() {
         }
 
         .miniStats strong {
-          font-size: 19px;
+          font-size: 18px;
+          color: #0F172A;
         }
 
         .miniStats span {
-          color: #8793a2;
-          font-size: 11px;
+          color: #8793A2;
+          font-size: 10px;
         }
 
         .categories,
@@ -2469,7 +2498,7 @@ function App() {
         }
 
         .services {
-          background: #f7f9fc;
+          background: #F8FAFC;
         }
 
         .container,
@@ -2484,8 +2513,8 @@ function App() {
 
         .eyebrow {
           display: block;
-          color: #718196;
-          font-size: 11px;
+          color: #2563EB;
+          font-size: 10px;
           font-weight: 900;
           letter-spacing: 1.7px;
           margin-bottom: 8px;
@@ -2494,17 +2523,17 @@ function App() {
         h1,
         h2,
         h3 {
-          color: #17263a;
+          color: #0F172A;
         }
 
         h2 {
-          font-size: 30px;
-          letter-spacing: -1px;
+          font-size: 29px;
+          letter-spacing: -.7px;
           margin: 0 0 10px;
         }
 
         .muted {
-          color: #718096;
+          color: #64748B;
         }
 
         .categoryGrid {
@@ -2516,27 +2545,38 @@ function App() {
         }
 
         .category {
-          border: 1px solid #dfe6ed;
+          border: 1px solid #DCE4ED;
           background: white;
           border-radius: 14px;
-          padding: 14px 8px;
+          padding: 13px 8px;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 7px;
           font-weight: 700;
-          font-size: 13px;
+          font-size: 12px;
           color: #405269;
+          transition: .2s ease;
+        }
+
+        .category:hover {
+          border-color: #93C5FD;
+          background: #EFF6FF;
         }
 
         .category span {
-          font-size: 22px;
+          font-size: 21px;
         }
 
         .category.active {
-          background: #132238;
-          border-color: #132238;
+          background: #0F172A;
+          border-color: #0F172A;
           color: white;
+        }
+
+        .category.active:hover {
+          background: #1E3A8A;
+          border-color: #1E3A8A;
         }
 
         .sectionTop {
@@ -2551,13 +2591,18 @@ function App() {
           width: 330px;
           max-width: 100%;
           background: white;
-          border: 1px solid #dce4ed;
+          border: 1px solid #DCE4ED;
           border-radius: 11px;
           padding: 0 13px;
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 14px;
+          font-size: 13px;
+        }
+
+        .searchBox:focus-within {
+          border-color: #2563EB;
+          box-shadow: 0 0 0 3px #DBEAFE;
         }
 
         .searchBox input {
@@ -2579,11 +2624,25 @@ function App() {
         .panel,
         .authCard {
           background: white;
-          border: 1px solid #e0e7ef;
+          border: 1px solid #E0E7EF;
           border-radius: 18px;
           padding: 23px;
           box-shadow:
-            0 10px 30px rgba(20,32,51,.035);
+            0 10px 30px rgba(15,23,42,.035);
+        }
+
+        .serviceCard {
+          transition:
+            transform .2s ease,
+            box-shadow .2s ease,
+            border-color .2s ease;
+        }
+
+        .serviceCard:hover {
+          transform: translateY(-2px);
+          border-color: #BFDBFE;
+          box-shadow:
+            0 14px 35px rgba(15,23,42,.07);
         }
 
         .provider {
@@ -2604,16 +2663,17 @@ function App() {
         .offerUser span,
         .contact span,
         .chatHeader span {
-          color: #7a899b;
-          font-size: 12px;
+          color: #7A899B;
+          font-size: 11px;
         }
 
         .provider small {
-          background: #f0f4f8;
+          background: #EFF6FF;
+          color: #1E3A8A;
           padding: 5px 8px;
           border-radius: 999px;
-          color: #617287;
-          font-size: 10px;
+          font-size: 9px;
+          font-weight: 800;
         }
 
         .avatar {
@@ -2621,34 +2681,34 @@ function App() {
           height: 43px;
           flex: 0 0 auto;
           border-radius: 12px;
-          background: #eaf0f6;
+          background: #DBEAFE;
           display: grid;
           place-items: center;
           font-weight: 900;
-          color: #263b53;
+          color: #1E3A8A;
         }
 
         .serviceCard h3 {
           margin: 17px 0 8px;
-          font-size: 18px;
+          font-size: 17px;
           line-height: 1.3;
-          letter-spacing: -0.2px;
+          letter-spacing: -.15px;
         }
 
         .serviceCard p {
-          color: #6c7c90;
-          font-size: 14px;
+          color: #6C7C90;
+          font-size: 13px;
           line-height: 1.55;
           margin: 0;
         }
 
         .panel p {
-          color: #6c7c90;
+          color: #6C7C90;
           line-height: 1.6;
         }
 
         .serviceBottom {
-          border-top: 1px solid #edf1f5;
+          border-top: 1px solid #EDF1F5;
           padding-top: 15px;
           margin-top: 17px;
           display: flex;
@@ -2659,28 +2719,34 @@ function App() {
 
         .serviceBottom small {
           display: block;
-          color: #8a96a5;
-          font-size: 10px;
+          color: #8A96A5;
+          font-size: 9px;
         }
 
         .serviceBottom strong {
-          font-size: 21px;
+          font-size: 20px;
+          color: #0F172A;
         }
 
         .view {
           border: 0;
-          background: #eef3f8;
-          color: #263c55;
+          background: #EFF6FF;
+          color: #1E3A8A;
           border-radius: 9px;
           padding: 9px 12px;
           font-weight: 800;
-          font-size: 12px;
+          font-size: 11px;
+        }
+
+        .view:hover {
+          background: #DBEAFE;
+          color: #0F172A;
         }
 
         .cta {
-          background: #132238;
+          background: #0F172A;
           color: white;
-          padding: 70px max(24px,calc((100% - 1120px)/2));
+          padding: 65px max(24px,calc((100% - 1120px)/2));
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -2689,22 +2755,28 @@ function App() {
 
         .cta h2 {
           color: white;
-          font-size: 40px;
+          font-size: 38px;
+          line-height: 1.1;
           max-width: 650px;
         }
 
         .cta p {
-          color: #b9c4d2;
+          color: #B9C4D2;
         }
 
         .ctaButton {
           border: 0;
           background: white;
-          color: #132238;
+          color: #0F172A;
           border-radius: 10px;
           padding: 14px 20px;
           font-weight: 900;
           white-space: nowrap;
+        }
+
+        .ctaButton:hover {
+          background: #DBEAFE;
+          color: #1E3A8A;
         }
 
         .page {
@@ -2735,7 +2807,7 @@ function App() {
         .tabs {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          background: #f1f4f8;
+          background: #F1F5F9;
           padding: 4px;
           border-radius: 10px;
           margin: 25px 0;
@@ -2752,9 +2824,9 @@ function App() {
 
         .tab.active {
           background: white;
-          color: #17263a;
+          color: #1E3A8A;
           box-shadow:
-            0 2px 8px rgba(0,0,0,.06);
+            0 2px 8px rgba(15,23,42,.06);
         }
 
         .form {
@@ -2769,7 +2841,7 @@ function App() {
           flex-direction: column;
           gap: 7px;
           color: #405168;
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 800;
         }
 
@@ -2777,12 +2849,19 @@ function App() {
         textarea,
         select {
           width: 100%;
-          border: 1px solid #d7e0e9;
+          border: 1px solid #D7E0E9;
           border-radius: 10px;
           padding: 12px 13px;
           outline: 0;
           background: white;
-          color: #17263a;
+          color: #0F172A;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+          border-color: #2563EB;
+          box-shadow: 0 0 0 3px #DBEAFE;
         }
 
         textarea {
@@ -2799,7 +2878,7 @@ function App() {
         }
 
         .dashboardHeader h1 {
-          font-size: 39px;
+          font-size: 38px;
           margin: 0 0 8px;
         }
 
@@ -2813,7 +2892,7 @@ function App() {
           border-radius: 20px;
           display: grid;
           place-items: center;
-          background: #132238;
+          background: #0F172A;
           color: white;
           font-size: 28px;
           font-weight: 900;
@@ -2828,21 +2907,23 @@ function App() {
 
         .stat {
           background: white;
-          border: 1px solid #e0e7ef;
+          border: 1px solid #E0E7EF;
           border-radius: 15px;
           padding: 18px;
         }
 
         .stat span {
-          font-size: 20px;
+          font-size: 19px;
         }
 
         .stat strong {
-          font-size: 25px;
+          font-size: 24px;
+          color: #0F172A;
         }
 
         .stat small {
           color: #718096;
+          font-size: 11px;
         }
 
         .dashboardGrid,
@@ -2860,7 +2941,7 @@ function App() {
         }
 
         .profileBox {
-          background: #132238;
+          background: #0F172A;
           color: white;
           border-radius: 18px;
           padding: 25px;
@@ -2872,14 +2953,15 @@ function App() {
         }
 
         .profileBox p {
-          color: #bdc8d5;
+          color: #BDC8D5;
         }
 
         .profileBox > span {
-          background: rgba(255,255,255,.12);
+          background: rgba(37,99,235,.28);
+          color: #DBEAFE;
           padding: 6px 10px;
           border-radius: 999px;
-          font-size: 11px;
+          font-size: 10px;
         }
 
         .profileAvatar {
@@ -2888,7 +2970,7 @@ function App() {
           margin: auto;
           border-radius: 19px;
           background: white;
-          color: #132238;
+          color: #0F172A;
           display: grid;
           place-items: center;
           font-size: 26px;
@@ -2898,7 +2980,7 @@ function App() {
         .quick {
           margin-top: 15px;
           background: white;
-          border: 1px solid #e0e7ef;
+          border: 1px solid #E0E7EF;
           border-radius: 18px;
           padding: 20px;
           display: flex;
@@ -2907,25 +2989,42 @@ function App() {
         }
 
         .quick button {
-          border: 1px solid #dce4ed;
+          border: 1px solid #DCE4ED;
           background: white;
+          color: #334155;
           border-radius: 9px;
           padding: 11px;
           font-weight: 800;
           text-align: left;
         }
 
+        .quick button:hover {
+          background: #EFF6FF;
+          border-color: #BFDBFE;
+          color: #1E3A8A;
+        }
+
         .quick .logout {
-          color: #a34d4d;
+          color: #A34D4D;
+        }
+
+        .quick .logout:hover {
+          background: #FEF2F2;
+          border-color: #FECACA;
+          color: #991B1B;
         }
 
         .back {
           border: 0;
           background: transparent;
-          color: #5c6e83;
+          color: #1E3A8A;
           font-weight: 800;
           padding: 0;
           margin-bottom: 25px;
+        }
+
+        .back:hover {
+          color: #2563EB;
         }
 
         .infoGrid {
@@ -2936,7 +3035,7 @@ function App() {
         }
 
         .infoGrid div {
-          background: #f6f8fa;
+          background: #F1F5F9;
           padding: 15px;
           border-radius: 12px;
         }
@@ -2947,19 +3046,31 @@ function App() {
         }
 
         .infoGrid small {
-          color: #7b8999;
+          color: #7B8999;
+          font-size: 10px;
+        }
+
+        .infoGrid strong {
+          margin-top: 4px;
+          font-size: 14px;
         }
 
         .requestPrice {
-          font-size: 25px;
+          font-size: 24px;
           font-weight: 900;
+          color: #0F172A;
           margin: 15px 0;
         }
 
         .notice {
-          background: #f1f5f8;
+          background: #EFF6FF;
+          border: 1px solid #DBEAFE;
           padding: 15px;
           border-radius: 12px;
+        }
+
+        .notice strong {
+          color: #1E3A8A;
         }
 
         .notice p {
@@ -2967,7 +3078,7 @@ function App() {
         }
 
         .requestCard {
-          border-top: 1px solid #e9edf2;
+          border-top: 1px solid #E9EDF2;
           padding: 18px 0;
         }
 
@@ -2978,30 +3089,30 @@ function App() {
         }
 
         .status {
-          background: #fff4d9;
-          color: #8a6510;
+          background: #FFF4D9;
+          color: #8A6510;
           padding: 5px 9px;
           border-radius: 999px;
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 900;
         }
 
         .status.accepted {
-          background: #e4f5eb;
+          background: #E4F5EB;
           color: #267348;
         }
 
         .status.rejected {
-          background: #f9e5e5;
-          color: #a34848;
+          background: #F9E5E5;
+          color: #A34848;
         }
 
         .messageQuote {
-          background: #f5f7fa;
+          background: #F1F5F9;
           padding: 12px;
           border-radius: 10px;
           color: #627287;
-          font-size: 13px;
+          font-size: 12px;
         }
 
         .requestActions {
@@ -3016,21 +3127,26 @@ function App() {
           border-radius: 8px;
           padding: 9px 11px;
           font-weight: 800;
+          font-size: 11px;
         }
 
         .accept {
-          background: #e5f5eb;
+          background: #E5F5EB;
           color: #267348;
         }
 
         .reject {
-          background: #fae7e7;
-          color: #a34848;
+          background: #FAE7E7;
+          color: #A34848;
         }
 
         .messageBtn {
-          background: #edf2f7;
-          color: #29415b;
+          background: #EFF6FF;
+          color: #1E3A8A;
+        }
+
+        .messageBtn:hover {
+          background: #DBEAFE;
         }
 
         .messagesLayout {
@@ -3038,13 +3154,13 @@ function App() {
           grid-template-columns: 300px 1fr;
           min-height: 580px;
           background: white;
-          border: 1px solid #e0e7ef;
+          border: 1px solid #E0E7EF;
           border-radius: 18px;
           overflow: hidden;
         }
 
         .contacts {
-          border-right: 1px solid #e5eaf0;
+          border-right: 1px solid #E5EAF0;
           padding: 20px;
         }
 
@@ -3060,14 +3176,23 @@ function App() {
           border-radius: 10px;
         }
 
+        .contact:hover {
+          background: #F8FAFC;
+        }
+
         .contact.active {
-          background: #edf2f7;
+          background: #EFF6FF;
+        }
+
+        .contact.active strong {
+          color: #1E3A8A;
         }
 
         .contact div:last-child {
           display: flex;
           flex-direction: column;
           gap: 3px;
+          min-width: 0;
         }
 
         .chat {
@@ -3077,7 +3202,7 @@ function App() {
 
         .chatHeader {
           padding: 17px;
-          border-bottom: 1px solid #e5eaf0;
+          border-bottom: 1px solid #E5EAF0;
           display: flex;
           align-items: center;
           gap: 10px;
@@ -3107,13 +3232,13 @@ function App() {
 
         .bubble {
           max-width: 75%;
-          background: #edf2f7;
+          background: #F1F5F9;
           padding: 10px 13px;
           border-radius: 14px;
         }
 
         .bubble.mine {
-          background: #132238;
+          background: #0F172A;
           color: white;
         }
 
@@ -3127,7 +3252,7 @@ function App() {
         }
 
         .messageForm {
-          border-top: 1px solid #e5eaf0;
+          border-top: 1px solid #E5EAF0;
           padding: 13px;
           display: flex;
           gap: 10px;
@@ -3148,7 +3273,7 @@ function App() {
         }
 
         .chatEmpty span {
-          font-size: 35px;
+          font-size: 32px;
         }
 
         .offerUser {
@@ -3166,7 +3291,7 @@ function App() {
 
         .empty {
           background: white;
-          border: 1px solid #e0e7ef;
+          border: 1px solid #E0E7EF;
           border-radius: 16px;
           padding: 45px;
           text-align: center;
@@ -3196,6 +3321,7 @@ function App() {
 
           .navAccount {
             padding: 9px 12px;
+            font-size: 12px;
           }
 
           .heroInner {
@@ -3227,11 +3353,11 @@ function App() {
           }
 
           .heroCardTitle {
-            font-size: 15px;
+            font-size: 14px;
           }
 
           .heroSearch {
-            font-size: 13px;
+            font-size: 12px;
           }
 
           .container,
@@ -3247,17 +3373,22 @@ function App() {
             padding: 45px 0;
           }
 
+          .categories h2,
+          .services h2 {
+            font-size: 25px;
+          }
+
           .categoryGrid {
             grid-template-columns: repeat(2,1fr);
           }
 
           .category {
-            font-size: 12px;
-            padding: 14px 8px;
+            font-size: 11px;
+            padding: 13px 8px;
           }
 
           .category span {
-            font-size: 21px;
+            font-size: 20px;
           }
 
           .sectionTop,
@@ -3280,13 +3411,22 @@ function App() {
           }
 
           .serviceCard h3 {
-            font-size: 17px;
+            font-size: 16px;
             line-height: 1.3;
           }
 
           .serviceCard p {
-            font-size: 13px;
+            font-size: 12px;
             line-height: 1.5;
+          }
+
+          .serviceBottom strong {
+            font-size: 19px;
+          }
+
+          .view {
+            font-size: 10px;
+            padding: 8px 10px;
           }
 
           .stats {
@@ -3318,7 +3458,7 @@ function App() {
 
           .contacts {
             border-right: 0;
-            border-bottom: 1px solid #e5eaf0;
+            border-bottom: 1px solid #E5EAF0;
             max-height: 220px;
             overflow-y: auto;
           }
@@ -3336,11 +3476,17 @@ function App() {
           }
 
           .cta h2 {
-            font-size: 32px;
+            font-size: 31px;
           }
 
           .ctaButton {
             width: 100%;
+          }
+
+          .authCard {
+            margin-left: 15px;
+            margin-right: 15px;
+            padding: 20px;
           }
         }
       `}</style>
