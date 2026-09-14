@@ -919,7 +919,7 @@ function App() {
         description: form.description.trim(),
         category: form.category,
         price: numericPrice || 0,
-        provider_id: loggedUser.id,
+    
         user_id: loggedUser.id,
       };
 
