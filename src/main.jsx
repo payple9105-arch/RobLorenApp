@@ -2,7 +2,6 @@ import React, {
   useEffect,
   useMemo,
   useState,
-  memo,
   useDeferredValue,
 } from "react";
 import ReactDOM from "react-dom/client";
@@ -109,10 +108,6 @@ function dateText(value) {
   });
 }
 
-/* =========================================================
-   COMPONENTE PRINCIPAL
-   ========================================================= */
-
 function App() {
   const [page, setPage] = useState("home");
   const [services, setServices] = useState(demoServices);
@@ -141,6 +136,7 @@ function App() {
 
   const [servicesLoading, setServicesLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -163,36 +159,26 @@ function App() {
     price: "",
   });
 
-  const [publishing, setPublishing] = useState(false);
-
-  /* =========================================================
-     FUNCIONES DE ESTADO OPTIMIZADAS
-     ========================================================= */
-
-  const updateForm = (field, value) => {
+  function updateForm(field, value) {
     setForm((current) => ({
       ...current,
       [field]: value,
     }));
-  };
+  }
 
-  const updateProfileForm = (field, value) => {
+  function updateProfileForm(field, value) {
     setProfileForm((current) => ({
       ...current,
       [field]: value,
     }));
-  };
+  }
 
-  const updateOffer = (field, value) => {
+  function updateOffer(field, value) {
     setOffer((current) => ({
       ...current,
       [field]: value,
     }));
-  };
-
-  /* =========================================================
-     PERFIL
-     ========================================================= */
+  }
 
   async function ensureProfile(user) {
     if (!user) return null;
@@ -254,10 +240,6 @@ function App() {
     });
   }
 
-  /* =========================================================
-     SERVICIOS
-     ========================================================= */
-
   async function loadServices() {
     setServicesLoading(true);
 
@@ -301,10 +283,6 @@ function App() {
     setServices([...real, ...demoServices]);
     setServicesLoading(false);
   }
-
-  /* =========================================================
-     SOLICITUDES
-     ========================================================= */
 
   async function loadRequests() {
     if (!loggedUser?.id) {
@@ -401,10 +379,6 @@ function App() {
 
     setLoadingRequests(false);
   }
-
-  /* =========================================================
-     MENSAJES
-     ========================================================= */
 
   async function loadMessages(contactId) {
     if (!loggedUser?.id || !contactId) {
@@ -503,10 +477,6 @@ function App() {
     await loadMessages(contactData.id);
   }
 
-  /* =========================================================
-     SOLICITAR SERVICIO
-     ========================================================= */
-
   async function sendRequest() {
     if (!loggedUser) {
       setAccountMode("login");
@@ -575,10 +545,6 @@ function App() {
     setUpdatingRequest(null);
   }
 
-  /* =========================================================
-     GUARDAR PERFIL
-     ========================================================= */
-
   async function saveProfile(event) {
     event.preventDefault();
 
@@ -630,10 +596,6 @@ function App() {
 
     await loadServices();
   }
-
-  /* =========================================================
-     REGISTRO
-     ========================================================= */
 
   async function register(event) {
     event.preventDefault();
@@ -693,10 +655,6 @@ function App() {
     setAuthLoading(false);
   }
 
-  /* =========================================================
-     LOGIN
-     ========================================================= */
-
   async function login(event) {
     event.preventDefault();
 
@@ -733,10 +691,6 @@ function App() {
     setAuthLoading(false);
   }
 
-  /* =========================================================
-     LOGOUT
-     ========================================================= */
-
   async function logout() {
     const { error } = await supabase.auth.signOut();
 
@@ -751,10 +705,6 @@ function App() {
     setSelectedContact(null);
     setPage("home");
   }
-
-  /* =========================================================
-     PUBLICAR SERVICIO
-     ========================================================= */
 
   async function publishService(event) {
     event.preventDefault();
@@ -810,10 +760,6 @@ function App() {
     setPage("home");
   }
 
-  /* =========================================================
-     NAVEGACIÓN
-     ========================================================= */
-
   function openAccount() {
     setPage("account");
 
@@ -842,10 +788,6 @@ function App() {
     setRequestMessage("");
     setPage("service");
   }
-
-  /* =========================================================
-     EFECTOS
-     ========================================================= */
 
   useEffect(() => {
     async function startAuth() {
@@ -888,10 +830,6 @@ function App() {
       loadRequests();
     }
   }, [loggedUser?.id]);
-
-  /* =========================================================
-     FILTRO
-     ========================================================= */
 
   const filteredServices = useMemo(() => {
     const q = deferredSearch.trim().toLowerCase();
@@ -940,10 +878,6 @@ function App() {
       !s.demo &&
       s.userId === loggedUser?.id
   ).length;
-
-  /* =========================================================
-     HEADER
-     ========================================================= */
 
   function Header() {
     return (
@@ -1006,11 +940,27 @@ function App() {
     );
   }
 
-  /* =========================================================
-     HOME
-     ========================================================= */
-
   function HomePage() {
+    const featuredServices = filteredServices.slice(0, 3);
+
+    const professionals = [];
+
+    filteredServices.forEach((service) => {
+      const exists = professionals.some(
+        (person) => person.name === service.name
+      );
+
+      if (!exists) {
+        professionals.push({
+          name: service.name,
+          profession: service.profession,
+          category: service.category,
+          userId: service.userId,
+          service: service,
+        });
+      }
+    });
+
     return (
       <>
         <section className="hero">
@@ -1138,6 +1088,307 @@ function App() {
                   {name}
                 </button>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="featured">
+          <div className="container">
+            <div className="sectionHeading">
+              <div>
+                <span className="eyebrow">
+                  DESTACADOS
+                </span>
+
+                <h2>
+                  Servicios que pueden ayudarte
+                </h2>
+
+                <p className="muted">
+                  Descubre talento disponible en RobLoren.
+                </p>
+              </div>
+
+              <button
+                className="linkButton"
+                onClick={() =>
+                  document
+                    .getElementById("services")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                    })
+                }
+              >
+                Ver todos →
+              </button>
+            </div>
+
+            <div className="featuredGrid">
+              {featuredServices.map((service) => (
+                <article
+                  key={`featured-${service.demo}-${service.id}`}
+                  className="featuredCard"
+                  onClick={() => openService(service)}
+                >
+                  <div className="featuredIcon">
+                    {service.category === "Tecnología"
+                      ? "💻"
+                      : service.category === "Diseño"
+                      ? "🎨"
+                      : service.category === "Marketing"
+                      ? "📣"
+                      : "✦"}
+                  </div>
+
+                  <span className="featuredCategory">
+                    {service.category}
+                  </span>
+
+                  <h3>{service.service}</h3>
+
+                  <p>{service.description}</p>
+
+                  <div className="featuredBottom">
+                    <span>
+                      {service.name}
+                    </span>
+
+                    <strong>
+                      Desde ${service.price}
+                    </strong>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="professionals">
+          <div className="container">
+            <span className="eyebrow">
+              TALENTO
+            </span>
+
+            <h2>
+              Profesionales destacados
+            </h2>
+
+            <p className="muted">
+              Personas con habilidades listas para crear
+              nuevas oportunidades.
+            </p>
+
+            <div className="professionalGrid">
+              {professionals.slice(0, 3).map((person) => (
+                <article
+                  className="professionalCard"
+                  key={person.name}
+                  onClick={() =>
+                    openService(person.service)
+                  }
+                >
+                  <div className="professionalAvatar">
+                    {person.name
+                      ?.charAt(0)
+                      ?.toUpperCase() || "R"}
+                  </div>
+
+                  <div className="professionalInfo">
+                    <h3>{person.name}</h3>
+
+                    <p>{person.profession}</p>
+
+                    <span>
+                      {person.category}
+                    </span>
+                  </div>
+
+                  <button
+                    className="smallView"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      openService(person.service);
+                    }}
+                  >
+                    Ver perfil →
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="how">
+          <div className="container">
+            <div className="centerHeading">
+              <span className="eyebrow">
+                CÓMO FUNCIONA
+              </span>
+
+              <h2>
+                Conectar talento nunca fue tan sencillo
+              </h2>
+
+              <p className="muted">
+                Una plataforma para convertir talento en
+                oportunidades.
+              </p>
+            </div>
+
+            <div className="steps">
+              <div className="step">
+                <div className="stepNumber">
+                  01
+                </div>
+
+                <div className="stepIcon">
+                  👤
+                </div>
+
+                <h3>
+                  Crea tu cuenta
+                </h3>
+
+                <p>
+                  Regístrate como cliente o profesional y
+                  crea tu perfil.
+                </p>
+              </div>
+
+              <div className="step">
+                <div className="stepNumber">
+                  02
+                </div>
+
+                <div className="stepIcon">
+                  🔎
+                </div>
+
+                <h3>
+                  Encuentra o publica
+                </h3>
+
+                <p>
+                  Busca el servicio que necesitas o
+                  muestra tus propias habilidades.
+                </p>
+              </div>
+
+              <div className="step">
+                <div className="stepNumber">
+                  03
+                </div>
+
+                <div className="stepIcon">
+                  💬
+                </div>
+
+                <h3>
+                  Conecta directamente
+                </h3>
+
+                <p>
+                  Habla con profesionales y clientes para
+                  definir cada proyecto.
+                </p>
+              </div>
+
+              <div className="step">
+                <div className="stepNumber">
+                  04
+                </div>
+
+                <div className="stepIcon">
+                  🚀
+                </div>
+
+                <h3>
+                  Trabaja y crece
+                </h3>
+
+                <p>
+                  Gestiona solicitudes, construye tu
+                  reputación y encuentra nuevas oportunidades.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="benefits">
+          <div className="container">
+            <div className="benefitIntro">
+              <span className="eyebrow">
+                POR QUÉ ROBLOREN
+              </span>
+
+              <h2>
+                Una plataforma creada para crecer contigo
+              </h2>
+
+              <p>
+                RobLoren busca hacer más sencilla la conexión
+                entre quienes necesitan talento y quienes
+                tienen talento para ofrecer.
+              </p>
+            </div>
+
+            <div className="benefitGrid">
+              <div className="benefit">
+                <span>✓</span>
+                <div>
+                  <h3>
+                    Talento profesional
+                  </h3>
+
+                  <p>
+                    Descubre personas con diferentes
+                    habilidades y especialidades.
+                  </p>
+                </div>
+              </div>
+
+              <div className="benefit">
+                <span>⚡</span>
+                <div>
+                  <h3>
+                    Conexiones directas
+                  </h3>
+
+                  <p>
+                    Comunícate directamente para entender
+                    cada necesidad.
+                  </p>
+                </div>
+              </div>
+
+              <div className="benefit">
+                <span>🌎</span>
+                <div>
+                  <h3>
+                    Nuevas oportunidades
+                  </h3>
+
+                  <p>
+                    Conecta con clientes y profesionales
+                    dentro y fuera de tu entorno.
+                  </p>
+                </div>
+              </div>
+
+              <div className="benefit">
+                <span>⭐</span>
+                <div>
+                  <h3>
+                    Reputación profesional
+                  </h3>
+
+                  <p>
+                    Construye confianza a través de tu
+                    perfil, servicios y futuras valoraciones.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -1280,10 +1531,6 @@ function App() {
       </>
     );
   }
-
-  /* =========================================================
-     CUENTA
-     ========================================================= */
 
   function AccountPage() {
     if (!loggedUser) {
@@ -1657,10 +1904,6 @@ function App() {
     );
   }
 
-  /* =========================================================
-     SERVICIO
-     ========================================================= */
-
   function ServicePage() {
     if (!selectedService) return null;
 
@@ -1810,55 +2053,6 @@ function App() {
     );
   }
 
-  /* =========================================================
-     SOLICITUDES
-     ========================================================= */
-
-  function RequestsPage() {
-    return (
-      <section className="page">
-        <div className="dashboard">
-          <button
-            className="back"
-            onClick={openAccount}
-          >
-            ← Volver a mi cuenta
-          </button>
-
-          <span className="eyebrow">
-            GESTIÓN
-          </span>
-
-          <h1>Solicitudes</h1>
-
-          <p className="muted">
-            Gestiona tus oportunidades y
-            contrataciones.
-          </p>
-
-          {loadingRequests ? (
-            <div className="empty">
-              Cargando solicitudes...
-            </div>
-          ) : (
-            <div className="requestColumns">
-              <RequestColumn
-                title="📥 Solicitudes recibidas"
-                items={received}
-                received
-              />
-
-              <RequestColumn
-                title="📤 Mis solicitudes"
-                items={sent}
-              />
-            </div>
-          )}
-        </div>
-      </section>
-    );
-  }
-
   function RequestColumn({
     title,
     items,
@@ -1990,9 +2184,50 @@ function App() {
     );
   }
 
-  /* =========================================================
-     MENSAJES
-     ========================================================= */
+  function RequestsPage() {
+    return (
+      <section className="page">
+        <div className="dashboard">
+          <button
+            className="back"
+            onClick={openAccount}
+          >
+            ← Volver a mi cuenta
+          </button>
+
+          <span className="eyebrow">
+            GESTIÓN
+          </span>
+
+          <h1>Solicitudes</h1>
+
+          <p className="muted">
+            Gestiona tus oportunidades y
+            contrataciones.
+          </p>
+
+          {loadingRequests ? (
+            <div className="empty">
+              Cargando solicitudes...
+            </div>
+          ) : (
+            <div className="requestColumns">
+              <RequestColumn
+                title="📥 Solicitudes recibidas"
+                items={received}
+                received
+              />
+
+              <RequestColumn
+                title="📤 Mis solicitudes"
+                items={sent}
+              />
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
 
   function MessagesPage() {
     const contacts = requests.map((request) => {
@@ -2201,10 +2436,6 @@ function App() {
     );
   }
 
-  /* =========================================================
-     OFRECER SERVICIO
-     ========================================================= */
-
   function OfferPage() {
     return (
       <section className="page">
@@ -2334,10 +2565,6 @@ function App() {
       </section>
     );
   }
-
-  /* =========================================================
-     ESTILOS
-     ========================================================= */
 
   return (
     <>
@@ -2579,7 +2806,6 @@ function App() {
           line-height: 1.35;
           font-weight: 800;
           margin-bottom: 18px;
-          color: #0F172A;
         }
 
         .heroSearch {
@@ -2623,7 +2849,6 @@ function App() {
 
         .miniStats strong {
           font-size: 18px;
-          color: #0F172A;
         }
 
         .miniStats span {
@@ -2632,7 +2857,11 @@ function App() {
         }
 
         .categories,
-        .services {
+        .services,
+        .featured,
+        .professionals,
+        .how,
+        .benefits {
           padding: 65px 0;
         }
 
@@ -2642,6 +2871,22 @@ function App() {
 
         .services {
           background: #F8FAFC;
+        }
+
+        .featured {
+          background: white;
+        }
+
+        .professionals {
+          background: #F8FAFC;
+        }
+
+        .how {
+          background: white;
+        }
+
+        .benefits {
+          background: #F1F5F9;
         }
 
         .container,
@@ -2699,12 +2944,6 @@ function App() {
           font-weight: 700;
           font-size: 12px;
           color: #405269;
-          transition: .2s ease;
-        }
-
-        .category:hover {
-          border-color: #93C5FD;
-          background: #EFF6FF;
         }
 
         .category span {
@@ -2717,17 +2956,265 @@ function App() {
           color: white;
         }
 
-        .category.active:hover {
-          background: #1E3A8A;
-          border-color: #1E3A8A;
-        }
-
+        .sectionHeading,
         .sectionTop {
           display: flex;
           justify-content: space-between;
           align-items: end;
           gap: 20px;
           margin-bottom: 28px;
+        }
+
+        .linkButton {
+          border: 0;
+          background: transparent;
+          color: #2563EB;
+          font-weight: 900;
+        }
+
+        .featuredGrid {
+          display: grid;
+          grid-template-columns:
+            repeat(3,minmax(0,1fr));
+          gap: 17px;
+        }
+
+        .featuredCard {
+          border: 1px solid #E0E7EF;
+          border-radius: 18px;
+          padding: 22px;
+          background: white;
+          cursor: pointer;
+          transition: .2s ease;
+        }
+
+        .featuredCard:hover {
+          transform: translateY(-3px);
+          border-color: #BFDBFE;
+          box-shadow:
+            0 15px 35px rgba(15,23,42,.07);
+        }
+
+        .featuredIcon {
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
+          display: grid;
+          place-items: center;
+          background: #EFF6FF;
+          font-size: 22px;
+          margin-bottom: 14px;
+        }
+
+        .featuredCategory {
+          color: #2563EB;
+          font-size: 10px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .featuredCard h3 {
+          margin: 9px 0;
+          font-size: 18px;
+        }
+
+        .featuredCard p {
+          color: #64748B;
+          font-size: 13px;
+          line-height: 1.55;
+          min-height: 60px;
+        }
+
+        .featuredBottom {
+          border-top: 1px solid #EDF1F5;
+          margin-top: 16px;
+          padding-top: 14px;
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          align-items: center;
+        }
+
+        .featuredBottom span {
+          color: #64748B;
+          font-size: 11px;
+        }
+
+        .featuredBottom strong {
+          font-size: 14px;
+        }
+
+        .professionalGrid {
+          display: grid;
+          grid-template-columns:
+            repeat(3,minmax(0,1fr));
+          gap: 17px;
+          margin-top: 25px;
+        }
+
+        .professionalCard {
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          background: white;
+          border: 1px solid #E0E7EF;
+          border-radius: 17px;
+          padding: 18px;
+          cursor: pointer;
+        }
+
+        .professionalCard:hover {
+          border-color: #BFDBFE;
+        }
+
+        .professionalAvatar {
+          width: 52px;
+          height: 52px;
+          flex: 0 0 auto;
+          border-radius: 15px;
+          display: grid;
+          place-items: center;
+          background: #0F172A;
+          color: white;
+          font-size: 20px;
+          font-weight: 900;
+        }
+
+        .professionalInfo {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .professionalInfo h3 {
+          margin: 0 0 4px;
+          font-size: 15px;
+        }
+
+        .professionalInfo p {
+          margin: 0 0 7px;
+          color: #64748B;
+          font-size: 11px;
+        }
+
+        .professionalInfo span {
+          color: #1E3A8A;
+          background: #EFF6FF;
+          padding: 4px 7px;
+          border-radius: 999px;
+          font-size: 9px;
+          font-weight: 800;
+        }
+
+        .smallView {
+          border: 0;
+          background: transparent;
+          color: #2563EB;
+          font-size: 10px;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .centerHeading {
+          text-align: center;
+          max-width: 680px;
+          margin: 0 auto 35px;
+        }
+
+        .centerHeading h2 {
+          margin-bottom: 8px;
+        }
+
+        .steps {
+          display: grid;
+          grid-template-columns:
+            repeat(4,minmax(0,1fr));
+          gap: 17px;
+        }
+
+        .step {
+          position: relative;
+          border: 1px solid #E0E7EF;
+          border-radius: 17px;
+          padding: 22px;
+          background: #F8FAFC;
+        }
+
+        .stepNumber {
+          color: #2563EB;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 1px;
+        }
+
+        .stepIcon {
+          font-size: 28px;
+          margin: 15px 0;
+        }
+
+        .step h3 {
+          margin: 0 0 8px;
+          font-size: 16px;
+        }
+
+        .step p {
+          color: #64748B;
+          font-size: 12px;
+          line-height: 1.55;
+          margin: 0;
+        }
+
+        .benefitIntro {
+          max-width: 650px;
+          margin-bottom: 30px;
+        }
+
+        .benefitIntro h2 {
+          font-size: 35px;
+        }
+
+        .benefitIntro p {
+          color: #64748B;
+          line-height: 1.65;
+        }
+
+        .benefitGrid {
+          display: grid;
+          grid-template-columns: repeat(2,1fr);
+          gap: 14px;
+        }
+
+        .benefit {
+          display: flex;
+          gap: 15px;
+          background: white;
+          border: 1px solid #E0E7EF;
+          border-radius: 16px;
+          padding: 20px;
+        }
+
+        .benefit > span {
+          width: 40px;
+          height: 40px;
+          flex: 0 0 auto;
+          border-radius: 12px;
+          display: grid;
+          place-items: center;
+          background: #EFF6FF;
+          color: #2563EB;
+          font-weight: 900;
+        }
+
+        .benefit h3 {
+          margin: 0 0 6px;
+          font-size: 15px;
+        }
+
+        .benefit p {
+          margin: 0;
+          color: #64748B;
+          font-size: 12px;
+          line-height: 1.5;
         }
 
         .searchBox {
@@ -2836,7 +3323,6 @@ function App() {
           margin: 17px 0 8px;
           font-size: 17px;
           line-height: 1.3;
-          letter-spacing: -.15px;
         }
 
         .serviceCard p {
@@ -2869,7 +3355,6 @@ function App() {
 
         .serviceBottom strong {
           font-size: 20px;
-          color: #0F172A;
         }
 
         .view {
@@ -2880,11 +3365,6 @@ function App() {
           padding: 9px 12px;
           font-weight: 800;
           font-size: 11px;
-        }
-
-        .view:hover {
-          background: #DBEAFE;
-          color: #0F172A;
         }
 
         .cta {
@@ -2918,11 +3398,6 @@ function App() {
           white-space: nowrap;
         }
 
-        .ctaButton:hover {
-          background: #DBEAFE;
-          color: #1E3A8A;
-        }
-
         .page {
           min-height: calc(100vh - 70px);
           padding: 45px 0 80px;
@@ -2931,10 +3406,7 @@ function App() {
         .authCard {
           max-width: 520px;
           margin: 20px auto;
-        }
-
-        .authCard > h1 {
-          margin-bottom: 5px;
+          text-align: center;
         }
 
         .accountLogo {
@@ -2942,10 +3414,6 @@ function App() {
           height: 58px;
           border-radius: 17px;
           margin: 0 auto 17px;
-        }
-
-        .authCard {
-          text-align: center;
         }
 
         .tabs {
@@ -3064,7 +3532,6 @@ function App() {
 
         .stat strong {
           font-size: 24px;
-          color: #0F172A;
         }
 
         .stat small {
@@ -3073,8 +3540,7 @@ function App() {
         }
 
         .dashboardGrid,
-        .detailGrid,
-        .requestColumns {
+        .detailGrid {
           display: grid;
           grid-template-columns:
             minmax(0,1fr) 320px;
@@ -3082,7 +3548,9 @@ function App() {
         }
 
         .requestColumns {
+          display: grid;
           grid-template-columns: 1fr 1fr;
+          gap: 20px;
           margin-top: 25px;
         }
 
@@ -3144,20 +3612,8 @@ function App() {
           text-align: left;
         }
 
-        .quick button:hover {
-          background: #EFF6FF;
-          border-color: #BFDBFE;
-          color: #1E3A8A;
-        }
-
         .quick .logout {
           color: #A34D4D;
-        }
-
-        .quick .logout:hover {
-          background: #FEF2F2;
-          border-color: #FECACA;
-          color: #991B1B;
         }
 
         .back {
@@ -3167,10 +3623,6 @@ function App() {
           font-weight: 800;
           padding: 0;
           margin-bottom: 25px;
-        }
-
-        .back:hover {
-          color: #2563EB;
         }
 
         .infoGrid {
@@ -3204,7 +3656,6 @@ function App() {
         .requestPrice {
           font-size: 24px;
           font-weight: 900;
-          color: #0F172A;
           margin: 15px 0;
         }
 
@@ -3217,10 +3668,6 @@ function App() {
 
         .notice strong {
           color: #1E3A8A;
-        }
-
-        .notice p {
-          margin-bottom: 0;
         }
 
         .requestCard {
@@ -3291,10 +3738,6 @@ function App() {
           color: #1E3A8A;
         }
 
-        .messageBtn:hover {
-          background: #DBEAFE;
-        }
-
         .messagesLayout {
           display: grid;
           grid-template-columns: 300px 1fr;
@@ -3322,16 +3765,8 @@ function App() {
           border-radius: 10px;
         }
 
-        .contact:hover {
-          background: #F8FAFC;
-        }
-
         .contact.active {
           background: #EFF6FF;
-        }
-
-        .contact.active strong {
-          color: #1E3A8A;
         }
 
         .contact div:last-child {
@@ -3448,6 +3883,17 @@ function App() {
           padding: 30px 15px;
         }
 
+        @media (max-width: 900px) {
+          .featuredGrid,
+          .professionalGrid {
+            grid-template-columns: 1fr;
+          }
+
+          .steps {
+            grid-template-columns: repeat(2,1fr);
+          }
+        }
+
         @media (max-width: 760px) {
           .headerInner {
             padding: 10px 15px;
@@ -3498,14 +3944,6 @@ function App() {
             padding: 20px;
           }
 
-          .heroCardTitle {
-            font-size: 14px;
-          }
-
-          .heroSearch {
-            font-size: 12px;
-          }
-
           .container,
           .dashboard,
           .detail,
@@ -3515,12 +3953,19 @@ function App() {
           }
 
           .categories,
-          .services {
+          .services,
+          .featured,
+          .professionals,
+          .how,
+          .benefits {
             padding: 45px 0;
           }
 
           .categories h2,
-          .services h2 {
+          .services h2,
+          .featured h2,
+          .professionals h2,
+          .how h2 {
             font-size: 25px;
           }
 
@@ -3528,16 +3973,8 @@ function App() {
             grid-template-columns: repeat(2,1fr);
           }
 
-          .category {
-            font-size: 11px;
-            padding: 13px 8px;
-          }
-
-          .category span {
-            font-size: 20px;
-          }
-
           .sectionTop,
+          .sectionHeading,
           .dashboardHeader,
           .cta {
             align-items: stretch;
@@ -3550,29 +3987,6 @@ function App() {
 
           .serviceGrid {
             grid-template-columns: 1fr;
-          }
-
-          .serviceCard {
-            width: 100%;
-          }
-
-          .serviceCard h3 {
-            font-size: 16px;
-            line-height: 1.3;
-          }
-
-          .serviceCard p {
-            font-size: 12px;
-            line-height: 1.5;
-          }
-
-          .serviceBottom strong {
-            font-size: 19px;
-          }
-
-          .view {
-            font-size: 10px;
-            padding: 8px 10px;
           }
 
           .stats {
@@ -3627,6 +4041,15 @@ function App() {
 
           .ctaButton {
             width: 100%;
+          }
+
+          .benefitGrid,
+          .steps {
+            grid-template-columns: 1fr;
+          }
+
+          .benefitIntro h2 {
+            font-size: 29px;
           }
 
           .authCard {
