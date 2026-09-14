@@ -30,6 +30,10 @@ const demoServices = [
     description:
       "Creo sitios web modernos, rápidos y adaptados a móviles para negocios y profesionales.",
     price: 80,
+    rating: 4.9,
+    reviews: 24,
+    jobs: 38,
+    experience: "5 años",
     userId: null,
     demo: true,
   },
@@ -42,6 +46,10 @@ const demoServices = [
     description:
       "Diseño logotipos modernos y profesionales para marcas y emprendimientos.",
     price: 35,
+    rating: 4.8,
+    reviews: 19,
+    jobs: 31,
+    experience: "4 años",
     userId: null,
     demo: true,
   },
@@ -54,6 +62,10 @@ const demoServices = [
     description:
       "Ayudo a negocios a mejorar su presencia y alcance en redes sociales.",
     price: 50,
+    rating: 4.7,
+    reviews: 16,
+    jobs: 27,
+    experience: "3 años",
     userId: null,
     demo: true,
   },
@@ -69,6 +81,10 @@ function mapService(row, profile) {
     category: row.category || "Otros",
     description: row.description || "",
     price: Number(row.price) || 0,
+    rating: Number(row.rating) || 5,
+    reviews: Number(row.reviews) || 0,
+    jobs: Number(row.jobs) || 0,
+    experience: row.experience || "Profesional",
     userId: row.user_id || null,
     demo: false,
   };
@@ -108,6 +124,18 @@ function dateText(value) {
   });
 }
 
+function stars(rating) {
+  const value = Number(rating) || 0;
+  const rounded = Math.round(value);
+
+  return "★★★★★"
+    .split("")
+    .map((star, index) =>
+      index < rounded ? star : "☆"
+    )
+    .join("");
+}
+
 function App() {
   const [page, setPage] = useState("home");
   const [services, setServices] = useState(demoServices);
@@ -117,6 +145,7 @@ function App() {
   const deferredSearch = useDeferredValue(search);
 
   const [category, setCategory] = useState("Todas");
+  const [sortBy, setSortBy] = useState("recommended");
 
   const [loggedUser, setLoggedUser] = useState(null);
   const [accountMode, setAccountMode] = useState("login");
@@ -834,7 +863,7 @@ function App() {
   const filteredServices = useMemo(() => {
     const q = deferredSearch.trim().toLowerCase();
 
-    return services.filter((service) => {
+    const result = services.filter((service) => {
       const categoryMatch =
         category === "Todas" ||
         service.category === category;
@@ -855,7 +884,32 @@ function App() {
           String(value).toLowerCase().includes(q)
         );
     });
-  }, [services, deferredSearch, category]);
+
+    if (sortBy === "priceLow") {
+      return [...result].sort(
+        (a, b) => a.price - b.price
+      );
+    }
+
+    if (sortBy === "priceHigh") {
+      return [...result].sort(
+        (a, b) => b.price - a.price
+      );
+    }
+
+    if (sortBy === "rating") {
+      return [...result].sort(
+        (a, b) => b.rating - a.rating
+      );
+    }
+
+    return result;
+  }, [
+    services,
+    deferredSearch,
+    category,
+    sortBy,
+  ]);
 
   const received = requests.filter(
     (r) => r.provider_id === loggedUser?.id
@@ -941,7 +995,8 @@ function App() {
   }
 
   function HomePage() {
-    const featuredServices = filteredServices.slice(0, 3);
+    const featuredServices =
+      filteredServices.slice(0, 3);
 
     const professionals = [];
 
@@ -957,6 +1012,10 @@ function App() {
           category: service.category,
           userId: service.userId,
           service: service,
+          rating: service.rating,
+          reviews: service.reviews,
+          jobs: service.jobs,
+          experience: service.experience,
         });
       }
     });
@@ -1017,7 +1076,16 @@ function App() {
                 🔎 Encuentra talento
               </div>
 
-              <div className="heroSearch">
+              <div
+                className="heroSearch"
+                onClick={() =>
+                  document
+                    .getElementById("services")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                    })
+                }
+              >
                 ¿Qué servicio buscas?
               </div>
 
@@ -1130,14 +1198,20 @@ function App() {
                   className="featuredCard"
                   onClick={() => openService(service)}
                 >
-                  <div className="featuredIcon">
-                    {service.category === "Tecnología"
-                      ? "💻"
-                      : service.category === "Diseño"
-                      ? "🎨"
-                      : service.category === "Marketing"
-                      ? "📣"
-                      : "✦"}
+                  <div className="featuredTop">
+                    <div className="featuredIcon">
+                      {service.category === "Tecnología"
+                        ? "💻"
+                        : service.category === "Diseño"
+                        ? "🎨"
+                        : service.category === "Marketing"
+                        ? "📣"
+                        : "✦"}
+                    </div>
+
+                    <span className="featuredBadge">
+                      ⭐ Destacado
+                    </span>
                   </div>
 
                   <span className="featuredCategory">
@@ -1147,6 +1221,20 @@ function App() {
                   <h3>{service.service}</h3>
 
                   <p>{service.description}</p>
+
+                  <div className="ratingLine">
+                    <strong>
+                      {stars(service.rating)}
+                    </strong>
+
+                    <span>
+                      {service.rating.toFixed(1)}
+                    </span>
+
+                    <small>
+                      ({service.reviews} reseñas)
+                    </small>
+                  </div>
 
                   <div className="featuredBottom">
                     <span>
@@ -1198,7 +1286,27 @@ function App() {
 
                     <p>{person.profession}</p>
 
-                    <span>
+                    <div className="professionalRating">
+                      <strong>
+                        {stars(person.rating)}
+                      </strong>
+
+                      <span>
+                        {person.rating.toFixed(1)}
+                      </span>
+                    </div>
+
+                    <div className="professionalMeta">
+                      <span>
+                        {person.jobs}+ trabajos
+                      </span>
+
+                      <span>
+                        {person.experience}
+                      </span>
+                    </div>
+
+                    <span className="professionalCategory">
                       {person.category}
                     </span>
                   </div>
@@ -1407,20 +1515,51 @@ function App() {
                 <h2>
                   Profesionales disponibles
                 </h2>
+
+                <p className="muted">
+                  Explora, compara y encuentra el servicio
+                  adecuado para ti.
+                </p>
               </div>
 
-              <div className="searchBox">
-                🔎
+              <div className="serviceTools">
+                <div className="searchBox">
+                  🔎
 
-                <input
-                  value={search}
+                  <input
+                    value={search}
+                    onChange={(e) =>
+                      setSearch(e.target.value)
+                    }
+                    placeholder="Buscar servicios..."
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                </div>
+
+                <select
+                  className="sortSelect"
+                  value={sortBy}
                   onChange={(e) =>
-                    setSearch(e.target.value)
+                    setSortBy(e.target.value)
                   }
-                  placeholder="Buscar servicios..."
-                  autoComplete="off"
-                  spellCheck="false"
-                />
+                >
+                  <option value="recommended">
+                    Recomendados
+                  </option>
+
+                  <option value="rating">
+                    Mejor valorados
+                  </option>
+
+                  <option value="priceLow">
+                    Precio menor
+                  </option>
+
+                  <option value="priceHigh">
+                    Precio mayor
+                  </option>
+                </select>
               </div>
             </div>
 
@@ -1472,6 +1611,30 @@ function App() {
                     <p>
                       {service.description}
                     </p>
+
+                    <div className="serviceRating">
+                      <strong>
+                        {stars(service.rating)}
+                      </strong>
+
+                      <b>
+                        {service.rating.toFixed(1)}
+                      </b>
+
+                      <span>
+                        ({service.reviews} reseñas)
+                      </span>
+                    </div>
+
+                    <div className="serviceMeta">
+                      <span>
+                        ✓ {service.jobs} trabajos
+                      </span>
+
+                      <span>
+                        🕐 {service.experience}
+                      </span>
+                    </div>
 
                     <div className="serviceBottom">
                       <div>
@@ -1862,6 +2025,16 @@ function App() {
                   {loggedUser.profession}
                 </p>
 
+                <div className="profileRating">
+                  <strong>
+                    ★★★★★
+                  </strong>
+
+                  <span>
+                    Nuevo profesional
+                  </span>
+                </div>
+
                 <span>
                   ✓ Cuenta activa
                 </span>
@@ -1919,9 +2092,17 @@ function App() {
 
           <div className="detailGrid">
             <div className="panel">
-              <span className="eyebrow">
-                {selectedService.category}
-              </span>
+              <div className="detailTop">
+                <span className="eyebrow">
+                  {selectedService.category}
+                </span>
+
+                {selectedService.rating >= 4.8 && (
+                  <span className="topRated">
+                    🏆 Mejor valorado
+                  </span>
+                )}
+              </div>
 
               <h1>
                 {selectedService.service}
@@ -1945,6 +2126,20 @@ function App() {
                 </div>
               </div>
 
+              <div className="detailRating">
+                <strong>
+                  {stars(selectedService.rating)}
+                </strong>
+
+                <b>
+                  {selectedService.rating.toFixed(1)}
+                </b>
+
+                <span>
+                  {selectedService.reviews} reseñas
+                </span>
+              </div>
+
               <hr />
 
               <h2>Sobre este servicio</h2>
@@ -1963,17 +2158,37 @@ function App() {
                 </div>
 
                 <div>
-                  <small>Categoría</small>
+                  <small>Trabajos realizados</small>
 
                   <strong>
-                    {selectedService.category}
+                    {selectedService.jobs}
                   </strong>
                 </div>
 
                 <div>
-                  <small>Modalidad</small>
+                  <small>Experiencia</small>
 
-                  <strong>Online</strong>
+                  <strong>
+                    {selectedService.experience}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="profileSummary">
+                <div className="summaryIcon">
+                  👤
+                </div>
+
+                <div>
+                  <strong>
+                    {selectedService.name}
+                  </strong>
+
+                  <p>
+                    Profesional especializado en{" "}
+                    {selectedService.category.toLowerCase()}.
+                    Disponible para nuevos proyectos.
+                  </p>
                 </div>
               </div>
             </div>
@@ -1989,6 +2204,22 @@ function App() {
 
               <div className="requestPrice">
                 Desde ${selectedService.price}
+              </div>
+
+              <div className="trustBox">
+                <span>⭐</span>
+
+                <div>
+                  <strong>
+                    Profesional valorado
+                  </strong>
+
+                  <small>
+                    {selectedService.rating.toFixed(1)}
+                    /5 ·{" "}
+                    {selectedService.reviews} reseñas
+                  </small>
+                </div>
               </div>
 
               {selectedService.demo ? (
@@ -2814,6 +3045,7 @@ function App() {
           padding: 15px;
           color: #8591A0;
           font-size: 13px;
+          cursor: pointer;
         }
 
         .tags {
@@ -2995,6 +3227,13 @@ function App() {
             0 15px 35px rgba(15,23,42,.07);
         }
 
+        .featuredTop {
+          display: flex;
+          justify-content: space-between;
+          align-items: start;
+          gap: 10px;
+        }
+
         .featuredIcon {
           width: 48px;
           height: 48px;
@@ -3004,6 +3243,15 @@ function App() {
           background: #EFF6FF;
           font-size: 22px;
           margin-bottom: 14px;
+        }
+
+        .featuredBadge {
+          background: #FFF7D6;
+          color: #8A6510;
+          padding: 6px 8px;
+          border-radius: 999px;
+          font-size: 9px;
+          font-weight: 900;
         }
 
         .featuredCategory {
@@ -3024,6 +3272,40 @@ function App() {
           font-size: 13px;
           line-height: 1.55;
           min-height: 60px;
+        }
+
+        .ratingLine,
+        .serviceRating,
+        .professionalRating,
+        .detailRating {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        }
+
+        .ratingLine strong,
+        .serviceRating strong,
+        .professionalRating strong,
+        .detailRating strong {
+          color: #E3A500;
+          letter-spacing: 1px;
+          font-size: 12px;
+        }
+
+        .ratingLine span,
+        .serviceRating b,
+        .professionalRating span,
+        .detailRating b {
+          font-weight: 900;
+          font-size: 12px;
+          color: #334155;
+        }
+
+        .ratingLine small,
+        .serviceRating span,
+        .detailRating span {
+          color: #7A899B;
+          font-size: 10px;
         }
 
         .featuredBottom {
@@ -3055,7 +3337,7 @@ function App() {
 
         .professionalCard {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           gap: 13px;
           background: white;
           border: 1px solid #E0E7EF;
@@ -3097,7 +3379,27 @@ function App() {
           font-size: 11px;
         }
 
-        .professionalInfo span {
+        .professionalRating {
+          margin-bottom: 8px;
+        }
+
+        .professionalMeta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 5px;
+          margin-bottom: 8px;
+        }
+
+        .professionalMeta span {
+          color: #64748B;
+          background: #F1F5F9;
+          padding: 4px 6px;
+          border-radius: 999px;
+          font-size: 9px;
+          font-weight: 700;
+        }
+
+        .professionalCategory {
           color: #1E3A8A;
           background: #EFF6FF;
           padding: 4px 7px;
@@ -3217,9 +3519,17 @@ function App() {
           line-height: 1.5;
         }
 
-        .searchBox {
-          width: 330px;
+        .serviceTools {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          width: 440px;
           max-width: 100%;
+        }
+
+        .searchBox {
+          flex: 1;
+          min-width: 0;
           background: white;
           border: 1px solid #DCE4ED;
           border-radius: 11px;
@@ -3242,6 +3552,13 @@ function App() {
           padding: 13px 0;
           background: transparent;
           box-shadow: none;
+        }
+
+        .sortSelect {
+          width: 150px;
+          padding: 12px 10px;
+          font-size: 11px;
+          font-weight: 700;
         }
 
         .serviceGrid {
@@ -3335,6 +3652,26 @@ function App() {
         .panel p {
           color: #6C7C90;
           line-height: 1.6;
+        }
+
+        .serviceRating {
+          margin-top: 15px;
+        }
+
+        .serviceMeta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 7px;
+          margin-top: 10px;
+        }
+
+        .serviceMeta span {
+          background: #F1F5F9;
+          color: #64748B;
+          padding: 5px 7px;
+          border-radius: 999px;
+          font-size: 9px;
+          font-weight: 700;
         }
 
         .serviceBottom {
@@ -3591,6 +3928,25 @@ function App() {
           font-weight: 900;
         }
 
+        .profileRating {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+          gap: 4px;
+          margin: 13px 0 15px;
+        }
+
+        .profileRating strong {
+          color: #E3A500;
+          letter-spacing: 2px;
+        }
+
+        .profileRating span {
+          color: #AEB9C7;
+          font-size: 10px;
+        }
+
         .quick {
           margin-top: 15px;
           background: white;
@@ -3625,6 +3981,51 @@ function App() {
           margin-bottom: 25px;
         }
 
+        .detailTop {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .topRated {
+          background: #FFF7D6;
+          color: #8A6510;
+          padding: 7px 10px;
+          border-radius: 999px;
+          font-size: 9px;
+          font-weight: 900;
+        }
+
+        .detailRating {
+          margin-top: 16px;
+        }
+
+        .profileSummary {
+          margin-top: 25px;
+          padding: 16px;
+          background: #F8FAFC;
+          border: 1px solid #E6EBF1;
+          border-radius: 14px;
+          display: flex;
+          gap: 12px;
+        }
+
+        .summaryIcon {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          background: #DBEAFE;
+          display: grid;
+          place-items: center;
+          flex: 0 0 auto;
+        }
+
+        .profileSummary p {
+          margin: 5px 0 0;
+          font-size: 11px;
+        }
+
         .infoGrid {
           display: grid;
           grid-template-columns: repeat(3,1fr);
@@ -3657,6 +4058,36 @@ function App() {
           font-size: 24px;
           font-weight: 900;
           margin: 15px 0;
+        }
+
+        .trustBox {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: #F8FAFC;
+          border: 1px solid #E5EAF0;
+          padding: 12px;
+          border-radius: 12px;
+          margin-bottom: 15px;
+        }
+
+        .trustBox > span {
+          font-size: 21px;
+        }
+
+        .trustBox div {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .trustBox strong {
+          font-size: 12px;
+        }
+
+        .trustBox small {
+          color: #718096;
+          font-size: 10px;
         }
 
         .notice {
@@ -3981,6 +4412,16 @@ function App() {
             flex-direction: column;
           }
 
+          .serviceTools {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .sortSelect {
+            width: 100%;
+          }
+
           .searchBox {
             width: 100%;
           }
@@ -4062,6 +4503,14 @@ function App() {
           textarea,
           select {
             font-size: 16px;
+          }
+
+          .professionalCard {
+            align-items: flex-start;
+          }
+
+          .smallView {
+            font-size: 9px;
           }
         }
       `}</style>
