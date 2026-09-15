@@ -609,7 +609,7 @@ function App() {
        };
 
     setSelectedContact(normalized);
-    setPage("messages");
+        setPage("messages");
     loadMessages(normalized);
   };
 
@@ -618,7 +618,6 @@ function App() {
       setMessages([]);
       return;
     }
-
     setLoadingMessages(true);
 
     try {
