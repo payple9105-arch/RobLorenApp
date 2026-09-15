@@ -306,12 +306,6 @@ function App() {
 
     try {
       const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "id,email,full_name,username,bio,location,skills"
-        )
-        .eq("id", user.id)
-        .maybeSingle();
 
       if (!error && data) {
         return data;
