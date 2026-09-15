@@ -565,118 +565,114 @@ function App() {
 };
   
   const openMessaging = (contact) => {
-    if (!loggedUser) {
-      setPage("account");
-      setAccountMode("login");
-      return;
-    }
+  if (!loggedUser) {
+    setPage("account");
+    setAccountMode("login");
+    return;
+  }
 
-    const contactId =
-      contact?.id ||
-      contact?.provider_id ||
-      contact?.user_id ||
-      null;
+  const contactId =
+    contact?.id ||
+    contact?.provider_id ||
+    contact?.user_id ||
+    null;
 
-    if (!contactId) {
-      alert(
-        "Este servicio todavía no está asociado a un profesional registrado."
-      );
-      return;
-    }
+  if (!contactId) {
+    alert(
+      "Este servicio todavía no está asociado a un profesional registrado."
+    );
+    return;
+  }
 
-    if (contactId === loggedUser.id) {
-      alert(
-        "No puedes iniciar una conversación contigo mismo."
-      );
-      return;
-    }
+  if (contactId === loggedUser.id) {
+    alert(
+      "No puedes iniciar una conversación contigo mismo."
+    );
+    return;
+  }
 
-    const normalized = {
-      id: contactId,
-      full_name:
-        contact.full_name ||
-        contact.provider_name ||
-        contact.username ||
-        "Profesional",
-      username:
-        contact.username ||
-        contact.provider_username ||
-        "",
-      email:
-        contact.email ||
-        contact.provider_email ||
-        "",
-       };
-
-    setSelectedContact(normalized);
-        setPage("messages");
-    loadMessages(normalized);
+  const normalized = {
+    id: contactId,
+    full_name:
+      contact.full_name ||
+      contact.provider_name ||
+      contact.username ||
+      "Profesional",
+    username:
+      contact.username ||
+      contact.provider_username ||
+      "",
+    email:
+      contact.email ||
+      contact.provider_email ||
+      "",
   };
 
-  const loadMessages = async (contact) => {
-    if (!loggedUser || !contact?.id) {
-      setMessages([]);
-      return;
-    }
-    setLoadingMessages(true);
+  setSelectedContact(normalized);
+  setMessages([]);
+  setPage("messages");
+  loadMessages(normalized);
+};
 
-    try {
-      const [sentResult, receivedResult] =
-        await Promise.all([
-          supabase
-            .from("messages")
-            .select("*")
-            .eq("sender_id", loggedUser.id)
-            .eq("receiver_id", contact.id),
-
-          supabase
-            .from("messages")
-            .select("*")
-            .eq("sender_id", contact.id)
-            .eq("receiver_id", loggedUser.id),
-        ]);
-
-      if (sentResult.error) {
-        console.error(
-          "Error cargando mensajes enviados:",
-          sentResult.error
-        );
-      }
-
-      if (receivedResult.error) {
-        console.error(
-          "Error cargando mensajes recibidos:",
-          receivedResult.error
-        );
-      }
-
-      const allMessages = [
-        ...(sentResult.data || []),
-        ...(receivedResult.data || []),
-      ].sort(
-        (a, b) =>
-          new Date(a.created_at) -
-          new Date(b.created_at)
-      );
-
-      setMessages(allMessages);
-    } catch (error) {
-      console.error(
-        "Error cargando mensajes:",
-        error
-      );
-      setMessages([]);
-    } finally {
-      setLoadingMessages(false);
-    }
-  };
-
-    setSelectedContact(normalized);
+const loadMessages = async (contact) => {
+  if (!loggedUser || !contact?.id) {
     setMessages([]);
-    setPage("messages");
-    loadMessages(normalized);
-  };
-  const loadConversations = async () => {
+    return;
+  }
+
+  setLoadingMessages(true);
+
+  try {
+    const [sentResult, receivedResult] =
+      await Promise.all([
+        supabase
+          .from("messages")
+          .select("*")
+          .eq("sender_id", loggedUser.id)
+          .eq("receiver_id", contact.id),
+
+        supabase
+          .from("messages")
+          .select("*")
+          .eq("sender_id", contact.id)
+          .eq("receiver_id", loggedUser.id),
+      ]);
+
+    if (sentResult.error) {
+      console.error(
+        "Error cargando mensajes enviados:",
+        sentResult.error
+      );
+    }
+
+    if (receivedResult.error) {
+      console.error(
+        "Error cargando mensajes recibidos:",
+        receivedResult.error
+      );
+    }
+
+    const allMessages = [
+      ...(sentResult.data || []),
+      ...(receivedResult.data || []),
+    ].sort(
+      (a, b) =>
+        new Date(a.created_at) -
+        new Date(b.created_at)
+    );
+
+    setMessages(allMessages);
+  } catch (error) {
+    console.error(
+      "Error cargando mensajes:",
+      error
+    );
+    setMessages([]);
+  } finally {
+    setLoadingMessages(false);
+  }
+};
+      const loadConversations = async () => {
   if (!loggedUser) {
     setSelectedContact(null);
     setMessages([]);
