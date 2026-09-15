@@ -97,35 +97,25 @@ const defaultAuthForm = {
 
 function mapService(service, profile = null) {
   const providerId =
-    service.user_id ||
     service.provider_id ||
+    service.user_id ||
     profile?.id ||
     null;
 
   const profileName =
     profile?.full_name ||
-    profile?.name ||
     profile?.username ||
     "";
 
+  const profileEmail = profile?.email || "";
+
   return {
     ...service,
-
     id: service.id,
-
-    title:
-      service.service_title ||
-      service.title ||
-      "Servicio profesional",
-
+    title: service.title || "Servicio profesional",
     description:
-      service.description ||
-      "Servicio ofrecido en RobLoren.",
-
-    category:
-      service.category ||
-      "Otros",
-
+      service.description || "Servicio ofrecido en RobLoren.",
+    category: service.category || "Otros",
     price: Number(service.price || 0),
 
     provider_id: providerId,
@@ -134,7 +124,6 @@ function mapService(service, profile = null) {
       service.provider_name ||
       profileName ||
       service.profiles?.full_name ||
-      service.profiles?.name ||
       service.profiles?.username ||
       "Profesional RobLoren",
 
@@ -144,12 +133,11 @@ function mapService(service, profile = null) {
       service.profiles?.username ||
       "",
 
-    provider_profession:
-      service.provider_profession ||
-      profile?.profession ||
-      service.profiles?.profession ||
-      service.profession ||
-      "Profesional",
+    provider_email:
+      service.provider_email ||
+      profileEmail ||
+      service.profiles?.email ||
+      "",
 
     provider_bio:
       service.provider_bio ||
@@ -169,16 +157,13 @@ function mapService(service, profile = null) {
       service.profiles?.skills ||
       "",
 
-    rating:
-      Number(service.rating || 4.8),
+    rating: Number(service.rating || 4.8),
+    reviews: Number(service.reviews || 0),
 
-    reviews:
-      Number(service.reviews || 0),
-
-    is_demo:
-      Boolean(service.is_demo),
+    is_demo: Boolean(service.is_demo),
   };
 }
+
 function makeUser(user, profile = null) {
   if (!user) return null;
 
@@ -317,66 +302,58 @@ function App() {
   };
 
   const ensureProfile = async (user) => {
-  if (!user) return null;
+    if (!user) return null;
 
-  try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(
-        "id,name,profession,bio,full_name,username,location,skills"
-      )
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error cargando perfil:", error);
-      return null;
-    }
-
-    if (data) {
-      return data;
-    }
-
-    const profile = {
-      id: user.id,
-      name:
-        user.user_metadata?.full_name ||
-        user.email?.split("@")[0] ||
-        "Usuario RobLoren",
-      profession: "Profesional",
-      bio: "",
-      full_name:
-        user.user_metadata?.full_name ||
-        user.email?.split("@")[0] ||
-        "Usuario RobLoren",
-      username:
-        user.user_metadata?.username ||
-        user.email?.split("@")[0] ||
-        "usuario",
-      location: "",
-      skills: "",
-    };
-
-    const { data: created, error: createError } =
-      await supabase
+    try {
+      const { data, error } = await supabase
         .from("profiles")
-        .insert(profile)
         .select(
-          "id,name,profession,bio,full_name,username,location,skills"
+          "id,email,full_name,username,bio,location,skills"
         )
+        .eq("id", user.id)
         .maybeSingle();
 
-    if (createError) {
-      console.error("Error creando perfil:", createError);
-      return profile;
-    }
+      if (!error && data) {
+        return data;
+      }
 
-    return created || profile;
-  } catch (error) {
-    console.error("Error en ensureProfile:", error);
-    return null;
-  }
-};
+      const username =
+        user.user_metadata?.username ||
+        user.email?.split("@")[0] ||
+        "usuario";
+
+      const profile = {
+        id: user.id,
+        email: user.email || "",
+        full_name:
+          user.user_metadata?.full_name ||
+          user.email?.split("@")[0] ||
+          "Usuario RobLoren",
+        username,
+        bio: "",
+        location: "",
+        skills: "",
+      };
+
+      const { data: created, error: createError } =
+        await supabase
+          .from("profiles")
+          .insert(profile)
+          .select(
+            "id,email,full_name,username,bio,location,skills"
+          )
+          .maybeSingle();
+
+      if (!createError && created) {
+        return created;
+      }
+
+      return profile;
+    } catch {
+      return null;
+    }
+  };
+
   const refreshUser = async (user) => {
     if (!user) {
       setLoggedUser(null);
@@ -430,10 +407,10 @@ function App() {
           const { data: profileData } =
             await supabase
               .from("profiles")
-.select(
-  "id,name,profession,bio,full_name,username,location,skills"
-)
-.in("id", providerIds);
+              .select(
+                "id,email,full_name,username,bio,location,skills"
+              )
+              .in("id", providerIds);
 
           if (profileData) {
             profileData.forEach((profile) => {
@@ -466,16 +443,15 @@ function App() {
   };
 
   const loadRequests = async () => {
-  if (!loggedUser) {
-    setRequests([]);
-    return;
-  }
+    if (!loggedUser) {
+      setRequests([]);
+      return;
+    }
 
-  setLoadingRequests(true);
+    setLoadingRequests(true);
 
-  try {
-    const { data: requestData, error: requestError } =
-      await supabase
+    try {
+      const { data, error } = await supabase
         .from("service_requests")
         .select("*")
         .or(
@@ -485,327 +461,143 @@ function App() {
           ascending: false,
         });
 
-    if (requestError) {
-      console.error(
-        "Error cargando solicitudes:",
-        requestError
-      );
-      setRequests([]);
-      return;
-    }
-
-    if (!requestData || requestData.length === 0) {
-      setRequests([]);
-      return;
-    }
-
-    const serviceIds = [
-      ...new Set(
-        requestData
-          .map((request) => request.service_id)
-          .filter(Boolean)
-      ),
-    ];
-
-    let servicesById = {};
-
-    if (serviceIds.length > 0) {
-      const { data: serviceData, error: serviceError } =
-        await supabase
-          .from("services")
-          .select(
-            "id,service_title,name,category,price,user_id"
-          )
-          .in("id", serviceIds);
-
-      if (!serviceError && serviceData) {
-        servicesById = serviceData.reduce(
-          (accumulator, service) => {
-            accumulator[service.id] = service;
-            return accumulator;
-          },
-          {}
-        );
+      if (!error && data) {
+        setRequests(data);
+      } else {
+        setRequests([]);
       }
+    } catch {
+      setRequests([]);
+    } finally {
+      setLoadingRequests(false);
     }
-
-    const enrichedRequests = requestData.map(
-      (request) => {
-        const service =
-          servicesById[request.service_id];
-
-        return {
-          ...request,
-          service_title:
-            service?.service_title ||
-            service?.name ||
-            "Servicio solicitado",
-          service_category:
-            service?.category || "",
-          service_price:
-            service?.price ?? null,
-          service_provider_id:
-            service?.user_id ||
-            request.provider_id ||
-            null,
-        };
-      }
-    );
-
-    setRequests(enrichedRequests);
-  } catch (error) {
-    console.error(
-      "Error inesperado cargando solicitudes:",
-      error
-    );
-    setRequests([]);
-  } finally {
-    setLoadingRequests(false);
-  }
-};
-  
-  const openMessaging = (contact) => {
-  if (!loggedUser) {
-    setPage("account");
-    setAccountMode("login");
-    return;
-  }
-
-  const contactId =
-    contact?.provider_id ||
-    contact?.user_id ||
-    contact?.id ||
-    null;
-
-  if (!contactId) {
-    alert(
-      "Este servicio todavía no está asociado a un profesional registrado."
-    );
-    return;
-  }
-
-  if (contactId === loggedUser.id) {
-    alert(
-      "No puedes iniciar una conversación contigo mismo."
-    );
-    return;
-  }
-
-  const normalized = {
-    id: contactId,
-    full_name:
-      contact?.provider_name ||
-      contact?.full_name ||
-      contact?.username ||
-      contact?.provider_username ||
-      "Profesional",
-    username:
-      contact?.provider_username ||
-      contact?.username ||
-      "",
-    profession:
-      contact?.provider_profession ||
-      contact?.profession ||
-      "Profesional",
   };
 
-  setSelectedContact(normalized);
-  setMessages([]);
-  setMessageText("");
-  setLoadingMessages(false);
-  setPage("messages");
-};
-const loadMessages = async (contact) => {
-  if (!loggedUser || !contact?.id) {
-    setMessages([]);
-    return;
-  }
-
-  setLoadingMessages(true);
-
-  try {
-    const [sentResult, receivedResult] =
-      await Promise.all([
-        supabase
-          .from("messages")
-          .select("*")
-          .eq("sender_id", loggedUser.id)
-          .eq("receiver_id", contact.id),
-
-        supabase
-          .from("messages")
-          .select("*")
-          .eq("sender_id", contact.id)
-          .eq("receiver_id", loggedUser.id),
-      ]);
-
-    if (sentResult.error) {
-      console.error(
-        "Error cargando mensajes enviados:",
-        sentResult.error
-      );
-    }
-
-    if (receivedResult.error) {
-      console.error(
-        "Error cargando mensajes recibidos:",
-        receivedResult.error
-      );
-    }
-
-    const allMessages = [
-      ...(sentResult.data || []),
-      ...(receivedResult.data || []),
-    ].sort(
-      (a, b) =>
-        new Date(a.created_at) -
-        new Date(b.created_at)
-    );
-
-    setMessages(allMessages);
-  } catch (error) {
-    console.error(
-      "Error cargando mensajes:",
-      error
-    );
-    setMessages([]);
-  } finally {
-    setLoadingMessages(false);
-  }
-};
-      const loadConversations = async () => {
-  if (!loggedUser) {
-    setSelectedContact(null);
-    setMessages([]);
-    return;
-  }
-
-  try {
-    const { data: sentMessages, error: sentError } =
-      await supabase
-        .from("messages")
-        .select("*")
-        .eq("sender_id", loggedUser.id)
-        .order("created_at", {
-          ascending: false,
-        });
-
-    const { data: receivedMessages, error: receivedError } =
-      await supabase
-        .from("messages")
-        .select("*")
-        .eq("receiver_id", loggedUser.id)
-        .order("created_at", {
-          ascending: false,
-        });
-
-    if (sentError) {
-      console.error(
-        "Error cargando mensajes enviados:",
-        sentError
-      );
-    }
-
-    if (receivedError) {
-      console.error(
-        "Error cargando mensajes recibidos:",
-        receivedError
-      );
-    }
-
-    const allMessages = [
-      ...(sentMessages || []),
-      ...(receivedMessages || []),
-    ].sort(
-      (a, b) =>
-        new Date(b.created_at) -
-        new Date(a.created_at)
-    );
-
-    if (allMessages.length === 0) {
-      setSelectedContact(null);
+  const loadMessages = async (contact) => {
+    if (!loggedUser || !contact?.id) {
       setMessages([]);
       return;
     }
 
-    const contactIds = [
-      ...new Set(
-        allMessages
-          .map((message) =>
-            message.sender_id === loggedUser.id
-              ? message.receiver_id
-              : message.sender_id
-          )
-          .filter(
-            (id) => id && id !== loggedUser.id
-          )
-      ),
-    ];
+    setLoadingMessages(true);
 
-    if (contactIds.length === 0) {
-      setMessages(allMessages);
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${loggedUser.id},receiver_id.eq.${contact.id}),and(sender_id.eq.${contact.id},receiver_id.eq.${loggedUser.id})`
+        )
+        .order("created_at", {
+          ascending: true,
+        });
+
+      if (!error && data) {
+        setMessages(data);
+      } else {
+        setMessages([]);
+      }
+    } catch {
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (
+      !loggedUser ||
+      !selectedContact?.id ||
+      !messageText.trim()
+    ) {
       return;
     }
 
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select(
-        "id,name,full_name,username,profession,bio,location,skills"
-      )
-      .in("id", contactIds);
+    setSendingMessage(true);
 
-    const profileMap = (profiles || []).reduce(
-      (accumulator, profile) => {
-        accumulator[profile.id] = profile;
-        return accumulator;
-      },
-      {}
-    );
+    try {
+      const payload = {
+        sender_id: loggedUser.id,
+        receiver_id: selectedContact.id,
+        content: messageText.trim(),
+      };
 
-    const conversations = contactIds.map(
-      (contactId) => {
-        const profile =
-          profileMap[contactId] || {};
+      const { data, error } = await supabase
+        .from("messages")
+        .insert(payload)
+        .select()
+        .maybeSingle();
 
-        const lastMessage = allMessages.find(
-          (message) =>
-            message.sender_id === contactId ||
-            message.receiver_id === contactId
+      if (error) {
+        alert(
+          "No se pudo enviar el mensaje. Comprueba la configuración de mensajes."
         );
-
-        return {
-          id: contactId,
-          full_name:
-            profile.full_name ||
-            profile.name ||
-            profile.username ||
-            "Profesional",
-          username:
-            profile.username || "",
-          profession:
-            profile.profession || "",
-          last_message:
-            lastMessage?.message || "",
-          created_at:
-            lastMessage?.created_at || null,
-        };
+        return;
       }
-    );
 
-    const firstConversation =
-      conversations[0];
+      setMessages((current) => [
+        ...current,
+        data || payload,
+      ]);
 
-    if (firstConversation) {
-      setSelectedContact(firstConversation);
-      await loadMessages(firstConversation);
+      setMessageText("");
+    } catch {
+      alert("Ocurrió un error al enviar el mensaje.");
+    } finally {
+      setSendingMessage(false);
     }
-  } catch (error) {
-    console.error(
-      "Error inesperado cargando conversaciones:",
-      error
-    );
-  }
-};
+  };
+
+  const openMessaging = (contact) => {
+    if (!loggedUser) {
+      setPage("account");
+      setAccountMode("login");
+      return;
+    }
+
+    const contactId =
+      contact?.id ||
+      contact?.provider_id ||
+      contact?.user_id ||
+      null;
+
+    if (!contactId) {
+      alert(
+        "Este servicio todavía no está asociado a un profesional registrado."
+      );
+      return;
+    }
+
+    if (contactId === loggedUser.id) {
+      alert(
+        "No puedes iniciar una conversación contigo mismo."
+      );
+      return;
+    }
+
+    const normalized = {
+      id: contactId,
+      full_name:
+        contact.full_name ||
+        contact.provider_name ||
+        contact.username ||
+        "Profesional",
+      username:
+        contact.username ||
+        contact.provider_username ||
+        "",
+      email:
+        contact.email ||
+        contact.provider_email ||
+        "",
+    };
+
+    setSelectedContact(normalized);
+    setMessages([]);
+    setPage("messages");
+    loadMessages(normalized);
+  };
+
   const sendRequest = async () => {
     if (!loggedUser) {
       setPage("account");
@@ -1008,9 +800,7 @@ const loadMessages = async (contact) => {
           email,
           password,
           options: {
-  emailRedirectTo:
-    "https://payple9105-arch.github.io/RobLorenApp/",
-  data: {
+            data: {
               full_name:
                 profileForm.full_name.trim(),
               username:
@@ -1122,15 +912,14 @@ const loadMessages = async (contact) => {
     setPublishing(true);
 
     try {
-const payload = {
-  name: loggedUser.name || "Usuario",
-  profession: loggedUser.profession || "Profesional",
-  service_title: form.title.trim(),
-  description: form.description.trim(),
-  category: form.category,
-  price: numericPrice || 0,
-  user_id: loggedUser.id,
-};
+      const payload = {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        category: form.category,
+        price: numericPrice || 0,
+        provider_id: loggedUser.id,
+        user_id: loggedUser.id,
+      };
 
       const { data, error } = await supabase
         .from("services")
@@ -1352,11 +1141,7 @@ const payload = {
                     ? "nav-link active"
                     : "nav-link"
                 }
-             onClick={(event) => {
-  event.preventDefault();
-  event.stopPropagation();
-  setPage("messages");
-}}
+                onClick={() => setPage("messages")}
               >
                 Mensajes
               </button>
@@ -2214,56 +1999,7 @@ const payload = {
                   </strong>
                 </div>
               </div>
-          
 
-              <div
-                className="dashboard-actions"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: "12px",
-                  marginBottom: "35px",
-                }}
-              >
-                <button
-                  className="button outline"
-                  onClick={() => {
-                    setPage("requests");
-                    loadRequests();
-                  }}
-                >
-                  📋 Mis solicitudes
-                </button>
-
-                <button
-                  className="button outline"
-                  onClick={() => {
-                    setPage("messages");
-                  }}
-                >
-                  💬 Mis mensajes
-                </button>
-
-                <button
-                  className="button outline"
-                  onClick={() => {
-  onClick={() => {
-  setPage("services");
-}}
-                >
-                  🛠️ Explorar servicios
-                </button>
-
-                <button
-                  className="button outline"
-                  onClick={() => {
-                    setPage("offer");
-                  }}
-                >
-                  ➕ Publicar servicio
-                </button>
-              </div>
               <div className="profile-form">
                 <div className="section-heading small">
                   <div>
@@ -2964,67 +2700,8 @@ const payload = {
       )}
     </main>
   );
- const sendMessage = async () => {
-  if (!loggedUser || !selectedContact?.id) {
-    return;
-  }
 
-  const text = messageText.trim();
-
-  if (!text) {
-    return;
-  }
-
-  setSendingMessage(true);
-
-  try {
-    const { error } = await supabase
-      .from("messages")
-      .insert({
-        request_id: null,
-        message: text,
-        sender_id: loggedUser.id,
-        receiver_id: selectedContact.id,
-      });
-
-    if (error) {
-      alert(
-        "No se pudo enviar el mensaje: " +
-          error.message
-      );
-      return;
-    }
-
-    setMessageText("");
-
-    await loadMessages(selectedContact);
-  } catch (error) {
-    alert(
-      "Ocurrió un error al enviar el mensaje: " +
-        (error?.message || "Error desconocido")
-    );
-  } finally {
-    setSendingMessage(false);
-  }
-};
-  const safeContact = selectedContact || null;
-
-  const contactName =
-    typeof safeContact?.full_name === "string" &&
-    safeContact.full_name.trim()
-      ? safeContact.full_name.trim()
-      : "Profesional";
-
-  const contactUsername =
-    typeof safeContact?.username === "string"
-      ? safeContact.username.trim()
-      : "";
-
-  const safeMessages = Array.isArray(messages)
-    ? messages
-    : [];
-
-  return (
+  const MessagesPage = () => (
     <main className="page-container messages-page">
       <section className="page-header">
         <span className="eyebrow">
@@ -3045,18 +2722,17 @@ const payload = {
             Conversaciones
           </div>
 
-          {safeContact ? (
-            <button
-              type="button"
-              className="contact active"
-            >
+          {selectedContact ? (
+            <button className="contact active">
               <span className="avatar">
-                {getInitials(contactName)}
+                {getInitials(
+                  selectedContact.full_name
+                )}
               </span>
 
               <span>
                 <strong>
-                  {contactName}
+                  {selectedContact.full_name}
                 </strong>
 
                 <small>
@@ -3074,21 +2750,25 @@ const payload = {
         </aside>
 
         <section className="chat-panel">
-          {safeContact ? (
+          {selectedContact ? (
             <>
               <div className="chat-header">
                 <span className="avatar">
-                  {getInitials(contactName)}
+                  {getInitials(
+                    selectedContact.full_name
+                  )}
                 </span>
 
                 <div>
                   <strong>
-                    {contactName}
+                    {
+                      selectedContact.full_name
+                    }
                   </strong>
 
                   <span>
-                    {contactUsername
-                      ? `@${contactUsername}`
+                    {selectedContact.username
+                      ? `@${selectedContact.username}`
                       : "RobLoren"}
                   </span>
                 </div>
@@ -3099,7 +2779,8 @@ const payload = {
                   <div className="loading-state">
                     Cargando mensajes...
                   </div>
-                ) : safeMessages.length === 0 ? (
+                ) : messages.length ===
+                  0 ? (
                   <div className="chat-empty">
                     <div>💬</div>
 
@@ -3114,16 +2795,19 @@ const payload = {
                     </p>
                   </div>
                 ) : (
-                  safeMessages.map(
-                    (message, index) => {
+                  messages.map(
+                    (
+                      message,
+                      index
+                    ) => {
                       const mine =
-                        message?.sender_id ===
-                        loggedUser?.id;
+                        message.sender_id ===
+                        loggedUser.id;
 
                       return (
                         <div
                           key={
-                            message?.id ||
+                            message.id ||
                             index
                           }
                           className={
@@ -3133,14 +2817,14 @@ const payload = {
                           }
                         >
                           <div>
-                            {String(
-                              message?.message || ""
-                            )}
+                            {
+                              message.content
+                            }
                           </div>
 
                           <small>
                             {dateText(
-                              message?.created_at
+                              message.created_at
                             )}
                           </small>
                         </div>
@@ -3160,7 +2844,8 @@ const payload = {
                   }
                   onKeyDown={(event) => {
                     if (
-                      event.key === "Enter"
+                      event.key ===
+                      "Enter"
                     ) {
                       event.preventDefault();
                       sendMessage();
@@ -3170,13 +2855,14 @@ const payload = {
                 />
 
                 <button
-                  type="button"
                   className="button primary"
                   disabled={
                     sendingMessage ||
                     !messageText.trim()
                   }
-                  onClick={sendMessage}
+                  onClick={
+                    sendMessage
+                  }
                 >
                   →
                 </button>
@@ -3200,6 +2886,7 @@ const payload = {
       </div>
     </main>
   );
+
   const OfferPage = () => (
     <main className="page-container">
       <section className="page-header">
