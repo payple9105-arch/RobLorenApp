@@ -610,9 +610,10 @@ function App() {
 
     setSelectedContact(normalized);
     setMessages([]);
-      setPage("messages");
+         setPage("messages");
     loadMessages(normalized);
   };
+
   const loadMessages = async (contact) => {
     if (!loggedUser || !contact?.id) {
       setMessages([]);
