@@ -329,7 +329,7 @@ function App() {
         skills: "",
       };
 
-      const { data, error } = await supabase
+    const { data, error } = await supabase
   .from("profiles")
   .select(
     "id,email,full_name,username,bio,location,skills"
