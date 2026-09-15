@@ -2017,7 +2017,7 @@ const payload = {
                   </strong>
                 </div>
               </div>
-              </div>
+          
 
               <div
                 className="dashboard-actions"
