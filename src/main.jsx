@@ -2017,7 +2017,57 @@ const payload = {
                   </strong>
                 </div>
               </div>
+              </div>
 
+              <div
+                className="dashboard-actions"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "12px",
+                  marginBottom: "35px",
+                }}
+              >
+                <button
+                  className="button outline"
+                  onClick={() => {
+                    setPage("requests");
+                    loadRequests();
+                  }}
+                >
+                  📋 Mis solicitudes
+                </button>
+
+                <button
+                  className="button outline"
+                  onClick={() => {
+                    setPage("messages");
+                  }}
+                >
+                  💬 Mis mensajes
+                </button>
+
+                <button
+                  className="button outline"
+                  onClick={() => {
+                    setPage("services");
+                  }}
+                >
+                  🛠️ Explorar servicios
+                </button>
+
+                <button
+                  className="button outline"
+                  onClick={() => {
+                    setPage("offer");
+                  }}
+                >
+                  ➕ Publicar servicio
+                </button>
+              </div>
+
+              <div className="profile-form">
               <div className="profile-form">
                 <div className="section-heading small">
                   <div>
