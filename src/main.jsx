@@ -2960,7 +2960,6 @@ const payload = {
       )}
     </main>
   );
-
   const MessagesPage = () => {
   const safeContact = selectedContact || null;
 
