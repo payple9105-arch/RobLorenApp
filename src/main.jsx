@@ -570,50 +570,6 @@ function App() {
     setAccountMode("login");
     return;
   }
-
-  const contactId =
-    contact?.id ||
-    contact?.provider_id ||
-    contact?.user_id ||
-    null;
-
-  if (!contactId) {
-    alert(
-      "Este servicio todavía no está asociado a un profesional registrado."
-    );
-    return;
-  }
-
-  if (contactId === loggedUser.id) {
-    alert(
-      "No puedes iniciar una conversación contigo mismo."
-    );
-    return;
-  }
-
-  const normalized = {
-    id: contactId,
-    full_name:
-      contact.full_name ||
-      contact.provider_name ||
-      contact.username ||
-      "Profesional",
-    username:
-      contact.username ||
-      contact.provider_username ||
-      "",
-    email:
-      contact.email ||
-      contact.provider_email ||
-      "",
-  };
-
-  setSelectedContact(normalized);
-  setMessages([]);
-  setPage("messages");
-  loadMessages(normalized);
-};
-
 const loadMessages = async (contact) => {
   if (!loggedUser || !contact?.id) {
     setMessages([]);
