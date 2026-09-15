@@ -563,7 +563,7 @@ function App() {
     setLoadingRequests(false);
   }
 };
-    const openMessaging = (contact) => {
+    ñ
   const openMessaging = (contact) => {
     if (!loggedUser) {
       setPage("account");
