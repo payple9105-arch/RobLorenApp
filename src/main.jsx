@@ -542,9 +542,9 @@ function App() {
       }
 
       setMessages((current) => [
-        ...current,
-        data || payload,
-      ]);
+  ...current,
+  payload,
+]);
 
       setMessageText("");
     } catch {
