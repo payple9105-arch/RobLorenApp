@@ -715,7 +715,12 @@ function App() {
         }
       );
 
-      setMessages(conversations);
+            const firstConversation = conversations[0];
+
+      if (firstConversation) {
+        setSelectedContact(firstConversation);
+        await loadMessages(firstConversation);
+      }
     } catch (error) {
       console.error(
         "Error inesperado cargando conversaciones:",
