@@ -2960,7 +2960,49 @@ const payload = {
       )}
     </main>
   );
-  const MessagesPage = () => {
+ const sendMessage = async () => {
+  if (!loggedUser || !selectedContact?.id) {
+    return;
+  }
+
+  const text = messageText.trim();
+
+  if (!text) {
+    return;
+  }
+
+  setSendingMessage(true);
+
+  try {
+    const { error } = await supabase
+      .from("messages")
+      .insert({
+        request_id: null,
+        message: text,
+        sender_id: loggedUser.id,
+        receiver_id: selectedContact.id,
+      });
+
+    if (error) {
+      alert(
+        "No se pudo enviar el mensaje: " +
+          error.message
+      );
+      return;
+    }
+
+    setMessageText("");
+
+    await loadMessages(selectedContact);
+  } catch (error) {
+    alert(
+      "Ocurrió un error al enviar el mensaje: " +
+        (error?.message || "Error desconocido")
+    );
+  } finally {
+    setSendingMessage(false);
+  }
+};
   const safeContact = selectedContact || null;
 
   const contactName =
