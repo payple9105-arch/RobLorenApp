@@ -97,25 +97,35 @@ const defaultAuthForm = {
 
 function mapService(service, profile = null) {
   const providerId =
-    service.provider_id ||
     service.user_id ||
+    service.provider_id ||
     profile?.id ||
     null;
 
   const profileName =
     profile?.full_name ||
+    profile?.name ||
     profile?.username ||
     "";
 
-  const profileEmail = profile?.email || "";
-
   return {
     ...service,
+
     id: service.id,
-    title: service.title || "Servicio profesional",
+
+    title:
+      service.service_title ||
+      service.title ||
+      "Servicio profesional",
+
     description:
-      service.description || "Servicio ofrecido en RobLoren.",
-    category: service.category || "Otros",
+      service.description ||
+      "Servicio ofrecido en RobLoren.",
+
+    category:
+      service.category ||
+      "Otros",
+
     price: Number(service.price || 0),
 
     provider_id: providerId,
@@ -124,6 +134,7 @@ function mapService(service, profile = null) {
       service.provider_name ||
       profileName ||
       service.profiles?.full_name ||
+      service.profiles?.name ||
       service.profiles?.username ||
       "Profesional RobLoren",
 
@@ -133,11 +144,12 @@ function mapService(service, profile = null) {
       service.profiles?.username ||
       "",
 
-    provider_email:
-      service.provider_email ||
-      profileEmail ||
-      service.profiles?.email ||
-      "",
+    provider_profession:
+      service.provider_profession ||
+      profile?.profession ||
+      service.profiles?.profession ||
+      service.profession ||
+      "Profesional",
 
     provider_bio:
       service.provider_bio ||
@@ -157,13 +169,16 @@ function mapService(service, profile = null) {
       service.profiles?.skills ||
       "",
 
-    rating: Number(service.rating || 4.8),
-    reviews: Number(service.reviews || 0),
+    rating:
+      Number(service.rating || 4.8),
 
-    is_demo: Boolean(service.is_demo),
+    reviews:
+      Number(service.reviews || 0),
+
+    is_demo:
+      Boolean(service.is_demo),
   };
 }
-
 function makeUser(user, profile = null) {
   if (!user) return null;
 
