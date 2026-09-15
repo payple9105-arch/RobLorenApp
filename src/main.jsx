@@ -606,7 +606,15 @@ function App() {
         contact.email ||
         contact.provider_email ||
         "",
-    };  const loadMessages = async (contact) => {
+       };
+
+    setSelectedContact(normalized);
+    setMessages([]);
+    setPage("messages");
+    loadMessages(normalized);
+  };
+
+  const loadMessages = async (contact) => {
     if (!loggedUser || !contact?.id) {
       setMessages([]);
       return;
