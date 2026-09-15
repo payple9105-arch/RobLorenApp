@@ -302,51 +302,66 @@ function App() {
   };
 
   const ensureProfile = async (user) => {
-    if (!user) return null;
+  if (!user) return null;
 
-    try {
-      const { data, error } = await supabase
-
-      if (!error && data) {
-        return data;
-      }
-
-      const username =
-        user.user_metadata?.username ||
-        user.email?.split("@")[0] ||
-        "usuario";
-
-      const profile = {
-        id: user.id,
-        email: user.email || "",
-        full_name:
-          user.user_metadata?.full_name ||
-          user.email?.split("@")[0] ||
-          "Usuario RobLoren",
-        username,
-        bio: "",
-        location: "",
-        skills: "",
-      };
-
+  try {
     const { data, error } = await supabase
-  .from("profiles")
-  .select(
-    "id,email,full_name,username,bio,location,skills"
-  )
-  .eq("id", user.id)
-  .maybeSingle();
+      .from("profiles")
+      .select(
+        "id,name,profession,bio,full_name,username,location,skills"
+      )
+      .eq("id", user.id)
+      .maybeSingle();
 
-      if (!createError && created) {
-        return created;
-      }
-
-      return profile;
-    } catch {
+    if (error) {
+      console.error("Error cargando perfil:", error);
       return null;
     }
-  };
 
+    if (data) {
+      return data;
+    }
+
+    const profile = {
+      id: user.id,
+      name:
+        user.user_metadata?.full_name ||
+        user.email?.split("@")[0] ||
+        "Usuario RobLoren",
+      profession: "Profesional",
+      bio: "",
+      full_name:
+        user.user_metadata?.full_name ||
+        user.email?.split("@")[0] ||
+        "Usuario RobLoren",
+      username:
+        user.user_metadata?.username ||
+        user.email?.split("@")[0] ||
+        "usuario",
+      location: "",
+      skills: "",
+    };
+
+    const { data: created, error: createError } =
+      await supabase
+        .from("profiles")
+        .insert(profile)
+        .select(
+          "id,name,profession,bio,full_name,username,location,skills"
+        )
+        .maybeSingle();
+
+    if (createError) {
+      console.error("Error creando perfil:", createError);
+      return profile;
+    }
+
+    return created || profile;
+  } catch (error) {
+    console.error("Error en ensureProfile:", error);
+    return null;
+  }
+};
   const refreshUser = async (user) => {
     if (!user) {
       setLoggedUser(null);
