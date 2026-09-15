@@ -513,46 +513,50 @@ function App() {
   };
 
   const sendMessage = async () => {
-    if (
-      !loggedUser ||
-      !selectedContact?.id ||
-      !messageText.trim()
-    ) {
+  if (
+    !loggedUser ||
+    !selectedContact?.id ||
+    !messageText.trim()
+  ) {
+    return;
+  }
+
+  setSendingMessage(true);
+
+  try {
+    const payload = {
+      sender_id: loggedUser.id,
+      receiver_id: selectedContact.id,
+      message: messageText.trim(),
+    };
+
+    const { error } = await supabase
+      .from("messages")
+      .insert(payload);
+
+    if (error) {
+      alert(
+        "No se pudo enviar el mensaje: " +
+          error.message
+      );
       return;
     }
 
-    setSendingMessage(true);
+    setMessages((current) => [
+      ...current,
+      payload,
+    ]);
 
-    try {
-      const payload = {
-        sender_id: loggedUser.id,
-        receiver_id: selectedContact.id,
-        message: messageText.trim(),
-      };
-
-      const { error } = await supabase
-  .from("messages")
-  .insert(payload);
-
-      if (error) {
-        alert(
-          "No se pudo enviar el mensaje. Comprueba la configuración de mensajes."
-        );
-        return;
-      }
-
-      setMessages((current) => [
-  ...current,
-  payload,
-]);
-
-      setMessageText("");
-    } catch {
-      alert("Ocurrió un error al enviar el mensaje.");
-    } finally {
-      setSendingMessage(false);
-    }
-  };
+    setMessageText("");
+  } catch (error) {
+    alert(
+      "Ocurrió un error al enviar el mensaje: " +
+        (error?.message || "Error desconocido")
+    );
+  } finally {
+    setSendingMessage(false);
+  }
+};
 
   const openMessaging = (contact) => {
     if (!loggedUser) {
