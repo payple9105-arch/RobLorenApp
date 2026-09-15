@@ -1352,7 +1352,11 @@ const payload = {
                     ? "nav-link active"
                     : "nav-link"
                 }
-                onClick={() => setPage("messages")}
+             onClick={(event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  setPage("messages");
+}}
               >
                 Mensajes
               </button>
