@@ -606,7 +606,64 @@ function App() {
         contact.email ||
         contact.provider_email ||
         "",
-    };
+    };  const loadMessages = async (contact) => {
+    if (!loggedUser || !contact?.id) {
+      setMessages([]);
+      return;
+    }
+
+    setLoadingMessages(true);
+
+    try {
+      const [sentResult, receivedResult] =
+        await Promise.all([
+          supabase
+            .from("messages")
+            .select("*")
+            .eq("sender_id", loggedUser.id)
+            .eq("receiver_id", contact.id),
+
+          supabase
+            .from("messages")
+            .select("*")
+            .eq("sender_id", contact.id)
+            .eq("receiver_id", loggedUser.id),
+        ]);
+
+      if (sentResult.error) {
+        console.error(
+          "Error cargando mensajes enviados:",
+          sentResult.error
+        );
+      }
+
+      if (receivedResult.error) {
+        console.error(
+          "Error cargando mensajes recibidos:",
+          receivedResult.error
+        );
+      }
+
+      const allMessages = [
+        ...(sentResult.data || []),
+        ...(receivedResult.data || []),
+      ].sort(
+        (a, b) =>
+          new Date(a.created_at) -
+          new Date(b.created_at)
+      );
+
+      setMessages(allMessages);
+    } catch (error) {
+      console.error(
+        "Error cargando mensajes:",
+        error
+      );
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
 
     setSelectedContact(normalized);
     setMessages([]);
