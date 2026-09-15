@@ -609,8 +609,7 @@ function App() {
        };
 
     setSelectedContact(normalized);
-    setMessages([]);
-         setPage("messages");
+    setPage("messages");
     loadMessages(normalized);
   };
 
