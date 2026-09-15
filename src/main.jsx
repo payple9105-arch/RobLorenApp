@@ -415,10 +415,10 @@ function App() {
           const { data: profileData } =
             await supabase
               .from("profiles")
-              .select(
-                "id,email,full_name,username,bio,location,skills"
-              )
-              .in("id", providerIds);
+.select(
+  "id,name,profession,bio,full_name,username,location,skills"
+)
+.in("id", providerIds);
 
           if (profileData) {
             profileData.forEach((profile) => {
