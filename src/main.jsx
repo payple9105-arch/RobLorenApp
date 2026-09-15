@@ -2161,8 +2161,9 @@ const payload = {
                 <button
                   className="button outline"
                   onClick={() => {
-                    setPage("services");
-                  }}
+  setPage("messages");
+  loadConversations();
+}}
                 >
                   🛠️ Explorar servicios
                 </button>
