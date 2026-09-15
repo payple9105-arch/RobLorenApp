@@ -2066,8 +2066,6 @@ const payload = {
                   ➕ Publicar servicio
                 </button>
               </div>
-
-              <div className="profile-form">
               <div className="profile-form">
                 <div className="section-heading small">
                   <div>
