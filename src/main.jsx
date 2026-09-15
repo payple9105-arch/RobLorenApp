@@ -451,15 +451,16 @@ function App() {
   };
 
   const loadRequests = async () => {
-    if (!loggedUser) {
-      setRequests([]);
-      return;
-    }
+  if (!loggedUser) {
+    setRequests([]);
+    return;
+  }
 
-    setLoadingRequests(true);
+  setLoadingRequests(true);
 
-    try {
-      const { data, error } = await supabase
+  try {
+    const { data: requestData, error: requestError } =
+      await supabase
         .from("service_requests")
         .select("*")
         .or(
@@ -469,95 +470,84 @@ function App() {
           ascending: false,
         });
 
-      if (!error && data) {
-        setRequests(data);
-      } else {
-        setRequests([]);
-      }
-    } catch {
-      setRequests([]);
-    } finally {
-      setLoadingRequests(false);
-    }
-  };
-
-  const loadMessages = async (contact) => {
-    if (!loggedUser || !contact?.id) {
-      setMessages([]);
-      return;
-    }
-
-    setLoadingMessages(true);
-
-    try {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .or(
-          `and(sender_id.eq.${loggedUser.id},receiver_id.eq.${contact.id}),and(sender_id.eq.${contact.id},receiver_id.eq.${loggedUser.id})`
-        )
-        .order("created_at", {
-          ascending: true,
-        });
-
-      if (!error && data) {
-        setMessages(data);
-      } else {
-        setMessages([]);
-      }
-    } catch {
-      setMessages([]);
-    } finally {
-      setLoadingMessages(false);
-    }
-  };
-
-  const sendMessage = async () => {
-  if (
-    !loggedUser ||
-    !selectedContact?.id ||
-    !messageText.trim()
-  ) {
-    return;
-  }
-
-  setSendingMessage(true);
-
-  try {
-    const payload = {
-      sender_id: loggedUser.id,
-      receiver_id: selectedContact.id,
-      message: messageText.trim(),
-    };
-
-    const { error } = await supabase
-      .from("messages")
-      .insert(payload);
-
-    if (error) {
-      alert(
-        "No se pudo enviar el mensaje: " +
-          error.message
+    if (requestError) {
+      console.error(
+        "Error cargando solicitudes:",
+        requestError
       );
+      setRequests([]);
       return;
     }
 
-    setMessages((current) => [
-      ...current,
-      payload,
-    ]);
+    if (!requestData || requestData.length === 0) {
+      setRequests([]);
+      return;
+    }
 
-    setMessageText("");
-  } catch (error) {
-    alert(
-      "Ocurrió un error al enviar el mensaje: " +
-        (error?.message || "Error desconocido")
+    const serviceIds = [
+      ...new Set(
+        requestData
+          .map((request) => request.service_id)
+          .filter(Boolean)
+      ),
+    ];
+
+    let servicesById = {};
+
+    if (serviceIds.length > 0) {
+      const { data: serviceData, error: serviceError } =
+        await supabase
+          .from("services")
+          .select(
+            "id,service_title,name,category,price,user_id"
+          )
+          .in("id", serviceIds);
+
+      if (!serviceError && serviceData) {
+        servicesById = serviceData.reduce(
+          (accumulator, service) => {
+            accumulator[service.id] = service;
+            return accumulator;
+          },
+          {}
+        );
+      }
+    }
+
+    const enrichedRequests = requestData.map(
+      (request) => {
+        const service =
+          servicesById[request.service_id];
+
+        return {
+          ...request,
+          service_title:
+            service?.service_title ||
+            service?.name ||
+            "Servicio solicitado",
+          service_category:
+            service?.category || "",
+          service_price:
+            service?.price ?? null,
+          service_provider_id:
+            service?.user_id ||
+            request.provider_id ||
+            null,
+        };
+      }
     );
+
+    setRequests(enrichedRequests);
+  } catch (error) {
+    console.error(
+      "Error inesperado cargando solicitudes:",
+      error
+    );
+    setRequests([]);
   } finally {
-    setSendingMessage(false);
+    setLoadingRequests(false);
   }
 };
-
   const openMessaging = (contact) => {
     if (!loggedUser) {
       setPage("account");
