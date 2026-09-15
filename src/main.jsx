@@ -570,6 +570,51 @@ function App() {
     setAccountMode("login");
     return;
   }
+
+  const contactId =
+    contact?.provider_id ||
+    contact?.user_id ||
+    contact?.id ||
+    null;
+
+  if (!contactId) {
+    alert(
+      "Este servicio todavía no está asociado a un profesional registrado."
+    );
+    return;
+  }
+
+  if (contactId === loggedUser.id) {
+    alert(
+      "No puedes iniciar una conversación contigo mismo."
+    );
+    return;
+  }
+
+  const normalized = {
+    id: contactId,
+    full_name:
+      contact?.provider_name ||
+      contact?.full_name ||
+      contact?.username ||
+      contact?.provider_username ||
+      "Profesional",
+    username:
+      contact?.provider_username ||
+      contact?.username ||
+      "",
+    profession:
+      contact?.provider_profession ||
+      contact?.profession ||
+      "Profesional",
+  };
+
+  setSelectedContact(normalized);
+  setMessages([]);
+  setMessageText("");
+  setLoadingMessages(false);
+  setPage("messages");
+};
 const loadMessages = async (contact) => {
   if (!loggedUser || !contact?.id) {
     setMessages([]);
