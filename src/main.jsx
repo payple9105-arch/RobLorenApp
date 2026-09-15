@@ -2830,10 +2830,8 @@ const payload = {
                           }
                         >
                           <div>
-                            {
-                              message.content
-                            }
-                          </div>
+  {message.message}
+</div>
 
                           <small>
                             {dateText(
