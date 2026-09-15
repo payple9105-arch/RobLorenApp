@@ -613,7 +613,6 @@ function App() {
       setPage("messages");
     loadMessages(normalized);
   };
-  
   const loadMessages = async (contact) => {
     if (!loggedUser || !contact?.id) {
       setMessages([]);
