@@ -2961,7 +2961,25 @@ const payload = {
     </main>
   );
 
-  const MessagesPage = () => (
+  const MessagesPage = () => {
+  const safeContact = selectedContact || null;
+
+  const contactName =
+    typeof safeContact?.full_name === "string" &&
+    safeContact.full_name.trim()
+      ? safeContact.full_name.trim()
+      : "Profesional";
+
+  const contactUsername =
+    typeof safeContact?.username === "string"
+      ? safeContact.username.trim()
+      : "";
+
+  const safeMessages = Array.isArray(messages)
+    ? messages
+    : [];
+
+  return (
     <main className="page-container messages-page">
       <section className="page-header">
         <span className="eyebrow">
@@ -2982,17 +3000,18 @@ const payload = {
             Conversaciones
           </div>
 
-          {selectedContact ? (
-            <button className="contact active">
+          {safeContact ? (
+            <button
+              type="button"
+              className="contact active"
+            >
               <span className="avatar">
-                {getInitials(
-                  selectedContact.full_name
-                )}
+                {getInitials(contactName)}
               </span>
 
               <span>
                 <strong>
-                  {selectedContact.full_name}
+                  {contactName}
                 </strong>
 
                 <small>
@@ -3010,25 +3029,21 @@ const payload = {
         </aside>
 
         <section className="chat-panel">
-          {selectedContact ? (
+          {safeContact ? (
             <>
               <div className="chat-header">
                 <span className="avatar">
-                  {getInitials(
-                    selectedContact.full_name
-                  )}
+                  {getInitials(contactName)}
                 </span>
 
                 <div>
                   <strong>
-                    {
-                      selectedContact.full_name
-                    }
+                    {contactName}
                   </strong>
 
                   <span>
-                    {selectedContact.username
-                      ? `@${selectedContact.username}`
+                    {contactUsername
+                      ? `@${contactUsername}`
                       : "RobLoren"}
                   </span>
                 </div>
@@ -3039,8 +3054,7 @@ const payload = {
                   <div className="loading-state">
                     Cargando mensajes...
                   </div>
-                ) : messages.length ===
-                  0 ? (
+                ) : safeMessages.length === 0 ? (
                   <div className="chat-empty">
                     <div>💬</div>
 
@@ -3055,19 +3069,16 @@ const payload = {
                     </p>
                   </div>
                 ) : (
-                  messages.map(
-                    (
-                      message,
-                      index
-                    ) => {
+                  safeMessages.map(
+                    (message, index) => {
                       const mine =
-                        message.sender_id ===
-                        loggedUser.id;
+                        message?.sender_id ===
+                        loggedUser?.id;
 
                       return (
                         <div
                           key={
-                            message.id ||
+                            message?.id ||
                             index
                           }
                           className={
@@ -3077,12 +3088,14 @@ const payload = {
                           }
                         >
                           <div>
-  {message.message}
-</div>
+                            {String(
+                              message?.message || ""
+                            )}
+                          </div>
 
                           <small>
                             {dateText(
-                              message.created_at
+                              message?.created_at
                             )}
                           </small>
                         </div>
@@ -3102,8 +3115,7 @@ const payload = {
                   }
                   onKeyDown={(event) => {
                     if (
-                      event.key ===
-                      "Enter"
+                      event.key === "Enter"
                     ) {
                       event.preventDefault();
                       sendMessage();
@@ -3113,14 +3125,13 @@ const payload = {
                 />
 
                 <button
+                  type="button"
                   className="button primary"
                   disabled={
                     sendingMessage ||
                     !messageText.trim()
                   }
-                  onClick={
-                    sendMessage
-                  }
+                  onClick={sendMessage}
                 >
                   →
                 </button>
@@ -3144,7 +3155,6 @@ const payload = {
       </div>
     </main>
   );
-
   const OfferPage = () => (
     <main className="page-container">
       <section className="page-header">
