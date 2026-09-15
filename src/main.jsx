@@ -329,14 +329,13 @@ function App() {
         skills: "",
       };
 
-      const { data: created, error: createError } =
-        await supabase
-          .from("profiles")
-          .insert(profile)
-          .select(
-            "id,email,full_name,username,bio,location,skills"
-          )
-          .maybeSingle();
+      const { data, error } = await supabase
+  .from("profiles")
+  .select(
+    "id,name,profession,full_name,username,bio,location,skills"
+  )
+  .eq("id", user.id)
+  .maybeSingle();
 
       if (!createError && created) {
         return created;
