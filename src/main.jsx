@@ -530,11 +530,9 @@ function App() {
         message: messageText.trim(),
       };
 
-      const { data, error } = await supabase
-        .from("messages")
-        .insert(payload)
-        .select()
-        .maybeSingle();
+      const { error } = await supabase
+  .from("messages")
+  .insert(payload);
 
       if (error) {
         alert(
