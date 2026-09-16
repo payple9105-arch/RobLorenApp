@@ -147,7 +147,29 @@ input {
     flex-wrap: wrap;
     gap: 8px 12px;
   }
+.header-inner .brand {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 
+.header-inner .header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.header-inner .header-actions .button {
+  width: auto;
+}
+
+.header-inner .nav {
+  display: flex;
+  order: 3;
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
   .header-inner .nav {
     order: 3;
     width: 100%;
