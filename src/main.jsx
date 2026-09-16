@@ -358,7 +358,7 @@ function App() {
     return;
   }
 
-  alert("USUARIO AUTH: " + user.id);
+
 
   const profile = await ensureProfile(user);
     const completeUser = makeUser(user, profile);
