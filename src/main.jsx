@@ -4336,14 +4336,41 @@ function App() {
         }
 
         .hire-card {
-          position: sticky;
-          top: 105px;
-          background: white;
-          border: 1px solid #dde6f0;
-          border-radius: 20px;
-          padding: 25px;
-          box-shadow: 0 18px 45px rgba(28,59,99,.08);
-        }
+  position: sticky;
+  top: 105px;
+  background: #ffffff;
+  border: 1px solid #dde6f0;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 18px 45px rgba(28, 59, 99, 0.08);
+  overflow: hidden;
+}
+
+.hire-card textarea {
+  width: 100%;
+  min-height: 120px;
+  margin: 14px 0;
+  resize: vertical;
+}
+
+.hire-card .button {
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  .hire-card {
+    position: relative;
+    top: auto;
+    padding: 20px;
+    border-radius: 17px;
+    box-shadow: 0 10px 28px rgba(28, 59, 99, 0.07);
+  }
+
+  .hire-card textarea {
+    min-height: 110px;
+    font-size: 16px;
+  }
+}
 
         .hire-price {
           display: flex;
