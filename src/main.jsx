@@ -355,12 +355,14 @@ function App() {
   };
 
   const refreshUser = async (user) => {
-    if (!user) {
-      setLoggedUser(null);
-      return;
-    }
+  if (!user) {
+    setLoggedUser(null);
+    return;
+  }
 
-    const profile = await ensureProfile(user);
+  console.log("USUARIO AUTH:", user.id);
+
+  const profile = await ensureProfile(user);
     const completeUser = makeUser(user, profile);
 
     setLoggedUser(completeUser);
