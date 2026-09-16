@@ -4492,36 +4492,60 @@ function App() {
   font-size: 28px;
 }
         .profile-form {
-          display: grid;
-          gap: 17px;
-        }
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid #e4eaf2;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(30, 55, 90, 0.06);
+}
 
-        .form-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 15px;
-        }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
 
-        label {
-          display: grid;
-          gap: 7px;
-          color: #506078;
-          font-size: 12px;
-          font-weight: 800;
-        }
+label {
+  display: grid;
+  gap: 8px;
+  color: #506078;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
 
-        input,
-        select {
-          width: 100%;
-          min-height: 45px;
-          border: 1px solid #d9e2ed;
-          border-radius: 10px;
-          outline: 0;
-          padding: 10px 12px;
-          background: #fbfcfe;
-          color: #30415b;
-        }
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #d9e2ed;
+  border-radius: 11px;
+  outline: 0;
+  padding: 11px 13px;
+  background: #fbfcfe;
+  color: #30415b;
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
 
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #2f6fed;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.10);
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
         .auth-layout {
           display: grid;
           grid-template-columns: 1fr 1fr;
