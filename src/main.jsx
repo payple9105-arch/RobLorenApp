@@ -340,7 +340,7 @@ function App() {
           .from("profiles")
           .insert(profile)
           .select(
-            "id,email,full_name,username,bio,location,skills"
+            "id,full_name,username,bio,location,skills"
           )
           .maybeSingle();
 
