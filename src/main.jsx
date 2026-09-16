@@ -2833,7 +2833,7 @@ function App() {
                         >
                           <div>
                             {
-                              message.content
+                           message.message
                             }
                           </div>
 
