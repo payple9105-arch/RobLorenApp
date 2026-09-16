@@ -832,7 +832,6 @@ function App() {
     setSavingProfile(false);
   }
 };
-
   const register = async () => {
     const email = authForm.email.trim();
     const password = authForm.password;
