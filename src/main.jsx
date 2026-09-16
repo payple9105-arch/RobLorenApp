@@ -408,7 +408,7 @@ function App() {
             await supabase
               .from("profiles")
               .select(
-                "id,email,full_name,username,bio,location,skills"
+                "id,full_name,username,bio,location,skills"
               )
               .in("id", providerIds);
 
