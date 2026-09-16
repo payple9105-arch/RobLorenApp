@@ -308,7 +308,7 @@ function App() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id,email,full_name,username,bio,location,skills"
+          "id,full_name,username,bio,location,skills"
         )
         .eq("id", user.id)
         .maybeSingle();
