@@ -4459,37 +4459,50 @@ function App() {
           margin-bottom: 45px;
         }
 
-       .stat-card {
-  background: #f5f8fc;
-  border: 1px solid #e5ebf2;
-  padding: 20px;
-  border-radius: 15px;
+      .stat-card {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e3e9f1;
+  padding: 22px;
+  border-radius: 16px;
   width: 100%;
+  min-height: 105px;
   text-align: left;
   font: inherit;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 18px rgba(30, 55, 90, 0.05);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(27, 78, 156, 0.10);
+  transform: translateY(-3px);
+  border-color: #cbd8e8;
+  box-shadow: 0 12px 26px rgba(30, 55, 90, 0.09);
 }
 
 .stat-card:active {
-  transform: translateY(0);
+  transform: translateY(-1px);
 }
 
 .stat-card span {
   display: block;
-  color: #8490a1;
+  color: #718096;
   font-size: 11px;
-  margin-bottom: 7px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: 9px;
 }
 
 .stat-card strong {
+  display: block;
   color: #1b4e9c;
-  font-size: 28px;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 800;
 }
     .profile-tagline {
   display: block;
