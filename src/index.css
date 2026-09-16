@@ -139,9 +139,28 @@ input {
 }
 
 @media (max-width: 700px) {
-  .nav {
-    display: none;
-  }
+ .nav {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 8px 0;
+  margin: 0;
+  scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-link {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 42px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+}
 
   .hero {
     padding: 55px 0;
