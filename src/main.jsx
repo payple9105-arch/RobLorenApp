@@ -4389,25 +4389,38 @@ function App() {
           margin-bottom: 45px;
         }
 
-        .stat-card {
-          background: #f5f8fc;
-          border: 1px solid #e5ebf2;
-          padding: 20px;
-          border-radius: 15px;
-        }
+       .stat-card {
+  background: #f5f8fc;
+  border: 1px solid #e5ebf2;
+  padding: 20px;
+  border-radius: 15px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-        .stat-card span {
-          display: block;
-          color: #8490a1;
-          font-size: 11px;
-          margin-bottom: 7px;
-        }
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(27, 78, 156, 0.10);
+}
 
-        .stat-card strong {
-          color: #1b4e9c;
-          font-size: 28px;
-        }
+.stat-card:active {
+  transform: translateY(0);
+}
 
+.stat-card span {
+  display: block;
+  color: #8490a1;
+  font-size: 11px;
+  margin-bottom: 7px;
+}
+
+.stat-card strong {
+  color: #1b4e9c;
+  font-size: 28px;
+}
         .profile-form {
           display: grid;
           gap: 17px;
