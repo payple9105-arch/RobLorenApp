@@ -340,11 +340,9 @@ function App() {
           .from("profiles")
           .insert(profile)
           .select(
-           .select(
- .select(
-  "id,full_name,username,bio,location,skills"
-)  
-        .maybeSingle();
+            "id,email,full_name,username,bio,location,skills"
+          )
+          .maybeSingle();
 
       if (!createError && created) {
         return created;
