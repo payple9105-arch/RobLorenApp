@@ -4491,7 +4491,16 @@ function App() {
   color: #1b4e9c;
   font-size: 28px;
 }
-        .profile-form {
+    .profile-tagline {
+  display: block;
+  margin-top: 8px;
+  color: #6b7a90;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.profile-form {
   display: grid;
   gap: 20px;
   padding: 24px;
@@ -4500,13 +4509,6 @@ function App() {
   background: #ffffff;
   box-shadow: 0 10px 30px rgba(30, 55, 90, 0.06);
 }
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-
 label {
   display: grid;
   gap: 8px;
