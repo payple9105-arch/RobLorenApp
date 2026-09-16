@@ -519,7 +519,7 @@ function App() {
       const payload = {
         sender_id: loggedUser.id,
         receiver_id: selectedContact.id,
-        content: messageText.trim(),
+        message: messageText.trim(),
       };
 
       const { data, error } = await supabase
