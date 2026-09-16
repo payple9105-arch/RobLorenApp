@@ -678,41 +678,75 @@ function App() {
     }
   };
 
-  const changeRequestStatus = async (
-    requestId,
-    status
-  ) => {
-    if (!requestId) return;
+ const changeRequestStatus = async (
+  requestId,
+  status
+) => {
+  if (!requestId) return;
 
-    setUpdatingRequest(requestId);
+  setUpdatingRequest(requestId);
 
-    try {
-      const { error } = await supabase
-        .from("service_requests")
-        .update({ status })
-        .eq("id", requestId);
+  try {
+    const { data, error } = await supabase
+      .from("service_requests")
+      .update({ status })
+      .eq("id", requestId)
+      .select()
+      .maybeSingle();
 
-      if (!error) {
-        setRequests((current) =>
-          current.map((request) =>
-            request.id === requestId
-              ? { ...request, status }
-              : request
-          )
-        );
-      } else {
-        alert(
-          "No se pudo actualizar el estado de la solicitud."
-        );
-      }
-    } catch {
-      alert(
-        "Ocurrió un error al actualizar la solicitud."
+    if (error) {
+      console.error(
+        "Error actualizando solicitud:",
+        error
       );
-    } finally {
-      setUpdatingRequest(null);
+
+      alert(
+        "No se pudo actualizar la solicitud:\n\n" +
+          error.message
+      );
+
+      return;
     }
-  };
+
+    if (!data) {
+      alert(
+        "La solicitud no se pudo actualizar. " +
+          "Supabase no devolvió ningún registro."
+      );
+
+      return;
+    }
+
+    setRequests((current) =>
+      current.map((request) =>
+        request.id === requestId
+          ? {
+              ...request,
+              status: data.status,
+            }
+          : request
+      )
+    );
+
+    alert(
+      `Solicitud actualizada: ${statusText(
+        data.status
+      )}`
+    );
+  } catch (error) {
+    console.error(
+      "Error inesperado:",
+      error
+    );
+
+    alert(
+      "Ocurrió un error al actualizar la solicitud:\n\n" +
+        (error?.message || "Error desconocido")
+    );
+  } finally {
+    setUpdatingRequest(null);
+  }
+};
 
   const saveProfile = async () => {
     if (!loggedUser) return;
