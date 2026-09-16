@@ -322,19 +322,17 @@ function App() {
         user.email?.split("@")[0] ||
         "usuario";
 
-      const profile = {
-        id: user.id,
-        email: user.email || "",
-        full_name:
-          user.user_metadata?.full_name ||
-          user.email?.split("@")[0] ||
-          "Usuario RobLoren",
-        username,
-        bio: "",
-        location: "",
-        skills: "",
-      };
-
+     const profile = {
+  id: user.id,
+  full_name:
+    user.user_metadata?.full_name ||
+    user.email?.split("@")[0] ||
+    "Usuario RobLoren",
+  username,
+  bio: "",
+  location: "",
+  skills: "",
+};
       const { data: created, error: createError } =
         await supabase
           .from("profiles")
