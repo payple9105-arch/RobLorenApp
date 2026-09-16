@@ -360,7 +360,7 @@ function App() {
     return;
   }
 
-  console.log("USUARIO AUTH:", user.id);
+  alert("USUARIO AUTH: " + user.id);
 
   const profile = await ensureProfile(user);
     const completeUser = makeUser(user, profile);
