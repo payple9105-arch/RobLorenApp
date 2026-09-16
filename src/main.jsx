@@ -1969,37 +1969,52 @@ function App() {
               </div>
 
               <div className="dashboard-grid">
-                <div className="stat-card">
-                  <span>
-                    Servicios publicados
-                  </span>
+  <button
+    type="button"
+    className="stat-card"
+    onClick={() => setPage("services")}
+  >
+    <span>
+      Servicios publicados
+    </span>
 
-                  <strong>
-                    {publishedCount}
-                  </strong>
-                </div>
+    <strong>
+      {publishedCount}
+    </strong>
+  </button>
 
-                <div className="stat-card">
-                  <span>
-                    Solicitudes pendientes
-                  </span>
+  <button
+    type="button"
+    className="stat-card"
+    onClick={() => {
+      setPage("requests");
+    }}
+  >
+    <span>
+      Solicitudes pendientes
+    </span>
 
-                  <strong>
-                    {pendingRequests}
-                  </strong>
-                </div>
+    <strong>
+      {pendingRequests}
+    </strong>
+  </button>
 
-                <div className="stat-card">
-                  <span>
-                    Trabajos aceptados
-                  </span>
+  <button
+    type="button"
+    className="stat-card"
+    onClick={() => {
+      setPage("requests");
+    }}
+  >
+    <span>
+      Trabajos aceptados
+    </span>
 
-                  <strong>
-                    {acceptedRequests}
-                  </strong>
-                </div>
-              </div>
-
+    <strong>
+      {acceptedRequests}
+    </strong>
+  </button>
+</div>
               <div className="profile-form">
                 <div className="section-heading small">
                   <div>
