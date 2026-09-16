@@ -2025,12 +2025,16 @@ function App() {
                   </span>
 
                   <h1>
-                    {loggedUser.full_name}
-                  </h1>
+  {loggedUser.full_name}
+</h1>
 
-                  <p>
-                    @{loggedUser.username}
-                  </p>
+<p>
+  @{loggedUser.username}
+</p>
+
+<span className="profile-tagline">
+  Profesional RobLoren · Conecta talento con oportunidades.
+</span>
                 </div>
               </div>
 
