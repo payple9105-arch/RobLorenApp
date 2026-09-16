@@ -749,56 +749,89 @@ function App() {
 };
 
   const saveProfile = async () => {
-    if (!loggedUser) return;
+  if (!loggedUser) return;
 
-    if (!profileForm.full_name.trim()) {
-      alert("Escribe tu nombre completo.");
+  if (!profileForm.full_name.trim()) {
+    alert("Escribe tu nombre completo.");
+    return;
+  }
+
+  if (!profileForm.username.trim()) {
+    alert("Escribe un nombre de usuario.");
+    return;
+  }
+
+  setSavingProfile(true);
+
+  try {
+    const payload = {
+      full_name: profileForm.full_name.trim(),
+      username: profileForm.username.trim(),
+      bio: profileForm.bio.trim(),
+      location: profileForm.location.trim(),
+      skills: profileForm.skills.trim(),
+    };
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(payload)
+      .eq("id", loggedUser.id)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.error(
+        "Error actualizando perfil:",
+        error
+      );
+
+      alert(
+        "No se pudo guardar el perfil:\n\n" +
+          error.message
+      );
+
       return;
     }
 
-    if (!profileForm.username.trim()) {
-      alert("Escribe un nombre de usuario.");
+    if (!data) {
+      alert(
+        "El perfil no se pudo actualizar. " +
+          "Supabase no devolvió ningún registro."
+      );
+
       return;
     }
 
-    setSavingProfile(true);
+    setLoggedUser((current) => ({
+      ...current,
+      ...data,
+    }));
 
-    try {
-      const payload = {
-        full_name: profileForm.full_name.trim(),
-        username: profileForm.username.trim(),
-        bio: profileForm.bio.trim(),
-        location: profileForm.location.trim(),
-        skills: profileForm.skills.trim(),
-      };
+    setProfileForm({
+      full_name: data.full_name || "",
+      username: data.username || "",
+      bio: data.bio || "",
+      location: data.location || "",
+      skills: data.skills || "",
+    });
 
-      const { error } = await supabase
-        .from("profiles")
-        .update(payload)
-        .eq("id", loggedUser.id);
+    await loadServices();
 
-      if (error) {
-        alert(
-          "No se pudo guardar el perfil: " +
-            error.message
-        );
-        return;
-      }
+    alert("Perfil actualizado correctamente.");
+  } catch (error) {
+    console.error(
+      "Error inesperado:",
+      error
+    );
 
-      setLoggedUser((current) => ({
-        ...current,
-        ...payload,
-      }));
-
-      await loadServices();
-
-      alert("Perfil actualizado correctamente.");
-    } catch {
-      alert("Ocurrió un error al guardar el perfil.");
-    } finally {
-      setSavingProfile(false);
-    }
-  };
+    alert(
+      "Ocurrió un error al guardar el perfil:\n\n" +
+        (error?.message || "Error desconocido")
+    );
+  } finally {
+    setSavingProfile(false);
+  }
+};
 
   const register = async () => {
     const email = authForm.email.trim();
