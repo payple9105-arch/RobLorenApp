@@ -3253,11 +3253,23 @@ function App() {
           margin-top: 2px;
         }
 
-        .nav {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-        }
+       .nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.nav button {
+  display: inline-flex !important;
+  align-items: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 
       .nav-link {
   display: inline-flex;
