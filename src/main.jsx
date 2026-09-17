@@ -2868,32 +2868,53 @@ const loadConversationContacts = async () => {
             Conversaciones
           </div>
 
-          {selectedContact ? (
-            <button className="contact active">
-              <span className="avatar">
-                {getInitials(
-                  selectedContact.full_name
-                )}
-              </span>
+         <aside className="contacts-panel">
+  <div className="contacts-title">
+    Conversaciones
+  </div>
 
-              <span>
-                <strong>
-                  {selectedContact.full_name}
-                </strong>
-
-                <small>
-                  Conversación activa
-                </small>
-              </span>
-            </button>
-          ) : (
-            <div className="contacts-empty">
-              Selecciona un profesional desde un
-              servicio para comenzar una
-              conversación.
-            </div>
+  {conversationContacts.length > 0 ? (
+    conversationContacts.map((contact) => (
+      <button
+        key={contact.id}
+        className={
+          selectedContact?.id === contact.id
+            ? "contact active"
+            : "contact"
+        }
+        onClick={() => {
+          setSelectedContact(contact);
+          loadMessages(contact);
+        }}
+      >
+        <span className="avatar">
+          {getInitials(
+            contact.full_name ||
+              contact.name ||
+              "Usuario"
           )}
-        </aside>
+        </span>
+
+        <span>
+          <strong>
+            {contact.full_name ||
+              contact.name ||
+              "Usuario"}
+          </strong>
+
+          <small>
+            {contact.profession ||
+              "Usuario de RobLoren"}
+          </small>
+        </span>
+      </button>
+    ))
+  ) : (
+    <div className="contacts-empty">
+      Aún no tienes conversaciones.
+    </div>
+  )}
+</aside>
 
         <section className="chat-panel">
           {selectedContact ? (
