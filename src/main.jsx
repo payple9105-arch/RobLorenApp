@@ -260,11 +260,13 @@ function App() {
   const [requestMessage, setRequestMessage] = useState("");
   const [sendingRequest, setSendingRequest] = useState(false);
 
-  const [selectedContact, setSelectedContact] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [messageText, setMessageText] = useState("");
-  const [loadingMessages, setLoadingMessages] = useState(false);
-  const [sendingMessage, setSendingMessage] = useState(false);
+ const [selectedContact, setSelectedContact] = useState(null);
+const [conversationContacts, setConversationContacts] =
+  useState([]);
+const [messages, setMessages] = useState([]);
+const [messageText, setMessageText] = useState("");
+const [loadingMessages, setLoadingMessages] = useState(false);
+const [sendingMessage, setSendingMessage] = useState(false);
 
   const [servicesLoading, setServicesLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
