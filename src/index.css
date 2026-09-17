@@ -139,56 +139,39 @@ input {
 }
 
 @media (max-width: 700px) {
+  .header {
+    overflow: visible;
+  }
+
   .header-inner {
     width: calc(100% - 24px);
     min-height: auto;
     padding: 12px 0;
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 10px;
   }
 
   .header-inner .brand {
+    flex: 1 1 auto;
     min-width: 0;
-    flex: 1;
-  }
-
-  .brand-name {
-    font-size: 20px;
-  }
-
-  .brand-slogan {
-    font-size: 11px;
-    white-space: nowrap;
-  }
-
-  .brand-mark {
-    width: 38px;
-    height: 38px;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-
-  .header-actions {
-    gap: 6px;
-    flex-shrink: 0;
-  }
-
-  .header-actions .button {
-    padding: 8px 10px;
-    font-size: 13px;
   }
 
   .header-inner .nav {
     order: 3;
+    flex: 0 0 100%;
     width: 100%;
+    min-width: 0;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
     gap: 6px;
     overflow-x: auto;
+    overflow-y: hidden;
     white-space: nowrap;
-    padding-bottom: 4px;
+    padding: 4px 0;
+    visibility: visible;
+    opacity: 1;
     scrollbar-width: none;
   }
 
@@ -196,20 +179,14 @@ input {
     display: none;
   }
 
-  .header-inner .nav button,
-  .header-inner .nav-link {
-    flex-shrink: 0;
+  .header-inner .nav .nav-link {
+    display: inline-flex;
+    flex: 0 0 auto;
+    visibility: visible;
+    opacity: 1;
   }
 
-  .hero {
-    padding: 36px 16px;
-  }
-
-  .search {
-    width: 100%;
-  }
-
-  .dashboard-grid {
-    grid-template-columns: 1fr;
+  .header-actions {
+    flex: 0 0 auto;
   }
 }
