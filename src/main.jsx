@@ -3259,17 +3259,17 @@ function App() {
           gap: 5px;
         }
 
-        .nav-link {
-          position: relative;
-          border: 0;
-          background: transparent;
-          padding: 10px 13px;
-          color: #68768a;
-          font-weight: 700;
-          font-size: 14px;
-          border-radius: 9px;
-        }
-
+      .nav-link {
+  display: inline-flex;
+  position: relative;
+  border: 0;
+  background: transparent;
+  padding: 10px 13px;
+  color: #68768a;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 9px;
+}
         .nav-link:hover,
         .nav-link.active {
           color: #1755b4;
