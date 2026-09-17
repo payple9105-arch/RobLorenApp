@@ -475,37 +475,96 @@ const [sendingMessage, setSendingMessage] = useState(false);
     }
   };
 
-  const loadMessages = async (contact) => {
-    if (!loggedUser || !contact?.id) {
+const loadMessages = async (contact) => {
+  if (!loggedUser || !contact?.id) {
+    setMessages([]);
+    return;
+  }
+
+  setLoadingMessages(true);
+
+  try {
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .or(
+        `and(sender_id.eq.${loggedUser.id},receiver_id.eq.${contact.id}),and(sender_id.eq.${contact.id},receiver_id.eq.${loggedUser.id})`
+      )
+      .order("created_at", {
+        ascending: true,
+      });
+
+    if (!error && data) {
+      setMessages(data);
+    } else {
       setMessages([]);
+    }
+  } catch {
+    setMessages([]);
+  } finally {
+    setLoadingMessages(false);
+  }
+};
+
+
+/* Cargar personas con las que ya existen conversaciones */
+const loadConversationContacts = async () => {
+  if (!loggedUser?.id) {
+    setConversationContacts([]);
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("messages")
+      .select("sender_id, receiver_id, created_at")
+      .or(
+        `sender_id.eq.${loggedUser.id},receiver_id.eq.${loggedUser.id}`
+      )
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (error || !data) {
+      setConversationContacts([]);
       return;
     }
 
-    setLoadingMessages(true);
-
-    try {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .or(
-          `and(sender_id.eq.${loggedUser.id},receiver_id.eq.${contact.id}),and(sender_id.eq.${contact.id},receiver_id.eq.${loggedUser.id})`
+    const contactIds = [
+      ...new Set(
+        data.map((message) =>
+          message.sender_id === loggedUser.id
+            ? message.receiver_id
+            : message.sender_id
         )
-        .order("created_at", {
-          ascending: true,
-        });
+      ),
+    ];
 
-      if (!error && data) {
-        setMessages(data);
-      } else {
-        setMessages([]);
-      }
-    } catch {
-      setMessages([]);
-    } finally {
-      setLoadingMessages(false);
+    if (contactIds.length === 0) {
+      setConversationContacts([]);
+      return;
     }
-  };
 
+    const {
+      data: profiles,
+      error: profilesError,
+    } = await supabase
+      .from("profiles")
+      .select(
+        "id, full_name, username, name, profession"
+      )
+      .in("id", contactIds);
+
+    if (profilesError || !profiles) {
+      setConversationContacts([]);
+      return;
+    }
+
+    setConversationContacts(profiles);
+  } catch {
+    setConversationContacts([]);
+  }
+};
   const sendMessage = async () => {
     if (
       !loggedUser ||
