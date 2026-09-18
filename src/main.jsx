@@ -444,68 +444,112 @@ const [sendingMessage, setSendingMessage] = useState(false);
     }
   };
 
-  const loadRequests = async () => {
-    if (!loggedUser) {
+ const loadRequests = async () => {
+  if (!loggedUser) {
+    setRequests([]);
+    return;
+  }
+
+  setLoadingRequests(true);
+
+  try {
+    const { data, error } = await supabase
+      .from("service_requests")
+      .select("*")
+      .or(
+        `client_id.eq.${loggedUser.id},provider_id.eq.${loggedUser.id}`
+      )
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (error || !data) {
       setRequests([]);
       return;
     }
 
-    setLoadingRequests(true);
+    const serviceIds = [
+      ...new Set(
+        data
+          .map((request) => request.service_id)
+          .filter(Boolean)
+      ),
+    ];
 
-    try {
-      const { data, error } = await supabase
-        .from("service_requests")
-        .select("*")
-        .or(
-          `client_id.eq.${loggedUser.id},provider_id.eq.${loggedUser.id}`
+    const providerIds = [
+      ...new Set(
+        data
+          .map((request) => request.provider_id)
+          .filter(Boolean)
+      ),
+    ];
+
+    let services = [];
+    let providers = [];
+
+    if (serviceIds.length > 0) {
+      const {
+        data: serviceData,
+      } = await supabase
+        .from("services")
+        .select("id, title, user_id")
+        .in("id", serviceIds);
+
+      services = serviceData || [];
+    }
+
+    if (providerIds.length > 0) {
+      const {
+        data: providerData,
+      } = await supabase
+        .from("profiles")
+        .select(
+          "id, full_name, username, name, profession"
         )
-        .order("created_at", {
-          ascending: false,
-        });
+        .in("id", providerIds);
 
-      if (!error && data) {
-        setRequests(data);
-      } else {
-        setRequests([]);
+      providers = providerData || [];
+    }
+
+    const enrichedRequests = data.map(
+      (request) => {
+        const service = services.find(
+          (item) =>
+            item.id === request.service_id
+        );
+
+        const provider = providers.find(
+          (item) =>
+            item.id === request.provider_id
+        );
+
+        return {
+          ...request,
+
+          service_title:
+            service?.title ||
+            "Servicio solicitado",
+
+          provider_name:
+            provider?.full_name ||
+            provider?.name ||
+            provider?.username ||
+            "Profesional",
+
+          provider_profession:
+            provider?.profession ||
+            "Profesional de RobLoren",
+        };
       }
-    } catch {
-      setRequests([]);
-    } finally {
-      setLoadingRequests(false);
-    }
-  };
+    );
 
-const loadMessages = async (contact) => {
-  if (!loggedUser || !contact?.id) {
-    setMessages([]);
-    return;
-  }
-
-  setLoadingMessages(true);
-
-  try {
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .or(
-        `and(sender_id.eq.${loggedUser.id},receiver_id.eq.${contact.id}),and(sender_id.eq.${contact.id},receiver_id.eq.${loggedUser.id})`
-      )
-      .order("created_at", {
-        ascending: true,
-      });
-
-    if (!error && data) {
-      setMessages(data);
-    } else {
-      setMessages([]);
-    }
+    setRequests(enrichedRequests);
   } catch {
-    setMessages([]);
+    setRequests([]);
   } finally {
-    setLoadingMessages(false);
+    setLoadingRequests(false);
   }
 };
-
 
 /* Cargar personas con las que ya existen conversaciones */
 const loadConversationContacts = async () => {
