@@ -2734,112 +2734,122 @@ useEffect(() => {
   };
 
   const RequestColumn = memo(
-    function RequestColumn({
-      request,
-    }) {
-      return (
-        <article className="request-card">
-          <div className="request-head">
-            <div>
-              <span className="request-label">
-                SOLICITUD
-              </span>
+  function RequestColumn({
+    request,
+  }) {
+    const isProvider =
+      loggedUser?.id === request.provider_id;
 
-              <h3>
-                {request.service_title ||
-                  "Servicio solicitado"}
-              </h3>
-            </div>
+    const isClient =
+      loggedUser?.id === request.client_id;
 
-            <span
-              className={`status ${
-                request.status ||
-                "pending"
-              }`}
-            >
-              {statusText(
-                request.status
-              )}
+    return (
+      <article className="request-card">
+        <div className="request-head">
+          <div>
+            <span className="request-label">
+              {isProvider
+                ? "SOLICITUD RECIBIDA"
+                : "SOLICITUD ENVIADA"}
             </span>
+
+            <h3>
+              {request.service_title ||
+                "Servicio solicitado"}
+            </h3>
           </div>
 
-          <p>
-            {request.message ||
-              "Sin mensaje adicional."}
-          </p>
-
-          <div className="request-meta">
-            <span>
-              📅{" "}
-              {dateText(
-                request.created_at
-              )}
-            </span>
-          </div>
-
-          {loggedUser?.id ===
-            request.provider_id &&
-            request.status ===
-              "pending" && (
-              <div className="request-actions">
-                <button
-                  className="button primary"
-                  disabled={
-                    updatingRequest ===
-                    request.id
-                  }
-                  onClick={() =>
-                    changeRequestStatus(
-                      request.id,
-                      "accepted"
-                    )
-                  }
-                >
-                  Aceptar
-                </button>
-
-                <button
-                  className="button danger"
-                  disabled={
-                    updatingRequest ===
-                    request.id
-                  }
-                  onClick={() =>
-                    changeRequestStatus(
-                      request.id,
-                      "rejected"
-                    )
-                  }
-                >
-                  Rechazar
-                </button>
-              </div>
+          <span
+            className={`status ${
+              request.status ||
+              "pending"
+            }`}
+          >
+            {statusText(
+              request.status
             )}
+          </span>
+        </div>
 
-          {loggedUser?.id ===
-            request.client_id &&
-            request.status ===
-              "accepted" && (
-            <button
-              className="button outline"
-              disabled={
-                updatingRequest ===
-                request.id
-              }
-              onClick={() =>
-                changeRequestStatus(
-                  request.id,
-                  "completed"
-                )
-              }
-            >
-              Marcar como completada
-            </button>
+        <p>
+          {request.message ||
+            "Sin mensaje adicional."}
+        </p>
+
+        {isProvider && (
+          <div className="request-person">
+            <strong>
+              Cliente
+            </strong>
+
+            <span>
+              Solicitud recibida para tu servicio
+            </span>
+          </div>
+        )}
+
+        {isClient && (
+          <div className="request-person">
+            <strong>
+              Tu solicitud
+            </strong>
+
+            <span>
+              Has solicitado este servicio
+            </span>
+          </div>
+        )}
+
+        <div className="request-meta">
+          <span>
+            📅{" "}
+            {dateText(
+              request.created_at
+            )}
+          </span>
+        </div>
+
+        {isProvider &&
+          request.status ===
+            "pending" && (
+            <div className="request-actions">
+              <button
+                className="button primary"
+                disabled={
+                  updatingRequest ===
+                  request.id
+                }
+                onClick={() =>
+                  changeRequestStatus(
+                    request.id,
+                    "accepted"
+                  )
+                }
+              >
+                Aceptar
+              </button>
+
+              <button
+                className="button danger"
+                disabled={
+                  updatingRequest ===
+                  request.id
+                }
+                onClick={() =>
+                  changeRequestStatus(
+                    request.id,
+                    "rejected"
+                  )
+                }
+              >
+                Rechazar
+              </button>
+            </div>
           )}
-        </article>
-      );
-    }
-  );
+      </article>
+    );
+  }
+);
 
   const RequestsPage = () => (
     <main className="page-container">
