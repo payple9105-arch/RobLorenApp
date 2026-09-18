@@ -2846,6 +2846,21 @@ useEffect(() => {
               </button>
             </div>
           )}
+
+        {isClient &&
+          request.status ===
+            "accepted" && (
+            <div className="request-actions">
+              <button
+                className="button primary"
+                onClick={() => {
+                  setPage("messages");
+                }}
+              >
+                💬 Enviar mensaje
+              </button>
+            </div>
+          )}
       </article>
     );
   }
