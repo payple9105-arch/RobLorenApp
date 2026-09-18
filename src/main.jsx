@@ -610,178 +610,61 @@ const loadConversationContacts = async () => {
   }
 };
   const sendMessage = async () => {
-    if (
-      !loggedUser ||
-      !selectedContact?.id ||
-      !messageText.trim()
-    ) {
-      return;
-    }
+  if (
+    !loggedUser ||
+    !selectedContact?.id ||
+    !messageText.trim()
+  ) {
+    return;
+  }
 
-    setSendingMessage(true);
+  setSendingMessage(true);
 
-    try {
-      const payload = {
-        sender_id: loggedUser.id,
-        receiver_id: selectedContact.id,
-        message: messageText.trim(),
-      };
-
-      const { data, error } = await supabase
-        .from("messages")
-        .insert(payload)
-        .select()
-        .maybeSingle();
-
-      if (error) {
-        alert(
-          "No se pudo enviar el mensaje. Comprueba la configuración de mensajes."
-        );
-        return;
-      }
-
-      setMessages((current) => [
-        ...current,
-        data || payload,
-      ]);
-
-      setMessageText("");
-    } catch {
-      alert("Ocurrió un error al enviar el mensaje.");
-    } finally {
-      setSendingMessage(false);
-    }
-  };
-
-  const openMessaging = (contact) => {
-    if (!loggedUser) {
-      setPage("account");
-      setAccountMode("login");
-      return;
-    }
-
-    const contactId =
-      contact?.id ||
-      contact?.provider_id ||
-      contact?.user_id ||
-      null;
-
-    if (!contactId) {
-      alert(
-        "Este servicio todavía no está asociado a un profesional registrado."
-      );
-      return;
-    }
-
-    if (contactId === loggedUser.id) {
-      alert(
-        "No puedes iniciar una conversación contigo mismo."
-      );
-      return;
-    }
-
-    const normalized = {
-      id: contactId,
-      full_name:
-        contact.full_name ||
-        contact.provider_name ||
-        contact.username ||
-        "Profesional",
-      username:
-        contact.username ||
-        contact.provider_username ||
-        "",
-      email:
-        contact.email ||
-        contact.provider_email ||
-        "",
+  try {
+    const payload = {
+      sender_id: loggedUser.id,
+      receiver_id: selectedContact.id,
+      message: messageText.trim(),
+      request_id: null,
     };
 
-    setSelectedContact(normalized);
-    setMessages([]);
-    setPage("messages");
-    loadMessages(normalized);
-  };
+    const { error } = await supabase
+      .from("messages")
+      .insert(payload);
 
-  const sendRequest = async () => {
-    if (!loggedUser) {
-      setPage("account");
-      setAccountMode("login");
+    if (error) {
+      console.error(
+        "Error guardando mensaje:",
+        error
+      );
+
+      alert(
+        "No se pudo enviar el mensaje:\n\n" +
+          error.message
+      );
+
       return;
     }
 
-    if (!selectedService) return;
+    setMessageText("");
 
-    if (selectedService.is_demo) {
-      setRequestMessage(
-        "Este servicio de demostración todavía no está asociado a un profesional registrado."
-      );
-      return;
-    }
+    await loadMessages(selectedContact);
 
-    const providerId =
-      selectedService.provider_id ||
-      selectedService.user_id ||
-      null;
+    await loadConversationContacts();
+  } catch (error) {
+    console.error(
+      "Error inesperado al enviar mensaje:",
+      error
+    );
 
-    if (!providerId) {
-      setRequestMessage(
-        "Este servicio todavía no está asociado a un profesional registrado."
-      );
-      return;
-    }
-
-    if (providerId === loggedUser.id) {
-      setRequestMessage(
-        "No puedes contratar tu propio servicio."
-      );
-      return;
-    }
-
-    setSendingRequest(true);
-    setRequestMessage("");
-
-    try {
-      const payload = {
-        service_id: selectedService.id,
-        client_id: loggedUser.id,
-        provider_id: providerId,
-        message:
-          offer.trim() ||
-          "Me interesa contratar este servicio.",
-        status: "pending",
-      };
-
-      const { data, error } = await supabase
-        .from("service_requests")
-        .insert(payload)
-        .select()
-        .maybeSingle();
-
-      if (error) {
-        setRequestMessage(
-          "No se pudo enviar la solicitud. Comprueba que el servicio y el profesional estén correctamente configurados."
-        );
-      } else {
-        setRequests((current) => [
-          data || payload,
-          ...current,
-        ]);
-
-        setOffer("");
-
-        setRequestMessage(
-          "Solicitud enviada correctamente."
-        );
-      }
-    } catch {
-      setRequestMessage(
-        "Ocurrió un error al enviar la solicitud."
-      );
-    } finally {
-      setSendingRequest(false);
-    }
-  };
+    alert(
+      "Ocurrió un error al enviar el mensaje:\n\n" +
+        (error?.message || "Error desconocido")
+    );
+  } finally {
+    setSendingMessage(false);
+  }
+};
 
  const changeRequestStatus = async (
   requestId,
