@@ -1118,11 +1118,19 @@ const loadConversationContacts = async () => {
     };
   }, []);
 
-  useEffect(() => {
+    useEffect(() => {
     if (loggedUser) {
       loadRequests();
     } else {
       setRequests([]);
+    }
+  }, [loggedUser]);
+
+  useEffect(() => {
+    if (loggedUser) {
+      loadConversationContacts();
+    } else {
+      setConversationContacts([]);
     }
   }, [loggedUser]);
 
