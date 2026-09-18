@@ -1134,22 +1134,6 @@ useEffect(() => {
   }
 }, [loggedUser]);
 
-useEffect(() => {
-  if (
-    conversationContacts.length > 0 &&
-    !selectedContact
-  ) {
-    const firstContact =
-      conversationContacts[0];
-
-    setSelectedContact(firstContact);
-    loadMessages(firstContact);
-  }
-}, [
-  conversationContacts,
-  selectedContact,
-]);
-
   const filteredServices = useMemo(() => {
     const text = deferredSearch
       .trim()
