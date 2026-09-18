@@ -2847,31 +2847,41 @@ useEffect(() => {
             </div>
           )}
 
-        {isClient &&
-          request.status ===
-            "accepted" && (
-            <div className="request-actions">
-              <button
-                className="button primary"
-              onClick={async () => {
-  const contact =
-    conversationContacts.find(
-      (item) =>
-        item.id === request.provider_id
-    );
+{isClient &&
+  request.status ===
+    "accepted" && (
+    <div className="request-actions">
+      <button
+        className="button primary"
+        onClick={async () => {
+          const { data: contact, error } =
+            await supabase
+              .from("profiles")
+              .select(
+                "id, full_name, username, name, profession"
+              )
+              .eq(
+                "id",
+                request.provider_id
+              )
+              .maybeSingle();
 
-  if (contact) {
-    setSelectedContact(contact);
-    await loadMessages(contact);
-  }
+          if (error || !contact) {
+            alert(
+              "No se pudo encontrar al profesional."
+            );
+            return;
+          }
 
-  setPage("messages");
-}}
-              >
-                💬 Enviar mensaje
-              </button>
-            </div>
-          )}
+          setSelectedContact(contact);
+          await loadMessages(contact);
+          setPage("messages");
+        }}
+      >
+        💬 Enviar mensaje
+      </button>
+    </div>
+  )}
       </article>
     );
   }
