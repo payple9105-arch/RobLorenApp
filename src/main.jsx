@@ -2853,28 +2853,7 @@ useEffect(() => {
     <div className="request-actions">
       <button
         className="button primary"
-        onClick={async () => {
-          const { data: contact, error } =
-            await supabase
-              .from("profiles")
-              .select(
-                "id, full_name, username, name, profession"
-              )
-              .eq(
-                "id",
-                request.provider_id
-              )
-              .maybeSingle();
-
-          if (error || !contact) {
-            alert(
-              "No se pudo encontrar al profesional."
-            );
-            return;
-          }
-
-          setSelectedContact(contact);
-          await loadMessages(contact);
+        onClick={() => {
           setPage("messages");
         }}
       >
