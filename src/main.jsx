@@ -2853,9 +2853,20 @@ useEffect(() => {
             <div className="request-actions">
               <button
                 className="button primary"
-                onClick={() => {
-                  setPage("messages");
-                }}
+              onClick={async () => {
+  const contact =
+    conversationContacts.find(
+      (item) =>
+        item.id === request.provider_id
+    );
+
+  if (contact) {
+    setSelectedContact(contact);
+    await loadMessages(contact);
+  }
+
+  setPage("messages");
+}}
               >
                 💬 Enviar mensaje
               </button>
