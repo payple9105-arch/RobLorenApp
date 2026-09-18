@@ -526,9 +526,9 @@ const [sendingMessage, setSendingMessage] = useState(false);
         return {
           ...request,
 
-          service_title:
-            service?.title ||
-            "Servicio solicitado",
+        service_title:
+  service?.service_title ||
+  "Servicio solicitado",
 
           provider_name:
             provider?.full_name ||
