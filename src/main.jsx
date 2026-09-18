@@ -489,11 +489,11 @@ const [sendingMessage, setSendingMessage] = useState(false);
 
     if (serviceIds.length > 0) {
       const {
-        data: serviceData,
-      } = await supabase
-        .from("services")
-        .select("id, title, user_id")
-        .in("id", serviceIds);
+  data: serviceData,
+} = await supabase
+  .from("services")
+  .select("id, service_title, user_id")
+  .in("id", serviceIds);
 
       services = serviceData || [];
     }
