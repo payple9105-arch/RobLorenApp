@@ -2853,9 +2853,13 @@ useEffect(() => {
     <div className="request-actions">
       <button
         className="button primary"
-        onClick={() => {
-          setPage("messages");
-        }}
+        onClick={() =>
+          openMessaging({
+            id: request.provider_id,
+            provider_id:
+              request.provider_id,
+          })
+        }
       >
         💬 Enviar mensaje
       </button>
