@@ -617,9 +617,7 @@ const loadConversationContacts = async () => {
   ) {
     return;
   }
-
   setSendingMessage(true);
-
   try {
     const payload = {
       sender_id: loggedUser.id,
@@ -627,36 +625,28 @@ const loadConversationContacts = async () => {
       message: messageText.trim(),
       request_id: null,
     };
-
     const { error } = await supabase
       .from("messages")
       .insert(payload);
-
     if (error) {
       console.error(
         "Error guardando mensaje:",
         error
       );
-
       alert(
         "No se pudo enviar el mensaje:\n\n" +
           error.message
       );
-
       return;
     }
-
     setMessageText("");
-
     await loadMessages(selectedContact);
-
     await loadConversationContacts();
   } catch (error) {
     console.error(
       "Error inesperado al enviar mensaje:",
       error
     );
-
     alert(
       "Ocurrió un error al enviar el mensaje:\n\n" +
         (error?.message || "Error desconocido")
