@@ -634,11 +634,18 @@ const loadConversationContacts = async () => {
         .maybeSingle();
 
       if (error) {
-        alert(
-          "No se pudo enviar el mensaje. Comprueba la configuración de mensajes."
-        );
-        return;
-      }
+  console.error(
+    "Error guardando mensaje:",
+    error
+  );
+
+  alert(
+    "No se pudo enviar el mensaje:\n\n" +
+      error.message
+  );
+
+  return;
+}
 
       setMessages((current) => [
         ...current,
