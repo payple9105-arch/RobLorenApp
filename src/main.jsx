@@ -2784,139 +2784,143 @@ useEffect(() => {
 
   const RequestColumn = memo(
   function RequestColumn({
-    request,
-  }) {
-    const isProvider =
-      loggedUser?.id === request.provider_id;
+  request,
+}) {
+  const isProvider =
+    loggedUser?.id === request.provider_id;
 
-    const isClient =
-      loggedUser?.id === request.client_id;
+  const isClient =
+    loggedUser?.id === request.client_id;
 
-    return (
-      <article className="request-card">
-        <div className="request-head">
-          <div>
-            <span className="request-label">
-              {isProvider
-                ? "SOLICITUD RECIBIDA"
-                : "SOLICITUD ENVIADA"}
-            </span>
-
-            <h3>
-              {request.service_title ||
-                "Servicio solicitado"}
-            </h3>
-          </div>
-
-          <span
-            className={`status ${
-              request.status ||
-              "pending"
-            }`}
-          >
-            {statusText(
-              request.status
-            )}
+  return (
+    <article className="request-card">
+      <div className="request-head">
+        <div>
+          <span className="request-label">
+            {isProvider
+              ? "SOLICITUD RECIBIDA"
+              : "SOLICITUD ENVIADA"}
           </span>
+
+          <h3>
+            {request.service_title ||
+              "Servicio solicitado"}
+          </h3>
         </div>
 
-        <p>
-          {request.message ||
-            "Sin mensaje adicional."}
-        </p>
+        <span
+          className={`status ${
+            request.status || "pending"
+          }`}
+        >
+          {statusText(request.status)}
+        </span>
+      </div>
 
-        {isProvider && (
-          <div className="request-person">
-            <strong>
-              Cliente
-            </strong>
+      <p>
+        {request.message ||
+          "Sin mensaje adicional."}
+      </p>
 
-            <span>
-              Solicitud recibida para tu servicio
-            </span>
-          </div>
-        )}
+      {isProvider && (
+        <div className="request-person">
+          <strong>Cliente</strong>
 
-        {isClient && (
-          <div className="request-person">
-            <strong>
-              Tu solicitud
-            </strong>
-
-            <span>
-              Has solicitado este servicio
-            </span>
-          </div>
-        )}
-
-        <div className="request-meta">
           <span>
-            📅{" "}
-            {dateText(
-              request.created_at
-            )}
+            Solicitud recibida para tu servicio
           </span>
         </div>
+      )}
 
-        {isProvider &&
-          request.status ===
-            "pending" && (
-            <div className="request-actions">
-              <button
-                className="button primary"
-                disabled={
-                  updatingRequest ===
-                  request.id
-                }
-                onClick={() =>
-                  changeRequestStatus(
-                    request.id,
-                    "accepted"
-                  )
-                }
-              >
-                Aceptar
-              </button>
+      {isClient && (
+        <div className="request-person">
+          <strong>Tu solicitud</strong>
 
-              <button
-                className="button danger"
-                disabled={
-                  updatingRequest ===
-                  request.id
-                }
-                onClick={() =>
-                  changeRequestStatus(
-                    request.id,
-                    "rejected"
-                  )
-                }
-              >
-                Rechazar
-              </button>
-            </div>
-          )}
+          <span>
+            Has solicitado este servicio
+          </span>
+        </div>
+      )}
 
-{isClient &&
-  request.status ===
-    "accepted" && (
-    <div className="request-actions">
-      <button
-        className="button primary"
-        onClick={() =>
-          openMessaging({
-            id: request.provider_id,
-            provider_id:
-              request.provider_id,
-          })
-        }
-      >
-        💬 Enviar mensaje
-      </button>
-    </div>
-  )}
-      </article>
-    );
-  }
+      <div className="request-meta">
+        <span>
+          📅 {dateText(request.created_at)}
+        </span>
+      </div>
+
+      {/* ACCIONES DEL PROFESIONAL */}
+      {isProvider &&
+        request.status === "pending" && (
+          <div className="request-actions">
+            <button
+              className="button primary"
+              disabled={
+                updatingRequest === request.id
+              }
+              onClick={() =>
+                changeRequestStatus(
+                  request.id,
+                  "accepted"
+                )
+              }
+            >
+              Aceptar
+            </button>
+
+            <button
+              className="button danger"
+              disabled={
+                updatingRequest === request.id
+              }
+              onClick={() =>
+                changeRequestStatus(
+                  request.id,
+                  "rejected"
+                )
+              }
+            >
+              Rechazar
+            </button>
+          </div>
+        )}
+
+      {/* ACCIONES DEL CLIENTE */}
+      {isClient &&
+        request.status === "accepted" && (
+          <div className="request-actions">
+            <button
+              className="button primary"
+              onClick={() =>
+                openMessaging({
+                  id: request.provider_id,
+                  provider_id:
+                    request.provider_id,
+                })
+              }
+            >
+              💬 Enviar mensaje
+            </button>
+          </div>
+        )}
+
+      {/* SOLICITUD COMPLETADA */}
+      {isClient &&
+        request.status === "completed" && (
+          <div className="request-completed">
+            ✓ Servicio completado
+          </div>
+        )}
+
+      {/* SOLICITUD RECHAZADA */}
+      {isClient &&
+        request.status === "rejected" && (
+          <div className="request-rejected">
+            Solicitud rechazada
+          </div>
+        )}
+    </article>
+  );
+}
 );
 
   const RequestsPage = () => (
