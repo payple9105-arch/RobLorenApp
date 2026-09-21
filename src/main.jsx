@@ -2247,14 +2247,11 @@ useEffect(() => {
         </div>
       ) : (
         <div className="services-grid large-grid">
-          {filteredServices.map(
-            (service) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-              />
-            )
-          )}
+          {filteredServices.map((service) =>
+  ServiceCard({
+    service,
+  })
+)}
         </div>
       )}
 
