@@ -609,6 +609,48 @@ const loadConversationContacts = async () => {
     setConversationContacts([]);
   }
 };
+    const loadMessages = async (contact) => {
+    if (!loggedUser || !contact?.id) {
+      setMessages([]);
+      return;
+    }
+
+    setLoadingMessages(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${loggedUser.id},receiver_id.eq.${contact.id}),and(sender_id.eq.${contact.id},receiver_id.eq.${loggedUser.id})`
+        )
+        .order("created_at", {
+          ascending: true,
+        });
+
+      if (error) {
+        console.error(
+          "Error cargando mensajes:",
+          error
+        );
+
+        setMessages([]);
+        return;
+      }
+
+      setMessages(data || []);
+    } catch (error) {
+      console.error(
+        "Error inesperado cargando mensajes:",
+        error
+      );
+
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
   const sendMessage = async () => {
     if (
       !loggedUser ||
