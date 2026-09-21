@@ -258,7 +258,11 @@ function App() {
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [updatingRequest, setUpdatingRequest] = useState(null);
   const [requestMessage, setRequestMessage] = useState("");
-  const [sendingRequest, setSendingRequest] = useState(false);
+  const [reviewingRequestId, setReviewingRequestId] = useState(null);
+const [reviewRating, setReviewRating] = useState(0);
+const [reviewComment, setReviewComment] = useState("");
+const [savingReview, setSavingReview] = useState(false);
+const [reviewedRequests, setReviewedRequests] = useState({});
 
  const [selectedContact, setSelectedContact] = useState(null);
 const [conversationContacts, setConversationContacts] =
