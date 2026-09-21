@@ -5081,65 +5081,82 @@ textarea {
     min-width: 0;
   }
 }
-        .messages-layout {
-          display: grid;
-          grid-template-columns: 290px 1fr;
-          min-height: 570px;
-          background: white;
-          border: 1px solid #dfe7ef;
-          border-radius: 20px;
-          overflow: hidden;
-        }
+     .messages-layout {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  min-height: 570px;
+  background: #ffffff;
+  border: 1px solid #dfe7ef;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(38, 58, 82, 0.06);
+}
 
-        .contacts-panel {
-          border-right: 1px solid #e6ebf2;
-          background: #f8fafc;
-        }
+.contacts-panel {
+  border-right: 1px solid #e6ebf2;
+  background: #f8fafc;
+  min-width: 0;
+}
 
-        .contacts-title {
-          padding: 20px;
-          font-weight: 900;
-          color: #293d5a;
-          border-bottom: 1px solid #e7edf3;
-        }
+.contacts-title {
+  padding: 20px;
+  font-weight: 900;
+  color: #293d5a;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  border-bottom: 1px solid #e7edf3;
+}
 
-        .contact {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 15px;
-          border: 0;
-          background: transparent;
-          text-align: left;
-        }
+.contact {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 15px;
+  border: 0;
+  border-bottom: 1px solid #edf1f5;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
 
-        .contact.active {
-          background: #eaf2ff;
-        }
+.contact:hover {
+  background: #f0f5fa;
+}
 
-        .contact strong,
-        .contact small {
-          display: block;
-        }
+.contact.active {
+  background: #eaf2ff;
+  box-shadow: inset 3px 0 0 #2f6fed;
+}
 
-        .contact strong {
-          color: #31445f;
-          font-size: 12px;
-        }
+.contact strong,
+.contact small {
+  display: block;
+}
 
-        .contact small {
-          color: #8a97a8;
-          font-size: 10px;
-          margin-top: 3px;
-        }
+.contact strong {
+  color: #31445f;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+}
 
-        .contacts-empty {
-          padding: 20px;
-          color: #8a97a8;
-          font-size: 11px;
-          line-height: 1.6;
-        }
+.contact small {
+  color: #8a97a8;
+  font-size: 10px;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+.contacts-empty {
+  padding: 20px;
+  color: #8a97a8;
+  font-size: 11px;
+  line-height: 1.6;
+}
 
         .chat-panel {
           display: flex;
