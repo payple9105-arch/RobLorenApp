@@ -3013,12 +3013,34 @@ useEffect(() => {
         )}
 
       {/* SOLICITUD COMPLETADA */}
-      {isClient &&
-        request.status === "completed" && (
-          <div className="request-completed">
-            ✓ Servicio completado
-          </div>
+{isClient &&
+  request.status === "completed" && (
+    <div className="request-completed">
+      <div>
+        ✓ Servicio completado
+      </div>
+
+      {!reviewedRequests[request.id] &&
+        reviewingRequestId !== request.id && (
+          <button
+            className="button primary"
+            onClick={() => {
+              setReviewingRequestId(request.id);
+              setReviewRating(0);
+              setReviewComment("");
+            }}
+          >
+            ⭐ Valorar servicio
+          </button>
         )}
+
+      {reviewedRequests[request.id] && (
+        <div className="review-published">
+          ⭐ Ya valoraste este servicio
+        </div>
+      )}
+    </div>
+  )}
 
       {/* SOLICITUD RECHAZADA */}
       {isClient &&
