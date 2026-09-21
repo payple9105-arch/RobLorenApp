@@ -2957,10 +2957,8 @@ useEffect(() => {
           </div>
         )}
     </article>
-  );
-}
-);
-
+   );
+};
   const RequestsPage = () => (
     <main className="page-container">
       <section className="page-header">
