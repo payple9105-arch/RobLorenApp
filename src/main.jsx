@@ -940,6 +940,77 @@ const loadConversationContacts = async () => {
   }
 };
 
+const submitReview = async (request) => {
+  if (!loggedUser?.id || !request?.id) {
+    return;
+  }
+
+  if (reviewRating < 1 || reviewRating > 5) {
+    alert(
+      "Selecciona una valoración de 1 a 5 estrellas."
+    );
+    return;
+  }
+
+  setSavingReview(true);
+
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .insert({
+        request_id: request.id,
+        reviewer_id: loggedUser.id,
+        reviewed_id: request.provider_id,
+        rating: reviewRating,
+        comment: reviewComment.trim() || null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error(
+        "Error guardando valoración:",
+        error
+      );
+
+      alert(
+        "No se pudo publicar la valoración:\n\n" +
+          error.message
+      );
+
+      return;
+    }
+
+    setReviewedRequests((current) => ({
+      ...current,
+      [request.id]: {
+        request_id: request.id,
+        rating: data.rating,
+        comment: data.comment,
+      },
+    }));
+
+    setReviewingRequestId(null);
+    setReviewRating(0);
+    setReviewComment("");
+
+    alert(
+      "⭐ Valoración publicada correctamente."
+    );
+  } catch (error) {
+    console.error(
+      "Error inesperado guardando valoración:",
+      error
+    );
+
+    alert(
+      "Ocurrió un error al publicar la valoración."
+    );
+  } finally {
+    setSavingReview(false);
+  }
+};
+
   const saveProfile = async () => {
   if (!loggedUser) return;
 
