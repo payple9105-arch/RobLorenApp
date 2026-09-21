@@ -3342,29 +3342,29 @@ useEffect(() => {
   );
 
   const renderPage = () => {
-    switch (page) {
-      case "services":
-        return <ServicesPage />;
+  switch (page) {
+    case "services":
+      return ServicesPage();
 
-      case "account":
-        return <AccountPage />;
+    case "account":
+      return AccountPage();
 
-      case "service":
-        return <ServicePage />;
+    case "service":
+      return ServicePage();
 
-      case "requests":
-        return <RequestsPage />;
+    case "requests":
+      return RequestsPage();
 
-      case "messages":
-        return <MessagesPage />;
+    case "messages":
+      return MessagesPage();
 
-      case "offer":
-        return <OfferPage />;
+    case "offer":
+      return OfferPage();
 
-      default:
-        return <HomePage />;
-    }
-  };
+    default:
+      return HomePage();
+  }
+};
 
   return (
     <>
