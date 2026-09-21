@@ -2821,8 +2821,7 @@ useEffect(() => {
     );
   };
 
-  const RequestColumn = memo(
-  function RequestColumn({
+  const RequestColumn = function RequestColumn({
   request,
 }) {
   const isProvider =
