@@ -1586,7 +1586,11 @@ useEffect(() => {
           {icon}
         </div>
 
-        <h3>{service.title}</h3>
+        <h3>
+  {service.service_title ||
+    service.title ||
+    "Servicio profesional"}
+</h3>
 
         <p>{service.description}</p>
 
