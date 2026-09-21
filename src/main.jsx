@@ -3050,17 +3050,19 @@ useEffect(() => {
             <>
               <div className="chat-header">
                 <span className="avatar">
-                  {getInitials(
-                    selectedContact.full_name
-                  )}
+                 {getInitials(
+  selectedContact.full_name ||
+    selectedContact.name ||
+    "Usuario"
+)}
                 </span>
 
                 <div>
                   <strong>
-                    {
-                      selectedContact.full_name
-                    }
-                  </strong>
+  {selectedContact.full_name ||
+    selectedContact.name ||
+    "Usuario"}
+</strong>
 
                   <span>
                     {selectedContact.username
