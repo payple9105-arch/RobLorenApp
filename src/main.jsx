@@ -5703,7 +5703,7 @@ textarea {
         }
       `}</style>
 
-      <Header />
+      {Header()}
 
       {renderPage()}
 
