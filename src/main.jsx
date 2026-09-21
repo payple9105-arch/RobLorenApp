@@ -1350,7 +1350,7 @@ useEffect(() => {
       if (!text) return matchesCategory;
 
       const content = [
-        service.title,
+        service.service_title,
         service.description,
         service.category,
         service.provider_name,
