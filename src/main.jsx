@@ -1252,11 +1252,12 @@ const loadConversationContacts = async () => {
    useEffect(() => {
   if (loggedUser) {
     loadRequests();
+    loadReviewedRequests();
   } else {
     setRequests([]);
+    setReviewedRequests({});
   }
 }, [loggedUser]);
-
 useEffect(() => {
   if (loggedUser) {
     loadConversationContacts();
