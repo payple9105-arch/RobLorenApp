@@ -3042,15 +3042,78 @@ useEffect(() => {
     </div>
   )}
 
-      {/* SOLICITUD RECHAZADA */}
-      {isClient &&
-        request.status === "rejected" && (
-          <div className="request-rejected">
-            Solicitud rechazada
-          </div>
-        )}
-    </article>
-   );
+{/* FORMULARIO DE VALORACIÓN */}
+{reviewingRequestId === request.id && (
+  <div className="review-form">
+    <strong>Valora este servicio</strong>
+
+    <div className="review-stars">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          className={
+            star <= reviewRating
+              ? "star selected"
+              : "star"
+          }
+          onClick={() =>
+            setReviewRating(star)
+          }
+          aria-label={`${star} estrellas`}
+        >
+          ★
+        </button>
+      ))}
+    </div>
+
+    <textarea
+      value={reviewComment}
+      onChange={(event) =>
+        setReviewComment(event.target.value)
+      }
+      placeholder="Escribe un comentario (opcional)"
+      rows={4}
+    />
+
+    <div className="review-actions">
+      <button
+        className="button primary"
+        disabled={
+          savingReview || reviewRating === 0
+        }
+        onClick={() => submitReview(request)}
+      >
+        {savingReview
+          ? "Publicando..."
+          : "Publicar valoración"}
+      </button>
+
+      <button
+        className="button"
+        type="button"
+        disabled={savingReview}
+        onClick={() => {
+          setReviewingRequestId(null);
+          setReviewRating(0);
+          setReviewComment("");
+        }}
+      >
+        Cancelar
+      </button>
+    </div>
+  </div>
+)}
+
+{/* SOLICITUD RECHAZADA */}
+{isClient &&
+  request.status === "rejected" && (
+    <div className="request-rejected">
+      Solicitud rechazada
+    </div>
+  )}
+</article>
+);
 };
   const RequestsPage = () => (
     <main className="page-container">
