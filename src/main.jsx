@@ -3160,14 +3160,11 @@ useEffect(() => {
         </div>
       ) : (
         <div className="requests-grid">
-          {requests.map(
-            (request) => (
-              <RequestColumn
-                request={request}
-                key={request.id}
-              />
-            )
-          )}
+          {requests.map((request) =>
+  RequestColumn({
+    request,
+  })
+)}
         </div>
       )}
     </main>
