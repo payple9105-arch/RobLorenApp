@@ -189,4 +189,71 @@ input {
   .header-actions {
     flex: 0 0 auto;
   }
+
+  /* MENSAJES - DISEÑO MÓVIL */
+
+  .messages-layout {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 0;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .contacts-panel {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid #e6ebf2;
+  }
+
+  .contacts-title {
+    padding: 15px 16px;
+    font-size: 12px;
+  }
+
+  .contact {
+    padding: 12px 15px;
+  }
+
+  .chat-panel {
+    width: 100%;
+    min-width: 0;
+    min-height: 500px;
+  }
+
+  .chat-header {
+    min-height: 62px;
+    padding: 12px 15px;
+  }
+
+  .chat-messages {
+    min-height: 350px;
+    padding: 18px 14px;
+  }
+
+  .message div {
+    max-width: 82%;
+    font-size: 12px;
+  }
+
+  .chat-input {
+    padding: 11px;
+    gap: 7px;
+  }
+
+  .chat-input input {
+    height: 42px;
+    font-size: 12px;
+  }
+
+  .chat-input button {
+    min-width: 44px;
+    height: 42px;
+  }
+
+  .chat-empty {
+    min-height: 280px;
+    padding: 20px;
+  }
 }
