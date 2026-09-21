@@ -4922,79 +4922,163 @@ textarea {
         }
 
         .requests-grid {
-          display: grid;
-          grid-template-columns: repeat(2,1fr);
-          gap: 18px;
-        }
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
 
-        .request-card {
-          background: white;
-          border: 1px solid #e0e7ef;
-          border-radius: 17px;
-          padding: 21px;
-        }
+.request-card {
+  background: white;
+  border: 1px solid #e0e7ef;
+  border-radius: 17px;
+  padding: 21px;
+  min-width: 0;
+  box-sizing: border-box;
+}
 
-        .request-head {
-          display: flex;
-          justify-content: space-between;
-          gap: 15px;
-        }
+.request-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+}
 
-        .request-label {
-          color: #8b98a9;
-          font-size: 9px;
-          font-weight: 900;
-          letter-spacing: 1px;
-        }
+.request-label {
+  color: #8b98a9;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
 
-        .request-card h3 {
-          margin: 5px 0 0;
-          color: #293e5b;
-          font-size: 15px;
-        }
+.request-card h3 {
+  margin: 5px 0 0;
+  color: #293e5b;
+  font-size: 15px;
+  line-height: 1.3;
+  word-break: break-word;
+}
 
-        .request-card > p {
-          color: #788598;
-          font-size: 12px;
-          line-height: 1.6;
-        }
+.request-card > p {
+  color: #788598;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 14px 0;
+  word-break: break-word;
+}
 
-        .status {
-          height: fit-content;
-          padding: 6px 9px;
-          border-radius: 7px;
-          background: #fff5db;
-          color: #9a7019;
-          font-size: 10px;
-          font-weight: 900;
-        }
+.status {
+  height: fit-content;
+  flex-shrink: 0;
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: #fff5db;
+  color: #9a7019;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
 
-        .status.accepted {
-          background: #eaf7ed;
-          color: #26743a;
-        }
+.status.accepted {
+  background: #eaf7ed;
+  color: #26743a;
+}
 
-        .status.rejected {
-          background: #fff0f0;
-          color: #bd3f3f;
-        }
+.status.rejected {
+  background: #fff0f0;
+  color: #bd3f3f;
+}
 
-        .status.completed {
-          background: #eaf2ff;
-          color: #225cb0;
-        }
+.status.completed {
+  background: #eaf2ff;
+  color: #225cb0;
+}
 
-        .request-meta {
-          color: #9aa5b4;
-          font-size: 10px;
-          margin-bottom: 15px;
-        }
+.request-person {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: #f7f9fc;
+  border-radius: 10px;
+}
 
-        .request-actions {
-          display: flex;
-          gap: 8px;
-        }
+.request-person strong {
+  color: #293e5b;
+  font-size: 11px;
+}
 
+.request-person span {
+  color: #8b98a9;
+  font-size: 10px;
+}
+
+.request-meta {
+  color: #9aa5b4;
+  font-size: 10px;
+  margin: 14px 0 15px;
+}
+
+.request-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.request-actions .button {
+  flex: 1;
+  min-width: 110px;
+}
+
+.request-completed,
+.request-rejected {
+  margin-top: 10px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.request-completed {
+  background: #eaf2ff;
+  color: #225cb0;
+}
+
+.request-rejected {
+  background: #fff0f0;
+  color: #bd3f3f;
+}
+
+/* Solicitudes en móvil */
+@media (max-width: 700px) {
+  .requests-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .request-card {
+    width: 100%;
+    padding: 17px;
+    border-radius: 15px;
+  }
+
+  .request-head {
+    gap: 10px;
+  }
+
+  .request-card h3 {
+    font-size: 14px;
+  }
+
+  .request-actions {
+    width: 100%;
+  }
+
+  .request-actions .button {
+    min-width: 0;
+  }
+}
         .messages-layout {
           display: grid;
           grid-template-columns: 290px 1fr;
