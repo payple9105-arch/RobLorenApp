@@ -1597,10 +1597,12 @@ useEffect(() => {
 
         <p>{service.description}</p>
 
-        <Rating
-          rating={service.rating}
-          reviews={service.reviews}
-        />
+        {/* 
+<Rating
+  rating={service.rating}
+  reviews={service.reviews}
+/>
+*/}
 
         <div className="service-provider">
           <span className="avatar">
