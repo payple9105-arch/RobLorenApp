@@ -112,7 +112,10 @@ function mapService(service, profile = null) {
   return {
     ...service,
     id: service.id,
-    title: service.title || "Servicio profesional",
+    title:
+  service.service_title ||
+  service.title ||
+  "Servicio profesional",
     description:
       service.description || "Servicio ofrecido en RobLoren.",
     category: service.category || "Otros",
