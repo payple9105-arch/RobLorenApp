@@ -5691,7 +5691,7 @@ textarea {
           }
         }
 
-        @media (max-width: 700px) {
+              @media (max-width: 700px) {
           .header-inner {
             width: calc(100% - 25px);
             min-height: 65px;
@@ -5892,6 +5892,63 @@ textarea {
           .professional-head {
             align-items: center;
           }
+        }
+
+        .review-form {
+          margin-top: 16px;
+          padding: 16px;
+          border-radius: 14px;
+          border: 1px solid #e5e7eb;
+          background: #f8fafc;
+        }
+
+        .review-form strong {
+          display: block;
+          margin-bottom: 12px;
+          font-size: 16px;
+        }
+
+        .review-stars {
+          display: flex;
+          gap: 4px;
+          margin-bottom: 12px;
+        }
+
+        .review-stars .star {
+          border: none;
+          background: transparent;
+          padding: 2px;
+          font-size: 30px;
+          line-height: 1;
+          cursor: pointer;
+          color: #cbd5e1;
+        }
+
+        .review-stars .star.selected {
+          color: #f59e0b;
+        }
+
+        .review-form textarea {
+          width: 100%;
+          min-height: 90px;
+          padding: 12px;
+          border: 1px solid #d1d5db;
+          border-radius: 10px;
+          resize: vertical;
+          font: inherit;
+          box-sizing: border-box;
+        }
+
+        .review-actions {
+          display: flex;
+          gap: 10px;
+          margin-top: 12px;
+          flex-wrap: wrap;
+        }
+
+        .review-published {
+          margin-top: 10px;
+          font-weight: 600;
         }
       `}</style>
 
