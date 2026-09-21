@@ -493,11 +493,11 @@ const [sendingMessage, setSendingMessage] = useState(false);
 
     if (serviceIds.length > 0) {
       const {
-  data: serviceData,
-} = await supabase
-  .from("services")
-  .select("id, service_title, user_id")
-  .in("id", serviceIds);
+        data: serviceData,
+      } = await supabase
+        .from("services")
+        .select("id, service_title, user_id")
+        .in("id", serviceIds);
 
       services = serviceData || [];
     }
@@ -530,9 +530,9 @@ const [sendingMessage, setSendingMessage] = useState(false);
         return {
           ...request,
 
-        service_title:
-  service?.service_title ||
-  "Servicio solicitado",
+          service_title:
+            service?.service_title ||
+            "Servicio solicitado",
 
           provider_name:
             provider?.full_name ||
@@ -555,6 +555,40 @@ const [sendingMessage, setSendingMessage] = useState(false);
   }
 };
 
+const loadReviewedRequests = async () => {
+  if (!loggedUser?.id) {
+    setReviewedRequests({});
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("request_id, rating, comment")
+      .eq("reviewer_id", loggedUser.id);
+
+    if (error) {
+      console.error(
+        "Error cargando valoraciones:",
+        error
+      );
+      return;
+    }
+
+    const map = {};
+
+    (data || []).forEach((review) => {
+      map[review.request_id] = review;
+    });
+
+    setReviewedRequests(map);
+  } catch (error) {
+    console.error(
+      "Error inesperado cargando valoraciones:",
+      error
+    );
+  }
+};
 /* Cargar personas con las que ya existen conversaciones */
 const loadConversationContacts = async () => {
   if (!loggedUser?.id) {
