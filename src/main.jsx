@@ -3998,7 +3998,21 @@ section {
           grid-template-columns: repeat(3,1fr);
         }
 
-       .service-card {
+      .services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.large-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.service-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   background: #ffffff;
   border: 1px solid #e1e8f1;
   border-radius: 18px;
@@ -4012,9 +4026,9 @@ section {
 }
 
 .service-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
   border-color: #c6d8ee;
-  box-shadow: 0 20px 45px rgba(27, 60, 102, 0.10);
+  box-shadow: 0 18px 38px rgba(27, 60, 102, 0.10);
 }
 
 .service-card:active {
@@ -4032,7 +4046,6 @@ section {
   gap: 10px;
   margin-bottom: 19px;
 }
-
 @media (max-width: 700px) {
   .service-card {
     padding: 18px;
