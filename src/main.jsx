@@ -1598,13 +1598,11 @@ useEffect(() => {
         <p>{service.description}</p>
 
         {/* 
-<div className="rating">
-  <span className="stars">★★★★★</span>
-  <strong>{Number(service.rating || 4.8).toFixed(1)}</strong>
-  <span className="review-count">
-    ({Number(service.reviews || 0)} valoraciones)
-  </span>
-</div>
+<Rating
+  rating={service.rating}
+  reviews={service.reviews}
+/>
+*/}
 
         <div className="service-provider">
           <span className="avatar">
