@@ -112,7 +112,10 @@ function mapService(service, profile = null) {
   return {
     ...service,
     id: service.id,
-    title: service.title || "Servicio profesional",
+    title:
+  service.service_title ||
+  service.title ||
+  "Servicio profesional",
     description:
       service.description || "Servicio ofrecido en RobLoren.",
     category: service.category || "Otros",
@@ -1350,7 +1353,7 @@ useEffect(() => {
       if (!text) return matchesCategory;
 
       const content = [
-        service.title,
+        service.service_title,
         service.description,
         service.category,
         service.provider_name,
@@ -1586,14 +1589,20 @@ useEffect(() => {
           {icon}
         </div>
 
-        <h3>{service.title}</h3>
+        <h3>
+  {service.service_title ||
+    service.title ||
+    "Servicio profesional"}
+</h3>
 
         <p>{service.description}</p>
 
-        <Rating
-          rating={service.rating}
-          reviews={service.reviews}
-        />
+        {/* 
+<Rating
+  rating={service.rating}
+  reviews={service.reviews}
+/>
+*/}
 
         <div className="service-provider">
           <span className="avatar">
@@ -3042,15 +3051,78 @@ useEffect(() => {
     </div>
   )}
 
-      {/* SOLICITUD RECHAZADA */}
-      {isClient &&
-        request.status === "rejected" && (
-          <div className="request-rejected">
-            Solicitud rechazada
-          </div>
-        )}
-    </article>
-   );
+{/* FORMULARIO DE VALORACIÓN */}
+{reviewingRequestId === request.id && (
+  <div className="review-form">
+    <strong>Valora este servicio</strong>
+
+    <div className="review-stars">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          className={
+            star <= reviewRating
+              ? "star selected"
+              : "star"
+          }
+          onClick={() =>
+            setReviewRating(star)
+          }
+          aria-label={`${star} estrellas`}
+        >
+          ★
+        </button>
+      ))}
+    </div>
+
+    <textarea
+      value={reviewComment}
+      onChange={(event) =>
+        setReviewComment(event.target.value)
+      }
+      placeholder="Escribe un comentario (opcional)"
+      rows={4}
+    />
+
+    <div className="review-actions">
+      <button
+        className="button primary"
+        disabled={
+          savingReview || reviewRating === 0
+        }
+        onClick={() => submitReview(request)}
+      >
+        {savingReview
+          ? "Publicando..."
+          : "Publicar valoración"}
+      </button>
+
+      <button
+        className="button"
+        type="button"
+        disabled={savingReview}
+        onClick={() => {
+          setReviewingRequestId(null);
+          setReviewRating(0);
+          setReviewComment("");
+        }}
+      >
+        Cancelar
+      </button>
+    </div>
+  </div>
+)}
+
+{/* SOLICITUD RECHAZADA */}
+{isClient &&
+  request.status === "rejected" && (
+    <div className="request-rejected">
+      Solicitud rechazada
+    </div>
+  )}
+</article>
+);
 };
   const RequestsPage = () => (
     <main className="page-container">
@@ -3097,14 +3169,11 @@ useEffect(() => {
         </div>
       ) : (
         <div className="requests-grid">
-          {requests.map(
-            (request) => (
-              <RequestColumn
-                request={request}
-                key={request.id}
-              />
-            )
-          )}
+          {requests.map((request) =>
+  RequestColumn({
+    request,
+  })
+)}
         </div>
       )}
     </main>
@@ -5628,7 +5697,7 @@ textarea {
           }
         }
 
-        @media (max-width: 700px) {
+              @media (max-width: 700px) {
           .header-inner {
             width: calc(100% - 25px);
             min-height: 65px;
@@ -5829,6 +5898,63 @@ textarea {
           .professional-head {
             align-items: center;
           }
+        }
+
+        .review-form {
+          margin-top: 16px;
+          padding: 16px;
+          border-radius: 14px;
+          border: 1px solid #e5e7eb;
+          background: #f8fafc;
+        }
+
+        .review-form strong {
+          display: block;
+          margin-bottom: 12px;
+          font-size: 16px;
+        }
+
+        .review-stars {
+          display: flex;
+          gap: 4px;
+          margin-bottom: 12px;
+        }
+
+        .review-stars .star {
+          border: none;
+          background: transparent;
+          padding: 2px;
+          font-size: 30px;
+          line-height: 1;
+          cursor: pointer;
+          color: #cbd5e1;
+        }
+
+        .review-stars .star.selected {
+          color: #f59e0b;
+        }
+
+        .review-form textarea {
+          width: 100%;
+          min-height: 90px;
+          padding: 12px;
+          border: 1px solid #d1d5db;
+          border-radius: 10px;
+          resize: vertical;
+          font: inherit;
+          box-sizing: border-box;
+        }
+
+        .review-actions {
+          display: flex;
+          gap: 10px;
+          margin-top: 12px;
+          flex-wrap: wrap;
+        }
+
+        .review-published {
+          margin-top: 10px;
+          font-weight: 600;
         }
       `}</style>
 
