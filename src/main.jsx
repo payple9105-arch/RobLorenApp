@@ -2694,7 +2694,7 @@ useEffect(() => {
               {service.category}
             </span>
 
-            <h1>{service.title}</h1>
+            <h1>{service.service_title || service.title || "Servicio profesional"}</h1>
 
             <Rating
               rating={service.rating}
