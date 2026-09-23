@@ -6247,15 +6247,12 @@ top: 0;
 }
 
 .header-inner {
-width: calc(100% - 20px);
-min-height: auto;
-padding: 10px 0;
-display: grid;
-grid-template-columns: 1fr auto;
-grid-template-areas:
-“brand actions”
-“nav nav”;
-gap: 9px 10px;
+  width: calc(100% - 16px);
+  min-height: 58px;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .brand {
