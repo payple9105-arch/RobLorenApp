@@ -1246,6 +1246,7 @@ const submitReview = async (request) => {
 
     try {
       const payload = {
+  name: form.title.trim(),
   service_title: form.title.trim(),
   description: form.description.trim(),
   category: form.category,
