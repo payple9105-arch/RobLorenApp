@@ -1245,15 +1245,15 @@ const submitReview = async (request) => {
     setPublishing(true);
 
     try {
-      const payload = {
+     const payload = {
   name: form.title.trim(),
   service_title: form.title.trim(),
   description: form.description.trim(),
   category: form.category,
+  profession: form.category,
   price: numericPrice || 0,
   user_id: loggedUser.id,
 };
-
       const { data, error } = await supabase
         .from("services")
         .insert(payload)
