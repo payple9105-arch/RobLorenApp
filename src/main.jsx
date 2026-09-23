@@ -5957,6 +5957,417 @@ textarea {
           margin-top: 10px;
           font-weight: 600;
         }
+
+/* =========================================================
+ROBLOREN — HEADER PROFESIONAL
+Capa visual adicional.
+NO modifica la lógica ni los botones existentes.
+========================================================= */
+
+.header {
+position: sticky;
+top: 0;
+z-index: 1000;
+width: 100%;
+background: rgba(255, 255, 255, 0.96);
+border-bottom: 1px solid #e8edf5;
+box-shadow: 0 4px 18px rgba(20, 43, 77, 0.05);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+}
+
+.header-inner {
+width: min(100% - 40px, 1240px);
+min-height: 76px;
+margin: 0 auto;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 24px;
+}
+
+/* ––––– MARCA ––––– */
+
+.brand {
+display: flex;
+align-items: center;
+gap: 11px;
+flex-shrink: 0;
+padding: 0;
+border: 0;
+background: transparent;
+cursor: pointer;
+text-align: left;
+}
+
+.brand-mark {
+width: 42px;
+height: 42px;
+display: grid;
+place-items: center;
+flex-shrink: 0;
+border-radius: 13px;
+background: linear-gradient(135deg, #185cc2, #2e7be8);
+color: #ffffff;
+font-size: 22px;
+font-weight: 900;
+letter-spacing: -1px;
+box-shadow: 0 8px 20px rgba(24, 92, 194, 0.20);
+transition:
+transform 0.2s ease,
+box-shadow 0.2s ease;
+}
+
+.brand:hover .brand-mark {
+transform: translateY(-1px);
+box-shadow: 0 11px 25px rgba(24, 92, 194, 0.25);
+}
+
+.brand-name {
+color: #132b55;
+font-size: 21px;
+line-height: 1;
+font-weight: 900;
+letter-spacing: -0.7px;
+}
+
+.brand-slogan {
+margin-top: 4px;
+color: #7a8799;
+font-size: 10px;
+line-height: 1;
+font-weight: 600;
+letter-spacing: 0.1px;
+}
+
+/* ––––– NAVEGACIÓN ––––– */
+
+.nav {
+display: flex !important;
+align-items: center !important;
+justify-content: center;
+gap: 4px !important;
+visibility: visible !important;
+opacity: 1 !important;
+width: auto !important;
+height: auto !important;
+overflow: visible !important;
+flex: 1;
+}
+
+.nav button {
+display: inline-flex !important;
+align-items: center !important;
+justify-content: center;
+visibility: visible !important;
+opacity: 1 !important;
+}
+
+.nav-link {
+position: relative;
+min-height: 40px;
+padding: 9px 14px;
+border: 0;
+border-radius: 10px;
+background: transparent;
+color: #68768a;
+font-size: 14px;
+font-weight: 750;
+white-space: nowrap;
+cursor: pointer;
+transition:
+color 0.2s ease,
+background 0.2s ease,
+transform 0.2s ease;
+}
+
+.nav-link:hover {
+color: #1755b4;
+background: #f3f7fd;
+}
+
+.nav-link.active {
+color: #1755b4;
+background: #edf4ff;
+}
+
+.nav-link.active::after {
+content: “”;
+position: absolute;
+left: 14px;
+right: 14px;
+bottom: 3px;
+height: 2px;
+border-radius: 10px;
+background: #2166d1;
+}
+
+/* ––––– CONTADOR ––––– */
+
+.nav-badge {
+display: inline-grid !important;
+place-items: center;
+min-width: 19px;
+height: 19px;
+padding: 0 5px;
+margin-left: 6px;
+border-radius: 999px;
+background: #2166d1;
+color: #ffffff;
+font-size: 10px;
+font-weight: 900;
+line-height: 1;
+box-shadow: 0 3px 8px rgba(33, 102, 209, 0.20);
+}
+
+/* ––––– ACCIONES DERECHA ––––– */
+
+.header-actions {
+display: flex;
+align-items: center;
+justify-content: flex-end;
+gap: 9px;
+flex-shrink: 0;
+}
+
+.profile-mini {
+display: flex;
+align-items: center;
+gap: 8px;
+min-height: 40px;
+padding: 5px 9px 5px 5px;
+border: 1px solid transparent;
+border-radius: 12px;
+background: transparent;
+color: #23334d;
+font-weight: 800;
+cursor: pointer;
+transition:
+background 0.2s ease,
+border-color 0.2s ease,
+transform 0.2s ease;
+}
+
+.profile-mini:hover {
+background: #f5f8fc;
+border-color: #e6ecf4;
+transform: translateY(-1px);
+}
+
+.profile-mini-name {
+max-width: 125px;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+color: #243550;
+font-size: 13px;
+font-weight: 800;
+}
+
+/* ––––– BOTÓN SALIR ––––– */
+
+.header-actions .button.ghost {
+min-height: 40px;
+padding: 9px 14px;
+border: 1px solid #e2e8f0;
+border-radius: 10px;
+background: #f7f9fc;
+color: #4c5b70;
+font-size: 13px;
+font-weight: 800;
+cursor: pointer;
+transition:
+background 0.2s ease,
+border-color 0.2s ease,
+color 0.2s ease,
+transform 0.2s ease;
+}
+
+.header-actions .button.ghost:hover {
+background: #eef3f9;
+border-color: #d8e1ed;
+color: #263b5b;
+transform: translateY(-1px);
+}
+
+/* ––––– AVATAR PEQUEÑO ––––– */
+
+.avatar.small {
+width: 34px;
+height: 34px;
+min-width: 34px;
+border-radius: 10px;
+font-size: 12px;
+font-weight: 900;
+}
+
+/* =========================================================
+RESPONSIVE — TABLET
+========================================================= */
+
+@media (max-width: 980px) {
+
+.header-inner {
+width: min(100% - 28px, 1240px);
+gap: 12px;
+}
+
+.brand-slogan {
+display: none;
+}
+
+.nav {
+gap: 2px !important;
+}
+
+.nav-link {
+padding: 9px 10px;
+font-size: 13px;
+}
+
+.profile-mini-name {
+max-width: 90px;
+}
+
+.header-actions .button.ghost {
+padding-left: 11px;
+padding-right: 11px;
+}
+}
+
+/* =========================================================
+RESPONSIVE — MÓVIL
+========================================================= */
+
+@media (max-width: 700px) {
+
+.header {
+position: sticky;
+top: 0;
+}
+
+.header-inner {
+width: calc(100% - 20px);
+min-height: auto;
+padding: 10px 0;
+display: grid;
+grid-template-columns: 1fr auto;
+grid-template-areas:
+“brand actions”
+“nav nav”;
+gap: 9px 10px;
+}
+
+.brand {
+grid-area: brand;
+min-width: 0;
+}
+
+.brand-mark {
+width: 38px;
+height: 38px;
+border-radius: 11px;
+font-size: 20px;
+}
+
+.brand-name {
+font-size: 19px;
+}
+
+.brand-slogan {
+display: none;
+}
+
+.header-actions {
+grid-area: actions;
+gap: 5px;
+}
+
+.profile-mini {
+padding: 3px;
+border-radius: 10px;
+}
+
+.profile-mini-name {
+display: none;
+}
+
+.header-actions .button.ghost {
+min-height: 36px;
+padding: 7px 10px;
+font-size: 12px;
+}
+
+.nav {
+grid-area: nav;
+width: 100% !important;
+justify-content: stretch;
+gap: 3px !important;
+overflow-x: auto !important;
+overflow-y: hidden;
+scrollbar-width: none;
+padding-bottom: 1px;
+}
+
+.nav::-webkit-scrollbar {
+display: none;
+}
+
+.nav-link {
+flex: 1 0 auto;
+min-height: 38px;
+padding: 8px 11px;
+font-size: 12px;
+border-radius: 9px;
+}
+
+.nav-link.active::after {
+left: 11px;
+right: 11px;
+bottom: 2px;
+}
+
+.nav-badge {
+min-width: 17px;
+height: 17px;
+margin-left: 4px;
+font-size: 9px;
+}
+}
+
+/* =========================================================
+RESPONSIVE — TELÉFONOS PEQUEÑOS
+========================================================= */
+
+@media (max-width: 420px) {
+
+.header-inner {
+width: calc(100% - 16px);
+}
+
+.brand-mark {
+width: 36px;
+height: 36px;
+border-radius: 10px;
+font-size: 19px;
+}
+
+.brand-name {
+font-size: 18px;
+}
+
+.nav-link {
+padding-left: 9px;
+padding-right: 9px;
+font-size: 11px;
+}
+
+.header-actions .button.ghost {
+padding-left: 8px;
+padding-right: 8px;
+}
+}
+        
       `}</style>
 
       {Header()}
