@@ -1246,13 +1246,12 @@ const submitReview = async (request) => {
 
     try {
       const payload = {
-        title: form.title.trim(),
-        description: form.description.trim(),
-        category: form.category,
-        price: numericPrice || 0,
-        provider_id: loggedUser.id,
-        user_id: loggedUser.id,
-      };
+  service_title: form.title.trim(),
+  description: form.description.trim(),
+  category: form.category,
+  price: numericPrice || 0,
+  user_id: loggedUser.id,
+};
 
       const { data, error } = await supabase
         .from("services")
