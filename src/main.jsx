@@ -276,7 +276,8 @@ const [loadingMessages, setLoadingMessages] = useState(false);
 const [sendingMessage, setSendingMessage] = useState(false);
 
   const [servicesLoading, setServicesLoading] = useState(true);
-  const [savingProfile, setSavingProfile] = useState(false);
+const [savingProfile, setSavingProfile] = useState(false);
+const [sendingRequest, setSendingRequest] = useState(false);
 
   const [form, setForm] = useState(defaultForm);
   const [profileForm, setProfileForm] =
