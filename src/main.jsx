@@ -3862,8 +3862,23 @@ section {
           align-items: center;
           padding: 75px max(20px, calc((100% - 1240px)/2));
           background:
-            radial-gradient(circle at 80% 20%, rgba(76,138,235,.15), transparent 32%),
-            linear-gradient(135deg,#f8fbff,#eef4fb);
+            background:
+  radial-gradient(
+    circle at 82% 18%,
+    rgba(76, 138, 235, 0.18),
+    transparent 30%
+  ),
+  radial-gradient(
+    circle at 15% 85%,
+    rgba(33, 102, 209, 0.08),
+    transparent 28%
+  ),
+  linear-gradient(
+    135deg,
+    #fbfdff 0%,
+    #f3f7fc 55%,
+    #edf4fb 100%
+  );
           overflow: hidden;
         }
 
