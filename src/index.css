@@ -69,9 +69,12 @@ input {
 
 .hero p {
   max-width: 650px;
-  margin: 0 auto 30px;
-  font-size: 20px;
+  margin: 0 auto 32px;
+  font-size: clamp(17px, 2vw, 19px);
+  line-height: 1.7;
   color: #667085;
+  font-weight: 500;
+  letter-spacing: -0.15px;
 }
 
 .search {
