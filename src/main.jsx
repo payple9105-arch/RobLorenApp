@@ -3926,10 +3926,43 @@ section {
         }
 
         .hero-buttons {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px;
-        }
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.hero-buttons .button {
+  min-height: 50px;
+  padding: 13px 22px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.1px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.hero-buttons .button:hover {
+  transform: translateY(-2px);
+}
+
+.hero-buttons .button.primary {
+  box-shadow: 0 10px 24px rgba(33, 102, 209, 0.18);
+}
+
+.hero-buttons .button.primary:hover {
+  box-shadow: 0 14px 30px rgba(33, 102, 209, 0.24);
+}
+
+.hero-buttons .button.light {
+  border: 1px solid #dbe4ef;
+  box-shadow: 0 6px 18px rgba(20, 43, 77, 0.06);
+}
 
         .hero-trust {
           display: flex;
