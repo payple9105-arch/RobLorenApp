@@ -4060,18 +4060,29 @@ section {
     0 22px 50px rgba(32, 67, 112, 0.10);
 }
 
-        .orbit-center {
-          width: 105px;
-          height: 105px;
-          display: grid;
-          place-items: center;
-          border-radius: 31px;
-          background: linear-gradient(145deg,#183c7d,#2372db);
-          color: white;
-          font-size: 52px;
-          font-weight: 900;
-          box-shadow: 0 25px 60px rgba(26,76,153,.32);
-        }
+       .orbit-center {
+  width: 108px;
+  height: 108px;
+  display: grid;
+  place-items: center;
+  border-radius: 30px;
+  background:
+    linear-gradient(
+      145deg,
+      #12366f 0%,
+      #1d5fbe 55%,
+      #2e7be8 100%
+    );
+  color: #ffffff;
+  font-size: 54px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  box-shadow:
+    0 18px 35px rgba(26, 76, 153, 0.24),
+    0 8px 18px rgba(33, 102, 209, 0.14),
+    0 0 0 8px rgba(255, 255, 255, 0.42);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+}
 
         .floating-card {
           position: absolute;
