@@ -4038,18 +4038,27 @@ section {
           filter: blur(12px);
         }
 
-        .hero-orbit {
-          width: 300px;
-          height: 300px;
-          border: 1px solid rgba(39,101,188,.18);
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          position: relative;
-          box-shadow:
-            0 0 0 40px rgba(42,111,215,.025),
-            0 0 0 80px rgba(42,111,215,.02);
-        }
+       .hero-orbit {
+  width: 300px;
+  height: 300px;
+  border: 1px solid rgba(39, 101, 188, 0.20);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.92) 0%,
+      rgba(241, 247, 255, 0.72) 48%,
+      rgba(225, 237, 251, 0.35) 100%
+    );
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset,
+    0 0 0 40px rgba(42, 111, 215, 0.035),
+    0 0 0 80px rgba(42, 111, 215, 0.022),
+    0 22px 50px rgba(32, 67, 112, 0.10);
+}
 
         .orbit-center {
           width: 105px;
