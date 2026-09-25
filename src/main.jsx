@@ -4117,9 +4117,13 @@ section {
         }
 
         .floating-card strong {
-          color: #233a5d;
-          font-size: 13px;
-        }
+  display: block;
+  color: #203653;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 850;
+  letter-spacing: -0.15px;
+}
 
         .floating-card span:last-child {
           color: #7b899b;
