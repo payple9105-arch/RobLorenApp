@@ -4128,14 +4128,24 @@ section {
         }
 
         .floating-icon {
-          width: 43px;
-          height: 43px;
-          display: grid;
-          place-items: center;
-          border-radius: 12px;
-          background: #eef5ff;
-          font-size: 21px;
-        }
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background:
+    linear-gradient(
+      145deg,
+      #f3f8ff 0%,
+      #e8f1ff 100%
+    );
+  border: 1px solid #dce8f7;
+  font-size: 21px;
+  box-shadow:
+    0 6px 14px rgba(33, 102, 209, 0.08),
+    0 1px 3px rgba(33, 66, 110, 0.05);
+}
 
         .card-one {
           top: 75px;
