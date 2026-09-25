@@ -3965,12 +3965,46 @@ section {
 }
 
         .hero-trust {
-          display: flex;
-          gap: 35px;
-          margin-top: 42px;
-          padding-top: 22px;
-          border-top: 1px solid #dce5f1;
-        }
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: 42px;
+  padding-top: 22px;
+  border-top: 1px solid #dce5f1;
+}
+
+.hero-trust > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+  padding: 0 24px;
+  border-right: 1px solid #e2e8f1;
+}
+
+.hero-trust > div:first-child {
+  padding-left: 0;
+}
+
+.hero-trust > div:last-child {
+  border-right: 0;
+}
+
+.hero-trust strong {
+  font-size: 16px;
+  line-height: 1.2;
+  color: #203653;
+  font-weight: 850;
+  letter-spacing: -0.2px;
+}
+
+.hero-trust span {
+  color: #8a97a9;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 600;
+}
 
         .hero-trust div {
           display: flex;
