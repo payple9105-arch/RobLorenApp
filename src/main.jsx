@@ -4126,10 +4126,14 @@ section {
 }
 
         .floating-card span:last-child {
-          color: #7b899b;
-          font-size: 11px;
-          margin-top: 4px;
-        }
+  display: block;
+  color: #7b899b;
+  font-size: 11px;
+  line-height: 1.3;
+  margin-top: 5px;
+  font-weight: 600;
+  letter-spacing: 0.05px;
+}
 
         .floating-icon {
   width: 44px;
