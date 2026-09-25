@@ -4085,17 +4085,31 @@ section {
 }
 
         .floating-card {
-          position: absolute;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 14px;
-          border-radius: 16px;
-          background: rgba(255,255,255,.94);
-          border: 1px solid rgba(215,226,241,.9);
-          box-shadow: 0 20px 45px rgba(35,68,110,.12);
-          z-index: 2;
-        }
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 16px;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(215, 226, 241, 0.92);
+  box-shadow:
+    0 18px 40px rgba(35, 68, 110, 0.10),
+    0 5px 14px rgba(35, 68, 110, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 2;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.floating-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 24px 48px rgba(35, 68, 110, 0.14),
+    0 7px 18px rgba(35, 68, 110, 0.06);
+}
 
         .floating-card strong,
         .floating-card span {
