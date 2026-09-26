@@ -4463,10 +4463,12 @@ section {
         }
 
         .service-price {
-          color: #183d77;
-          font-size: 20px;
-          font-weight: 900;
-        }
+  color: #17488f;
+  font-size: 21px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.4px;
+}
 
         .service-icon {
           width: 55px;
@@ -4480,19 +4482,22 @@ section {
         }
 
         .service-card h3 {
-          margin: 0 0 9px;
-          color: #1d3353;
-          font-size: 17px;
-          line-height: 1.35;
-        }
+  margin: 0 0 10px;
+  color: #18345b;
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 850;
+  letter-spacing: -0.3px;
+}
 
         .service-card > p {
-          color: #78869a;
-          font-size: 13px;
-          line-height: 1.65;
-          min-height: 63px;
-          margin: 0 0 15px;
-        }
+  color: #718096;
+  font-size: 13px;
+  line-height: 1.65;
+  min-height: 63px;
+  margin: 0 0 17px;
+  font-weight: 500;
+}
 
         .rating {
           display: flex;
