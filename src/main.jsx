@@ -4161,9 +4161,9 @@ section {
 }
 
         .card-two {
-          bottom: 75px;
-          left: 2%;
-        }
+  bottom: 68px;
+  left: 4%;
+}
 
         .search-section {
           width: min(1050px, calc(100% - 40px));
