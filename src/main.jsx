@@ -4215,14 +4215,22 @@ section {
 }
 
         .search-box input {
-          flex: 1;
-          min-width: 0;
-          border: 0;
-          outline: 0;
-          padding: 10px 13px;
-          color: #263852;
-          background: transparent;
-        }
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 11px 13px;
+  color: #263852;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 550;
+  line-height: 1.4;
+}
+
+.search-box input::placeholder {
+  color: #8a98aa;
+  opacity: 1;
+}
 
         .search-box input::placeholder {
           color: #9ba7b6;
