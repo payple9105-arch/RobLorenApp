@@ -4451,16 +4451,25 @@ section {
 }
 
         .category-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          padding: 6px 9px;
-          border-radius: 8px;
-          background: #edf4ff;
-          color: #2361b8;
-          font-size: 10px;
-          font-weight: 900;
-        }
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: linear-gradient(
+    135deg,
+    #eef5ff 0%,
+    #e7f0fc 100%
+  );
+  border: 1px solid #d9e6f6;
+  color: #245da8;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 850;
+  letter-spacing: 0.15px;
+  box-shadow:
+    0 3px 8px rgba(33, 102, 209, 0.05);
+}
 
         .service-price {
   color: #17488f;
