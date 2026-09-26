@@ -4203,10 +4203,16 @@ section {
         }
 
         .search-icon {
-          color: #8492a6;
-          font-size: 27px;
-          line-height: 1;
-        }
+  width: 28px;
+  min-width: 28px;
+  display: grid;
+  place-items: center;
+  color: #6f8199;
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 500;
+  transform: translateY(-1px);
+}
 
         .search-box input {
           flex: 1;
