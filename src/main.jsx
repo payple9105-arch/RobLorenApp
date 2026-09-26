@@ -4155,10 +4155,10 @@ section {
     0 1px 3px rgba(33, 66, 110, 0.05);
 }
 
-        .card-one {
-          top: 75px;
-          right: 5%;
-        }
+       .card-one {
+  top: 68px;
+  right: 4%;
+}
 
         .card-two {
           bottom: 75px;
