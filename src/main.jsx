@@ -4237,8 +4237,24 @@ section {
         }
 
         .search-button {
-          min-width: 105px;
-        }
+  min-width: 112px;
+  min-height: 50px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.1px;
+  box-shadow: 0 8px 18px rgba(33, 102, 209, 0.16);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.search-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 11px 22px rgba(33, 102, 209, 0.22);
+}
 
         .section {
           width: min(1240px, calc(100% - 40px));
