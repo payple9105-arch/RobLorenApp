@@ -5892,11 +5892,12 @@ textarea {
             grid-template-columns: repeat(3,1fr);
           }
 
-          .services-grid,
-          .large-grid,
-          .professionals-grid {
-            grid-template-columns: repeat(2,1fr);
-          }
+         .services-grid,
+.large-grid,
+.professionals-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
 
           .steps-grid {
             grid-template-columns: repeat(2,1fr);
