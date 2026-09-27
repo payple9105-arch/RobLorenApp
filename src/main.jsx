@@ -4557,6 +4557,13 @@ section {
   font-weight: 600;
 }
 
+.rating span {
+  color: #8794a5;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
         .rating strong {
           color: #263b58;
           font-size: 12px;
