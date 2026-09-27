@@ -4480,15 +4480,24 @@ section {
 }
 
         .service-icon {
-          width: 55px;
-          height: 55px;
-          display: grid;
-          place-items: center;
-          border-radius: 16px;
-          background: #f0f5fc;
-          font-size: 27px;
-          margin-bottom: 17px;
-        }
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 17px;
+  background:
+    linear-gradient(
+      145deg,
+      #f2f7ff 0%,
+      #e7f0fc 100%
+    );
+  border: 1px solid #dbe7f5;
+  font-size: 29px;
+  margin-bottom: 18px;
+  box-shadow:
+    0 7px 16px rgba(33, 102, 209, 0.07),
+    0 2px 5px rgba(33, 66, 110, 0.03);
+}
 
         .service-card h3 {
   margin: 0 0 10px;
