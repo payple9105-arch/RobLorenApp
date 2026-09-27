@@ -4334,13 +4334,15 @@ section {
         }
 
         .eyebrow {
-          display: block;
-          color: #2667c8;
-          font-size: 11px;
-          font-weight: 900;
-          letter-spacing: 1.7px;
-          margin-bottom: 10px;
-        }
+  display: block;
+  color: #2b67b7;
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 850;
+  letter-spacing: 1.8px;
+  margin-bottom: 9px;
+  text-transform: uppercase;
+}
 
         .section-heading h2,
         .benefits-content h2 {
