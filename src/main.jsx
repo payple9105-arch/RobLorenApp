@@ -4574,10 +4574,10 @@ section {
         }
 
         .professionals-grid {
-          display: grid;
-          grid-template-columns: repeat(3,1fr);
-          gap: 20px;
-        }
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
 
         .professional-card {
           background: white;
