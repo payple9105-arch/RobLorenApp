@@ -4656,11 +4656,13 @@ section {
         }
 
         .professional-info h3 {
-          margin: 0 0 3px;
-          color: #213958;
-          font-size: 17px;
-        }
-
+  margin: 0 0 5px;
+  color: #18345b;
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 850;
+  letter-spacing: -0.25px;
+}
         .professional-role,
         .professional-username,
         .professional-location {
