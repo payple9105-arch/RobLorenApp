@@ -3848,10 +3848,27 @@ section {
         }
 
         .avatar.large {
-          width: 58px;
-          height: 58px;
-          font-size: 17px;
-        }
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  font-size: 18px;
+  font-weight: 850;
+  color: #ffffff;
+  background:
+    linear-gradient(
+      145deg,
+      #12366f 0%,
+      #1d5fbe 55%,
+      #2e7be8 100%
+    );
+  border: 3px solid #ffffff;
+  box-shadow:
+    0 8px 18px rgba(33, 102, 209, 0.18),
+    0 2px 6px rgba(33, 66, 110, 0.06);
+}
 
         .hero {
           min-height: 620px;
