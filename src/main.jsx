@@ -4728,14 +4728,25 @@ section {
 }
 
         .skill-row span,
-        .profile-skills span {
-          padding: 6px 9px;
-          border-radius: 7px;
-          background: #f1f5f9;
-          color: #647287;
-          font-size: 10px;
-          font-weight: 800;
-        }
+.profile-skills span {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background:
+    linear-gradient(
+      135deg,
+      #f3f7fc 0%,
+      #edf3fa 100%
+    );
+  border: 1px solid #e0e8f2;
+  color: #52667f;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 750;
+  letter-spacing: 0.05px;
+  box-shadow: 0 2px 5px rgba(30, 55, 90, 0.03);
+}
 
         .how-section {
           padding: 95px 20px;
