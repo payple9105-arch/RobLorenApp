@@ -4580,12 +4580,52 @@ section {
 }
 
         .professional-card {
-          background: white;
-          border: 1px solid #e2e8f0;
-          border-radius: 18px;
-          padding: 24px;
-          box-shadow: 0 10px 28px rgba(28,58,95,.04);
-        }
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #fbfdff 100%
+    );
+  border: 1px solid #dfe7f1;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow:
+    0 8px 22px rgba(30, 55, 90, 0.05),
+    0 2px 6px rgba(30, 55, 90, 0.025);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.professional-card::before {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  top: -70px;
+  right: -55px;
+  border-radius: 50%;
+  background: rgba(33, 102, 209, 0.045);
+  pointer-events: none;
+}
+
+.professional-card:hover {
+  transform: translateY(-5px);
+  border-color: #c8d9ee;
+  box-shadow:
+    0 20px 42px rgba(27, 60, 102, 0.11),
+    0 5px 12px rgba(27, 60, 102, 0.04);
+}
+
+.professional-card:active {
+  transform: translateY(-1px);
+}
 
         .professional-head {
           display: flex;
