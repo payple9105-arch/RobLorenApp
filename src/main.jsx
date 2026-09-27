@@ -4628,11 +4628,11 @@ section {
 }
 
         .professional-head {
-          display: flex;
-          align-items: flex-start;
-          gap: 15px;
-          margin-bottom: 18px;
-        }
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
 
         .professional-info {
           min-width: 0;
