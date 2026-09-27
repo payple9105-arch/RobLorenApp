@@ -4673,9 +4673,14 @@ section {
         }
 
         .professional-username {
-          color: #2866bf;
-          font-weight: 800;
-        }
+  display: block;
+  margin-top: 1px;
+  color: #4f78ad;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: 0.05px;
+}
 
         .professional-location {
           color: #738196;
