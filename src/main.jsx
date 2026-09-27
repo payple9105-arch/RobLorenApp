@@ -4345,12 +4345,18 @@ section {
 }
 
         .section-heading h2,
-        .benefits-content h2 {
-          margin: 0;
-          color: #162c4e;
-          font-size: clamp(27px, 3vw, 39px);
-          letter-spacing: -1.4px;
-        }
+.benefits-content h2 {
+  margin: 0;
+  color: #162c4e;
+  font-size: clamp(27px, 3vw, 39px);
+  letter-spacing: -1.4px;
+}
+
+.section-heading h2 {
+  line-height: 1.12;
+  font-weight: 850;
+  color: #162f55;
+}
 
         .section-heading p {
           margin: 10px 0 0;
