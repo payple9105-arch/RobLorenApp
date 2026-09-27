@@ -4663,14 +4663,23 @@ section {
   font-weight: 850;
   letter-spacing: -0.25px;
 }
-        .professional-role,
-        .professional-username,
-        .professional-location {
-          display: block;
-          color: #8490a2;
-          font-size: 11px;
-          margin-top: 3px;
-        }
+        .professional-role {
+  display: block;
+  margin-top: 4px;
+  color: #65758a;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.professional-location {
+  display: block;
+  margin-top: 5px;
+  color: #8794a5;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 600;
+}
 
         .professional-username {
   display: block;
