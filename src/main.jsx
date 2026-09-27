@@ -4691,9 +4691,7 @@ section {
   letter-spacing: 0.05px;
 }
 
-        .professional-location {
-          color: #738196;
-        }
+        
 
         .professional-card > p {
   margin: 0;
