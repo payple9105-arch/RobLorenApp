@@ -4696,11 +4696,14 @@ section {
         }
 
         .professional-card > p {
-          color: #758297;
-          font-size: 13px;
-          line-height: 1.65;
-          min-height: 63px;
-        }
+  margin: 0;
+  color: #6f7f92;
+  font-size: 13px;
+  line-height: 1.7;
+  min-height: 66px;
+  font-weight: 500;
+  letter-spacing: -0.05px;
+}
 
         .skill-row {
           display: flex;
