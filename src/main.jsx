@@ -4720,11 +4720,12 @@ section {
 }
 
         .skill-row {
-          display: flex;
-          gap: 7px;
-          flex-wrap: wrap;
-          margin: 15px 0;
-        }
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 17px 0 20px;
+}
 
         .skill-row span,
         .profile-skills span {
