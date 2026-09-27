@@ -3755,6 +3755,33 @@ useEffect(() => {
   box-shadow: none;
 }
 
+.professional-card .button.outline {
+  width: 100%;
+  min-height: 46px;
+  margin-top: auto;
+  padding: 11px 18px;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #1755b4;
+  border: 1px solid #cbd8eb;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.05px;
+  box-shadow: 0 5px 14px rgba(33, 102, 209, 0.06);
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.professional-card .button.outline:hover {
+  transform: translateY(-2px);
+  background: #f5f9ff;
+  border-color: #a9c3e6;
+  box-shadow: 0 9px 20px rgba(33, 102, 209, 0.11);
+}
+
 .button.light {
   background: white;
   color: #163a75;
