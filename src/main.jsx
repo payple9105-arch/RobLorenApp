@@ -4535,18 +4535,27 @@ section {
 }
 
         .rating {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin: 8px 0;
-        }
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 9px 0 0;
+}
 
-        .stars {
-          color: #f0a928;
-          letter-spacing: 1px;
-          font-size: 12px;
-        }
+.stars {
+  color: #e9a52b;
+  letter-spacing: 1.5px;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.rating span {
+  color: #8794a5;
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 600;
+}
 
         .rating strong {
           color: #263b58;
