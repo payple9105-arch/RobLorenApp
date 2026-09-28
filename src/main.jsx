@@ -4359,10 +4359,14 @@ section {
 }
 
         .section-heading p {
-          margin: 10px 0 0;
-          color: #748196;
-          line-height: 1.6;
-        }
+  margin: 11px 0 0;
+  max-width: 620px;
+  color: #718096;
+  font-size: 15px;
+  line-height: 1.65;
+  font-weight: 500;
+  letter-spacing: -0.05px;
+}
 
         .text-button {
           border: 0;
