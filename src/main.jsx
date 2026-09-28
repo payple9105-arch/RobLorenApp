@@ -4506,15 +4506,15 @@ section {
     linear-gradient(
       145deg,
       #ffffff 0%,
-      #fbfdff 100%
+      #f9fbfe 100%
     );
-  border: 1px solid #dfe7f1;
+  border: 1px solid #dbe5f0;
   border-radius: 20px;
   padding: 22px;
   cursor: pointer;
   box-shadow:
-    0 8px 22px rgba(30, 55, 90, 0.05),
-    0 2px 6px rgba(30, 55, 90, 0.025);
+    0 10px 26px rgba(30, 55, 90, 0.055),
+    0 2px 7px rgba(30, 55, 90, 0.025);
   transition:
     transform 0.22s ease,
     box-shadow 0.22s ease,
@@ -4534,11 +4534,11 @@ section {
 }
 
 .service-card:hover {
-  transform: translateY(-5px);
-  border-color: #c8d9ee;
+  transform: translateY(-6px);
+  border-color: #c3d6ed;
   box-shadow:
-    0 20px 42px rgba(27, 60, 102, 0.11),
-    0 5px 12px rgba(27, 60, 102, 0.04);
+    0 24px 48px rgba(27, 60, 102, 0.12),
+    0 7px 16px rgba(27, 60, 102, 0.045);
 }
 
 .service-card:active {
@@ -4598,7 +4598,7 @@ section {
   font-size: 21px;
   line-height: 1.2;
   font-weight: 900;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.45px;
 }
 
         .service-icon {
@@ -4606,37 +4606,38 @@ section {
   height: 58px;
   display: grid;
   place-items: center;
-  border-radius: 17px;
+  border-radius: 16px;
   background:
     linear-gradient(
       145deg,
-      #f2f7ff 0%,
-      #e7f0fc 100%
+      #f4f8ff 0%,
+      #e8f1fd 100%
     );
-  border: 1px solid #dbe7f5;
-  font-size: 29px;
+  border: 1px solid #d7e4f3;
+  font-size: 28px;
   margin-bottom: 18px;
   box-shadow:
-    0 7px 16px rgba(33, 102, 209, 0.07),
-    0 2px 5px rgba(33, 66, 110, 0.03);
+    0 8px 18px rgba(33, 102, 209, 0.08),
+    0 2px 6px rgba(33, 66, 110, 0.035);
 }
 
         .service-card h3 {
-  margin: 0 0 10px;
-  color: #18345b;
+  margin: 0 0 9px;
+  color: #17345d;
   font-size: 18px;
-  line-height: 1.3;
+  line-height: 1.28;
   font-weight: 850;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.35px;
 }
 
         .service-card > p {
   color: #718096;
   font-size: 13px;
-  line-height: 1.65;
+  line-height: 1.68;
   min-height: 63px;
-  margin: 0 0 17px;
+  margin: 0 0 18px;
   font-weight: 500;
+  letter-spacing: -0.05px;
 }
 
         .rating {
