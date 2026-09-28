@@ -3778,9 +3778,10 @@ useEffect(() => {
 
 .professional-card .button.outline:hover {
   transform: translateY(-2px);
-  background: #f5f9ff;
-  border-color: #a9c3e6;
-  box-shadow: 0 9px 20px rgba(33, 102, 209, 0.11);
+  background: #f4f8fe;
+  border-color: #a6c1e5;
+  box-shadow:
+    0 10px 22px rgba(33, 102, 209, 0.12);
 }
 
 .button.light {
