@@ -4711,36 +4711,39 @@ section {
         }
 
         .professional-info h3 {
-  margin: 0 0 5px;
+  margin: 0 0 6px;
   color: #18345b;
   font-size: 18px;
   line-height: 1.25;
   font-weight: 850;
-  letter-spacing: -0.25px;
+  letter-spacing: -0.3px;
+}
 }
         .professional-role {
   display: block;
-  margin-top: 4px;
+  margin-top: 5px;
   color: #65758a;
-  font-size: 12px;
+  font-size: 11.5px;
   line-height: 1.35;
   font-weight: 700;
+  letter-spacing: 0.05px;
 }
 
 .professional-location {
   display: block;
   margin-top: 5px;
-  color: #8794a5;
+  color: #7d8b9d;
   font-size: 11px;
   line-height: 1.35;
   font-weight: 600;
+  letter-spacing: 0.02px;
 }
 
         .professional-username {
   display: block;
   margin-top: 1px;
   color: #4f78ad;
-  font-size: 12px;
+  font-size: 11.5px;
   line-height: 1.3;
   font-weight: 700;
   letter-spacing: 0.05px;
@@ -4752,7 +4755,7 @@ section {
   margin: 0;
   color: #6f7f92;
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.68;
   min-height: 66px;
   font-weight: 500;
   letter-spacing: -0.05px;
@@ -4761,12 +4764,12 @@ section {
         .skill-row {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin: 17px 0 20px;
+  margin: 18px 0 21px;
 }
 
-        .skill-row span,
+.skill-row span,
 .profile-skills span {
   display: inline-flex;
   align-items: center;
@@ -4778,13 +4781,14 @@ section {
       #f3f7fc 0%,
       #edf3fa 100%
     );
-  border: 1px solid #e0e8f2;
+  border: 1px solid #dce6f1;
   color: #52667f;
   font-size: 10px;
   line-height: 1;
   font-weight: 750;
   letter-spacing: 0.05px;
-  box-shadow: 0 2px 5px rgba(30, 55, 90, 0.03);
+  box-shadow:
+    0 2px 5px rgba(30, 55, 90, 0.03);
 }
 
         .how-section {
