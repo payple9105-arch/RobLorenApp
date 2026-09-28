@@ -4303,10 +4303,10 @@ section {
 }
 
         .section {
-          width: min(1240px, calc(100% - 40px));
-          margin: auto;
-          padding: 90px 0;
-        }
+  width: min(1240px, calc(100% - 40px));
+  margin: auto;
+  padding: 84px 0;
+}
 
         .soft-section {
           width: 100%;
