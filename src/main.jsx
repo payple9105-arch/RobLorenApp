@@ -3763,11 +3763,12 @@ useEffect(() => {
   border-radius: 11px;
   background: #ffffff;
   color: #1755b4;
-  border: 1px solid #cbd8eb;
+  border: 1px solid #c3d3e8;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: -0.05px;
-  box-shadow: 0 5px 14px rgba(33, 102, 209, 0.06);
+  box-shadow:
+    0 5px 14px rgba(33, 102, 209, 0.06);
   transition:
     transform 0.2s ease,
     background 0.2s ease,
