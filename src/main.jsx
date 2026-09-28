@@ -4367,6 +4367,10 @@ section {
   color: #162f55;
 }
 
+.soft-section .section-heading h2 {
+  color: #17345d;
+}
+
         .section-heading p {
   margin: 11px 0 0;
   max-width: 620px;
@@ -4375,6 +4379,14 @@ section {
   line-height: 1.65;
   font-weight: 500;
   letter-spacing: -0.05px;
+}
+
+.category-section .section-heading p {
+  max-width: 620px;
+  color: #718096;
+  font-size: 15px;
+  line-height: 1.65;
+  font-weight: 500;
 }
 
         .text-button {
