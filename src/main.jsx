@@ -4578,19 +4578,20 @@ section {
   gap: 6px;
   padding: 7px 10px;
   border-radius: 9px;
-  background: linear-gradient(
-    135deg,
-    #eef5ff 0%,
-    #e7f0fc 100%
-  );
-  border: 1px solid #d9e6f6;
+  background:
+    linear-gradient(
+      135deg,
+      #f1f6ff 0%,
+      #e8f1fc 100%
+    );
+  border: 1px solid #d5e3f3;
   color: #245da8;
   font-size: 10px;
   line-height: 1;
   font-weight: 850;
-  letter-spacing: 0.15px;
+  letter-spacing: 0.1px;
   box-shadow:
-    0 3px 8px rgba(33, 102, 209, 0.05);
+    0 4px 9px rgba(33, 102, 209, 0.055);
 }
 
         .service-price {
