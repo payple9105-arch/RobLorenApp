@@ -4309,11 +4309,18 @@ section {
 }
 
         .soft-section {
-          width: 100%;
-          padding-left: max(20px, calc((100% - 1240px)/2));
-          padding-right: max(20px, calc((100% - 1240px)/2));
-          background: #f1f5fa;
-        }
+  width: 100%;
+  padding-left: max(20px, calc((100% - 1240px) / 2));
+  padding-right: max(20px, calc((100% - 1240px) / 2));
+  background:
+    linear-gradient(
+      180deg,
+      #f5f8fc 0%,
+      #eef3f9 100%
+    );
+  border-top: 1px solid #e8eef5;
+  border-bottom: 1px solid #e8eef5;
+}
 
         .section-heading {
           display: flex;
