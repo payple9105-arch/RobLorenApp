@@ -4506,7 +4506,7 @@ section {
         .services-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
+  gap: 24px;
 }
 
         .large-grid {
