@@ -4747,10 +4747,26 @@ section {
 }
 
         .arrow {
-          margin-left: auto;
-          color: #2667c8;
-          font-size: 18px;
-        }
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+
+  color: #2667c8;
+  background: #f1f6fd;
+  border: 1px solid #dce8f5;
+
+  font-size: 17px;
+  line-height: 1;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
 
         .professionals-grid {
   display: grid;
