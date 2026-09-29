@@ -4373,8 +4373,10 @@ section {
         .section-heading h2,
 .benefits-content h2 {
   margin: 0;
-  color: #162c4e;
+  color: #162f55;
   font-size: clamp(27px, 3vw, 39px);
+  line-height: 1.15;
+  font-weight: 800;
   letter-spacing: -1.2px;
 }
 
