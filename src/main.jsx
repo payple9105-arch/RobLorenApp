@@ -4592,22 +4592,26 @@ section {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 10px;
-  border-radius: 9px;
+  padding: 7px 11px;
+  border-radius: 999px;
+
   background:
     linear-gradient(
       135deg,
-      #f1f6ff 0%,
-      #e8f1fc 100%
+      #f3f7ff 0%,
+      #eaf2fc 100%
     );
-  border: 1px solid #d5e3f3;
+
+  border: 1px solid #d4e2f1;
   color: #245da8;
+
   font-size: 10px;
   line-height: 1;
-  font-weight: 850;
-  letter-spacing: 0.1px;
+  font-weight: 800;
+  letter-spacing: 0.15px;
+
   box-shadow:
-    0 4px 9px rgba(33, 102, 209, 0.055);
+    0 4px 10px rgba(33, 102, 209, 0.05);
 }
 
         .service-price {
@@ -4623,19 +4627,22 @@ section {
   height: 58px;
   display: grid;
   place-items: center;
-  border-radius: 16px;
+  border-radius: 17px;
+
   background:
     linear-gradient(
       145deg,
-      #f4f8ff 0%,
-      #e8f1fd 100%
+      #f5f9ff 0%,
+      #e9f2fc 100%
     );
-  border: 1px solid #d7e4f3;
-  font-size: 28px;
+
+  border: 1px solid #d5e3f2;
+  font-size: 27px;
   margin-bottom: 18px;
+
   box-shadow:
-    0 8px 18px rgba(33, 102, 209, 0.08),
-    0 2px 6px rgba(33, 66, 110, 0.035);
+    0 9px 20px rgba(33, 102, 209, 0.075),
+    0 2px 6px rgba(33, 66, 110, 0.03);
 }
 
         .service-card h3 {
@@ -4698,30 +4705,33 @@ section {
         }
 
         .service-provider {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          border-top: 1px solid #edf1f5;
-          padding-top: 15px;
-          margin-top: 15px;
-        }
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border-top: 1px solid #e8eef5;
+  padding-top: 16px;
+  margin-top: 16px;
+}
 
-        .service-provider div {
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-        }
+.service-provider div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
-        .service-provider strong {
-          color: #2b3d58;
-          font-size: 12px;
-        }
+.service-provider strong {
+  color: #263b59;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 750;
+}
 
-        .service-provider span:not(.avatar) {
-          color: #8c98a8;
-          font-size: 10px;
-          margin-top: 3px;
-        }
+.service-provider span:not(.avatar) {
+  color: #7d8b9e;
+  font-size: 10px;
+  line-height: 1.35;
+  margin-top: 3px;
+}
 
         .arrow {
           margin-left: auto;
