@@ -4339,13 +4339,13 @@ section {
   border-bottom: 1px solid #e8eef5;
 }
 
-        .section-heading {
-          display: flex;
-          align-items: flex-end;
-          justify-content: space-between;
-          gap: 25px;
-          margin-bottom: 35px;
-        }
+       .section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 38px;
+}
 
         .section-heading.centered {
           display: block;
@@ -4375,12 +4375,12 @@ section {
   margin: 0;
   color: #162c4e;
   font-size: clamp(27px, 3vw, 39px);
-  letter-spacing: -1.4px;
+  letter-spacing: -1.2px;
 }
 
 .section-heading h2 {
-  line-height: 1.12;
-  font-weight: 850;
+  line-height: 1.15;
+  font-weight: 800;
   color: #162f55;
 }
 
@@ -4389,11 +4389,12 @@ section {
 }
 
         .section-heading p {
-  margin: 11px 0 0;
-  max-width: 620px;
+  margin: 12px 0 0;
+  max-width: 650px;
+
   color: #718096;
   font-size: 15px;
-  line-height: 1.65;
+  line-height: 1.7;
   font-weight: 500;
   letter-spacing: -0.05px;
 }
