@@ -6722,12 +6722,25 @@ padding-right: 11px;
 RESPONSIVE — MÓVIL
 ========================================================= */
 
+*/
+
 @media (max-width: 700px) {
 
-.header {
-position: sticky;
-top: 0;
-}
+  .header {
+
+    position: sticky;
+
+    top: 0;
+
+  }
+
+  .services-grid {
+
+    grid-template-columns: 1fr;
+
+    gap: 16px;
+
+  }
 
 .header-inner {
   width: calc(100% - 16px);
