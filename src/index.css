@@ -316,11 +316,11 @@ input {
 }
 
   .search-box {
-    min-height: 60px;
-    padding: 7px 7px 7px 14px;
-    border-radius: 15px;
-    gap: 7px;
-  }
+  min-height: 64px;
+  padding: 7px 8px 7px 15px;
+  border-radius: 16px;
+  gap: 8px;
+}
 
   .search-box input {
     min-width: 0;
