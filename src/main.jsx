@@ -4418,20 +4418,20 @@ section {
 }
 
 .category-card {
-  min-height: 145px;
-  padding: 20px;
-  border: 1px solid #dfe7f1;
+  min-height: 140px;
+  padding: 19px;
+  border: 1px solid #dbe5f0;
   background:
     linear-gradient(
       145deg,
       #ffffff 0%,
-      #fbfdff 100%
+      #f9fbfe 100%
     );
   border-radius: 17px;
   text-align: left;
   box-shadow:
-    0 7px 18px rgba(30, 55, 90, 0.04),
-    0 2px 5px rgba(30, 55, 90, 0.025);
+    0 8px 20px rgba(30, 55, 90, 0.045),
+    0 2px 6px rgba(30, 55, 90, 0.025);
   transition:
     transform 0.22s ease,
     box-shadow 0.22s ease,
