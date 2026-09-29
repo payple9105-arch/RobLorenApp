@@ -3857,26 +3857,36 @@ section {
   max-width: 100%;
 }
         .avatar {
-          flex: 0 0 auto;
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          background: linear-gradient(135deg,#dbe9ff,#b9d0f7);
-          color: #174c9d;
-          font-weight: 900;
-          border: 3px solid white;
-          box-shadow: 0 5px 15px rgba(32,65,110,.1);
-        }
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
 
-        .avatar.small {
-          width: 32px;
-          height: 32px;
-          font-size: 11px;
-        }
+  background:
+    linear-gradient(
+      135deg,
+      #e0ecff 0%,
+      #bdd3f5 100%
+    );
 
-        .avatar.large {
+  color: #174c9d;
+  font-weight: 850;
+
+  border: 3px solid #ffffff;
+
+  box-shadow:
+    0 6px 16px rgba(32, 65, 110, 0.09);
+}
+
+.avatar.small {
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+}
+
+.avatar.large {
   width: 62px;
   height: 62px;
   min-width: 62px;
@@ -3886,6 +3896,7 @@ section {
   font-size: 18px;
   font-weight: 850;
   color: #ffffff;
+
   background:
     linear-gradient(
       145deg,
@@ -3893,10 +3904,12 @@ section {
       #1d5fbe 55%,
       #2e7be8 100%
     );
+
   border: 3px solid #ffffff;
+
   box-shadow:
-    0 8px 18px rgba(33, 102, 209, 0.18),
-    0 2px 6px rgba(33, 66, 110, 0.06);
+    0 8px 18px rgba(33, 102, 209, 0.17),
+    0 2px 6px rgba(33, 66, 110, 0.055);
 }
 
         .hero {
