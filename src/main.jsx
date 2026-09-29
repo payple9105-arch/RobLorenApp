@@ -4310,14 +4310,18 @@ section {
 
         .soft-section {
   width: 100%;
+  padding-top: 72px;
+  padding-bottom: 72px;
   padding-left: max(20px, calc((100% - 1240px) / 2));
   padding-right: max(20px, calc((100% - 1240px) / 2));
+
   background:
     linear-gradient(
       180deg,
-      #f5f8fc 0%,
-      #eef3f9 100%
+      #f8fafc 0%,
+      #f1f5f9 100%
     );
+
   border-top: 1px solid #e8eef5;
   border-bottom: 1px solid #e8eef5;
 }
@@ -4496,29 +4500,35 @@ section {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-      .service-card {
+     .service-card {
   position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
+
   background:
     linear-gradient(
       145deg,
       #ffffff 0%,
-      #f9fbfe 100%
+      #f8fbff 100%
     );
-  border: 1px solid #dbe5f0;
+
+  border: 1px solid #d9e4ef;
   border-radius: 20px;
   padding: 22px;
+
   cursor: pointer;
+
   box-shadow:
-    0 10px 26px rgba(30, 55, 90, 0.055),
-    0 2px 7px rgba(30, 55, 90, 0.025);
+    0 12px 28px rgba(30, 55, 90, 0.06),
+    0 3px 8px rgba(30, 55, 90, 0.028);
+
   transition:
     transform 0.22s ease,
     box-shadow 0.22s ease,
-    border-color 0.22s ease;
+    border-color 0.22s ease,
+    background 0.22s ease;
 }
 
 .service-card::before {
@@ -4534,11 +4544,17 @@ section {
 }
 
 .service-card:hover {
-  transform: translateY(-6px);
-  border-color: #c3d6ed;
+  transform: translateY(-5px);
+  border-color: #c7d8eb;
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff 0%,
+      #f7fbff 100%
+    );
   box-shadow:
-    0 24px 48px rgba(27, 60, 102, 0.12),
-    0 7px 16px rgba(27, 60, 102, 0.045);
+    0 20px 42px rgba(27, 60, 102, 0.105),
+    0 6px 14px rgba(27, 60, 102, 0.04);
 }
 
 .service-card:active {
@@ -4598,8 +4614,8 @@ section {
   color: #17488f;
   font-size: 21px;
   line-height: 1.2;
-  font-weight: 900;
-  letter-spacing: -0.45px;
+  font-weight: 850;
+  letter-spacing: -0.35px;
 }
 
         .service-icon {
@@ -4623,22 +4639,22 @@ section {
 }
 
         .service-card h3 {
-  margin: 0 0 9px;
+  margin: 0 0 10px;
   color: #17345d;
   font-size: 18px;
-  line-height: 1.28;
-  font-weight: 850;
-  letter-spacing: -0.35px;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: -0.3px;
 }
 
         .service-card > p {
-  color: #718096;
-  font-size: 13px;
-  line-height: 1.68;
+  color: #68788f;
+  font-size: 13.5px;
+  line-height: 1.65;
   min-height: 63px;
   margin: 0 0 18px;
   font-weight: 500;
-  letter-spacing: -0.05px;
+  letter-spacing: 0;
 }
 
         .rating {
