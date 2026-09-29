@@ -4570,14 +4570,10 @@ section {
     0 6px 14px rgba(27, 60, 102, 0.04);
 }
 
-.service-card:active {
-  transform: translateY(-1px);
-}
-
-.featured-card {
-  box-shadow:
-    0 12px 32px rgba(28, 64, 108, 0.07),
-    0 3px 8px rgba(28, 64, 108, 0.03);
+.service-card:hover .arrow {
+  transform: translateX(3px);
+  background: #eaf2fc;
+  color: #1f5fb7;
 }
 
 .service-card-top {
