@@ -4955,63 +4955,84 @@ section {
         }
 
         .benefits-section {
-          width: min(1240px,calc(100% - 40px));
-          margin: auto;
-          padding: 100px 0;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 80px;
-          align-items: center;
-        }
+  width: min(1240px, calc(100% - 40px));
+  margin: auto;
+  padding: 96px 0;
 
-        .benefits-content h2 span {
-          color: #2468cc;
-        }
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 72px;
+  align-items: center;
+}
 
-        .benefits-content > p {
-          color: #748196;
-          line-height: 1.7;
-          max-width: 580px;
-          margin: 20px 0 30px;
-        }
+.benefits-content h2 span {
+  color: #2468cc;
+}
 
-        .benefits-list {
-          display: grid;
-          gap: 15px;
-        }
+.benefits-content > p {
+  color: #718096;
+  line-height: 1.7;
+  max-width: 580px;
+  margin: 20px 0 30px;
+  font-size: 15px;
+  font-weight: 500;
+}
 
-        .benefit-item {
-          display: flex;
-          gap: 13px;
-        }
+.benefits-list {
+  display: grid;
+  gap: 17px;
+}
 
-        .benefit-item > span {
-          width: 28px;
-          height: 28px;
-          flex: 0 0 28px;
-          display: grid;
-          place-items: center;
-          border-radius: 50%;
-          background: #e9f2ff;
-          color: #2062c1;
-          font-weight: 900;
-        }
+.benefit-item {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+}
 
-        .benefit-item strong {
-          color: #29405f;
-          font-size: 14px;
-        }
+.benefit-item > span {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
 
-        .benefit-item p {
-          margin: 4px 0 0;
-          color: #8793a4;
-          font-size: 12px;
-        }
+  display: grid;
+  place-items: center;
 
-        .benefits-visual {
-          display: grid;
-          place-items: center;
-        }
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      135deg,
+      #eef5ff 0%,
+      #e2edfc 100%
+    );
+
+  color: #2062c1;
+  font-size: 13px;
+  font-weight: 900;
+
+  border: 1px solid #d6e5f7;
+  box-shadow:
+    0 5px 12px rgba(32, 98, 193, 0.07);
+}
+
+.benefit-item strong {
+  color: #29405f;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 750;
+}
+
+.benefit-item p {
+  margin: 5px 0 0;
+  color: #8793a4;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.benefits-visual {
+  display: grid;
+  place-items: center;
+}
 
         .network-card {
           width: 390px;
