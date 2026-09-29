@@ -310,10 +310,10 @@ input {
 
   /* BUSCADOR - DISEÑO MÓVIL */
 
-  .search-section {
-    width: calc(100% - 24px);
-    margin-top: -28px;
-  }
+.search-section {
+  width: calc(100% - 24px);
+  margin-top: -36px;
+}
 
   .search-box {
     min-height: 60px;
