@@ -3567,10 +3567,9 @@ useEffect(() => {
 
   return (
     <>
-     style>{`
+      <style>{`
   /* =========================================================
      ROBLOREN — SISTEMA VISUAL PRINCIPAL
-     Versión pulida — Header + Hero + Responsive
   ========================================================= */
 
   * {
@@ -3635,7 +3634,6 @@ useEffect(() => {
 
   img {
     max-width: 100%;
-    display: block;
   }
 
   /* =========================================================
@@ -3647,25 +3645,17 @@ useEffect(() => {
     top: 0;
     z-index: 50;
 
-    width: 100%;
-
-    background: rgba(255,255,255,.96);
-
+    background: rgba(255,255,255,.94);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 
     border-bottom: 1px solid #e8edf4;
-
-    box-shadow:
-      0 2px 12px rgba(24,52,88,.025);
   }
 
   .header-inner {
     width: min(1240px, calc(100% - 40px));
-    max-width: 1240px;
     min-height: 76px;
-
-    margin: 0 auto;
+    margin: auto;
 
     display: flex;
     align-items: center;
@@ -3680,35 +3670,33 @@ useEffect(() => {
 
     gap: 11px;
 
-    flex: 0 0 auto;
-
     border: 0;
     background: transparent;
 
     padding: 0;
 
     text-align: left;
+
+    flex: 0 0 auto;
   }
 
   .brand-mark {
     width: 42px;
     height: 42px;
 
-    flex: 0 0 42px;
+    border-radius: 13px;
 
     display: grid;
     place-items: center;
 
-    border-radius: 13px;
-
     background:
       linear-gradient(
         135deg,
-        #132f67 0%,
-        #2166d1 100%
+        #132f67,
+        #2166d1
       );
 
-    color: #ffffff;
+    color: white;
 
     font-size: 23px;
     font-weight: 900;
@@ -3729,23 +3717,20 @@ useEffect(() => {
   }
 
   .brand-name {
-    color: #132b55;
-
     font-size: 21px;
-    line-height: 1;
-
     font-weight: 900;
 
     letter-spacing: -.6px;
+
+    color: #132b55;
   }
 
   .brand-slogan {
     color: #718096;
 
     font-size: 10px;
-    line-height: 1.2;
 
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   /* =========================================================
@@ -3755,13 +3740,8 @@ useEffect(() => {
   .nav {
     display: flex !important;
     align-items: center !important;
-    justify-content: center;
 
     gap: 5px !important;
-
-    flex: 0 1 auto;
-
-    min-width: 0;
 
     visibility: visible !important;
     opacity: 1 !important;
@@ -3770,59 +3750,49 @@ useEffect(() => {
     height: auto !important;
 
     overflow: visible !important;
+
+    flex: 0 1 auto;
   }
 
   .nav button {
     display: inline-flex !important;
     align-items: center !important;
-    justify-content: center !important;
 
     visibility: visible !important;
     opacity: 1 !important;
   }
 
   .nav-link {
-    position: relative;
-
     display: inline-flex;
 
     align-items: center;
     justify-content: center;
 
-    min-height: 40px;
+    position: relative;
 
     border: 0;
     background: transparent;
 
-    padding: 9px 13px;
+    padding: 10px 13px;
 
     color: #68768a;
 
-    font-size: 14px;
     font-weight: 700;
+    font-size: 14px;
 
-    border-radius: 10px;
+    border-radius: 9px;
 
     white-space: nowrap;
 
     transition:
       color .2s ease,
-      background .2s ease,
-      transform .2s ease;
+      background .2s ease;
   }
 
-  .nav-link:hover {
-    color: #1755b4;
-
-    background: #f2f6fc;
-
-    transform: translateY(-1px);
-  }
-
+  .nav-link:hover,
   .nav-link.active {
     color: #1755b4;
-
-    background: #edf4ff;
+    background: #f0f5ff;
   }
 
   .nav-badge {
@@ -3838,13 +3808,10 @@ useEffect(() => {
     border-radius: 20px;
 
     background: #2166d1;
-
-    color: #ffffff;
+    color: white;
 
     font-size: 10px;
     font-weight: 800;
-
-    line-height: 1;
   }
 
   /* =========================================================
@@ -3858,8 +3825,6 @@ useEffect(() => {
     gap: 10px;
 
     flex: 0 0 auto;
-
-    min-width: 0;
   }
 
   .button {
@@ -3875,8 +3840,7 @@ useEffect(() => {
       transform .2s ease,
       box-shadow .2s ease,
       background .2s ease,
-      border-color .2s ease,
-      color .2s ease;
+      border-color .2s ease;
   }
 
   .button:hover:not(:disabled) {
@@ -3884,26 +3848,15 @@ useEffect(() => {
   }
 
   .button.primary {
-    background:
-      linear-gradient(
-        135deg,
-        #185cc2 0%,
-        #216bd3 100%
-      );
-
-    color: #ffffff;
+    background: #185cc2;
+    color: white;
 
     box-shadow:
       0 9px 22px rgba(24,92,194,.18);
   }
 
   .button.primary:hover:not(:disabled) {
-    background:
-      linear-gradient(
-        135deg,
-        #124a9f 0%,
-        #185fc3 100%
-      );
+    background: #124a9f;
 
     box-shadow:
       0 12px 28px rgba(24,92,194,.25);
@@ -3911,13 +3864,11 @@ useEffect(() => {
 
   .button.ghost {
     background: #f1f4f8;
-
     color: #41516a;
   }
 
   .button.outline {
-    background: #ffffff;
-
+    background: white;
     color: #1755b4;
 
     border: 1px solid #cbd8eb;
@@ -3925,33 +3876,23 @@ useEffect(() => {
     box-shadow: none;
   }
 
-  .button.outline:hover:not(:disabled) {
-    background: #f5f9ff;
-
-    border-color: #a9c2e2;
-  }
-
   .button.light {
-    background: #ffffff;
-
+    background: white;
     color: #163a75;
   }
 
   .button.white {
-    background: #ffffff;
-
+    background: white;
     color: #1856ae;
   }
 
   .button.danger {
     background: #fff1f1;
-
     color: #c83d3d;
   }
 
   .button.large {
     padding: 14px 21px;
-
     font-size: 15px;
   }
 
@@ -3965,10 +3906,8 @@ useEffect(() => {
 
     gap: 8px;
 
-    padding: 4px;
-
-    border: 0;
     background: transparent;
+    border: 0;
 
     color: #23334d;
 
@@ -3979,9 +3918,7 @@ useEffect(() => {
     max-width: 130px;
 
     overflow: hidden;
-
     text-overflow: ellipsis;
-
     white-space: nowrap;
   }
 
@@ -3995,10 +3932,10 @@ useEffect(() => {
     width: 38px;
     height: 38px;
 
+    border-radius: 50%;
+
     display: grid;
     place-items: center;
-
-    border-radius: 50%;
 
     background:
       linear-gradient(
@@ -4060,11 +3997,9 @@ useEffect(() => {
   ========================================================= */
 
   .hero {
-    position: relative;
+    min-height: 600px;
 
     width: 100%;
-
-    min-height: 600px;
 
     display: grid;
 
@@ -4077,10 +4012,8 @@ useEffect(() => {
     align-items: center;
 
     padding:
-      76px
+      72px
       max(20px, calc((100% - 1240px) / 2));
-
-    overflow: hidden;
 
     background:
       radial-gradient(
@@ -4099,31 +4032,11 @@ useEffect(() => {
         #f3f7fc 55%,
         #edf4fb 100%
       );
-  }
 
-  .hero::before {
-    content: "";
-
-    position: absolute;
-
-    width: 420px;
-    height: 420px;
-
-    right: -170px;
-    top: -190px;
-
-    border-radius: 50%;
-
-    border: 1px solid rgba(44,111,210,.08);
-
-    pointer-events: none;
+    overflow: hidden;
   }
 
   .hero-content {
-    position: relative;
-
-    z-index: 2;
-
     max-width: 680px;
   }
 
@@ -4134,8 +4047,6 @@ useEffect(() => {
     gap: 8px;
 
     padding: 8px 13px;
-
-    margin-bottom: 22px;
 
     border-radius: 999px;
 
@@ -4151,6 +4062,8 @@ useEffect(() => {
     box-shadow:
       0 8px 20px rgba(31,67,112,.05);
 
+    margin-bottom: 22px;
+
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
@@ -4162,15 +4075,15 @@ useEffect(() => {
   .hero h1 {
     max-width: 700px;
 
-    margin: 0 0 25px;
-
-    color: #12264a;
-
     font-size: clamp(42px,5.5vw,70px);
 
     line-height: .99;
 
     letter-spacing: -3.5px;
+
+    margin: 0 0 25px;
+
+    color: #12264a;
 
     font-weight: 850;
   }
@@ -4182,13 +4095,13 @@ useEffect(() => {
   .hero p {
     max-width: 640px;
 
-    margin: 0 0 30px;
-
-    color: #66768c;
-
     font-size: 18px;
 
     line-height: 1.7;
+
+    color: #66768c;
+
+    margin: 0 0 30px;
 
     font-weight: 500;
   }
@@ -4272,11 +4185,11 @@ useEffect(() => {
   }
 
   .hero-trust strong {
-    color: #203653;
-
     font-size: 16px;
 
     line-height: 1.2;
+
+    color: #203653;
 
     font-weight: 850;
   }
@@ -4296,14 +4209,12 @@ useEffect(() => {
   ========================================================= */
 
   .hero-visual {
-    position: relative;
-
     min-height: 480px;
+
+    position: relative;
 
     display: grid;
     place-items: center;
-
-    z-index: 1;
   }
 
   .hero-glow {
@@ -4318,22 +4229,20 @@ useEffect(() => {
       rgba(41,111,218,.12);
 
     filter: blur(12px);
-
-    pointer-events: none;
   }
 
   .hero-orbit {
-    position: relative;
-
     width: 320px;
     height: 320px;
-
-    display: grid;
-    place-items: center;
 
     border: 1px solid rgba(39,101,188,.20);
 
     border-radius: 50%;
+
+    display: grid;
+    place-items: center;
+
+    position: relative;
 
     background:
       radial-gradient(
@@ -4415,7 +4324,7 @@ useEffect(() => {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 
-    z-index: 3;
+    z-index: 2;
 
     transition:
       transform .25s ease,
@@ -4448,12 +4357,12 @@ useEffect(() => {
   }
 
   .floating-card span:last-child {
-    margin-top: 5px;
-
     color: #7b899b;
 
     font-size: 11px;
     line-height: 1.3;
+
+    margin-top: 5px;
 
     font-weight: 600;
   }
@@ -4500,12 +4409,13 @@ useEffect(() => {
   ========================================================= */
 
   .search-section {
-    position: relative;
-    z-index: 5;
-
     width: min(1050px, calc(100% - 40px));
 
     margin: -34px auto 0;
+
+    position: relative;
+
+    z-index: 5;
   }
 
   .search-box {
@@ -4535,7 +4445,8 @@ useEffect(() => {
 
     transition:
       border-color .2s ease,
-      box-shadow .2s ease;
+      box-shadow .2s ease,
+      transform .2s ease;
   }
 
   .search-box:focus-within {
@@ -4648,7 +4559,7 @@ useEffect(() => {
       linear-gradient(
         180deg,
         #f8fafc 0%,
-        #f1f5f9 100%
+        #f2f6fa 100%
       );
 
     border-top: 1px solid #e8eef5;
@@ -4668,12 +4579,12 @@ useEffect(() => {
   .section-heading.centered {
     display: block;
 
+    text-align: center;
+
     max-width: 700px;
 
     margin-left: auto;
     margin-right: auto;
-
-    text-align: center;
   }
 
   .section-heading.small {
@@ -4717,9 +4628,9 @@ useEffect(() => {
   }
 
   .section-heading p {
-    max-width: 650px;
-
     margin: 12px 0 0;
+
+    max-width: 650px;
 
     color: #718096;
 
@@ -4741,19 +4652,14 @@ useEffect(() => {
 
     color: #1758b6;
 
-    padding: 7px 4px;
-
-    border-radius: 7px;
-
     font-size: 13px;
     font-weight: 800;
 
     white-space: nowrap;
 
-    transition:
-      color .2s ease,
-      background .2s ease,
-      transform .2s ease;
+    padding: 7px 4px;
+
+    border-radius: 7px;
   }
 
   .text-button:hover {
@@ -4807,7 +4713,8 @@ useEffect(() => {
     transition:
       transform .22s ease,
       box-shadow .22s ease,
-      border-color .22s ease;
+      border-color .22s ease,
+      background .22s ease;
   }
 
   .category-card:hover {
@@ -4891,10 +4798,6 @@ useEffect(() => {
 
     overflow: hidden;
 
-    padding: 22px;
-
-    cursor: pointer;
-
     background:
       linear-gradient(
         145deg,
@@ -4906,6 +4809,10 @@ useEffect(() => {
 
     border-radius: 20px;
 
+    padding: 22px;
+
+    cursor: pointer;
+
     box-shadow:
       0 12px 28px rgba(30,55,90,.055),
       0 3px 8px rgba(30,55,90,.025);
@@ -4913,7 +4820,8 @@ useEffect(() => {
     transition:
       transform .22s ease,
       box-shadow .22s ease,
-      border-color .22s ease;
+      border-color .22s ease,
+      background .22s ease;
   }
 
   .service-card::before {
@@ -4959,6 +4867,7 @@ useEffect(() => {
 
   .service-card-top {
     position: relative;
+
     z-index: 1;
 
     display: flex;
@@ -5012,8 +4921,6 @@ useEffect(() => {
     display: grid;
     place-items: center;
 
-    margin-bottom: 18px;
-
     border-radius: 17px;
 
     background:
@@ -5026,6 +4933,8 @@ useEffect(() => {
     border: 1px solid #d4e2f1;
 
     font-size: 27px;
+
+    margin-bottom: 18px;
   }
 
   .service-card h3 {
@@ -5042,15 +4951,15 @@ useEffect(() => {
   }
 
   .service-card > p {
-    min-height: 63px;
-
-    margin: 0 0 18px;
-
     color: #68788f;
 
     font-size: 13.5px;
 
     line-height: 1.65;
+
+    min-height: 63px;
+
+    margin: 0 0 18px;
   }
 
   .rating {
@@ -5091,10 +5000,11 @@ useEffect(() => {
 
     gap: 11px;
 
-    margin-top: auto;
+    border-top: 1px solid #e7edf4;
+
     padding-top: 16px;
 
-    border-top: 1px solid #e7edf4;
+    margin-top: auto;
   }
 
   .service-provider div {
@@ -5115,11 +5025,11 @@ useEffect(() => {
   }
 
   .service-provider span:not(.avatar) {
-    margin-top: 3px;
-
     color: #7d8b9e;
 
     font-size: 10px;
+
+    margin-top: 3px;
 
     white-space: nowrap;
     overflow: hidden;
@@ -5127,16 +5037,16 @@ useEffect(() => {
   }
 
   .arrow {
-    width: 30px;
-    height: 30px;
-
-    flex: 0 0 auto;
+    margin-left: auto;
 
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    margin-left: auto;
+    flex: 0 0 auto;
+
+    width: 30px;
+    height: 30px;
 
     border-radius: 50%;
 
@@ -5177,8 +5087,6 @@ useEffect(() => {
 
     overflow: hidden;
 
-    padding: 24px;
-
     background:
       linear-gradient(
         145deg,
@@ -5189,6 +5097,8 @@ useEffect(() => {
     border: 1px solid #dce6f0;
 
     border-radius: 20px;
+
+    padding: 24px;
 
     box-shadow:
       0 10px 24px rgba(30,55,90,.05);
@@ -5282,8 +5192,6 @@ useEffect(() => {
   }
 
   .professional-card > p {
-    min-height: 66px;
-
     margin: 0;
 
     color: #6f7f92;
@@ -5291,15 +5199,17 @@ useEffect(() => {
     font-size: 13px;
 
     line-height: 1.68;
+
+    min-height: 66px;
   }
 
   .skill-row {
     display: flex;
     align-items: center;
 
-    flex-wrap: wrap;
-
     gap: 8px;
+
+    flex-wrap: wrap;
 
     margin: 18px 0 21px;
   }
@@ -5825,6 +5735,7 @@ useEffect(() => {
 
   .cta-section .eyebrow {
     position: relative;
+
     z-index: 1;
 
     color: #b9d7ff;
@@ -5832,6 +5743,7 @@ useEffect(() => {
 
   .cta-section h2 {
     position: relative;
+
     z-index: 1;
 
     margin: 0 0 11px;
@@ -5849,11 +5761,12 @@ useEffect(() => {
 
   .cta-section p {
     position: relative;
+
     z-index: 1;
 
-    max-width: 620px;
-
     margin: 0;
+
+    max-width: 620px;
 
     color: #d9e8fb;
 
@@ -5966,6 +5879,8 @@ useEffect(() => {
     font-size: 11px;
 
     font-weight: 800;
+
+    cursor: pointer;
   }
 
   .filter:hover {
@@ -6025,10 +5940,8 @@ useEffect(() => {
     border-radius: 7px;
   }
 
-  .clear-button:hover,
-  .back-button:hover {
+  .clear-button:hover {
     color: #174b96;
-
     background: #f1f6fd;
   }
 
@@ -6045,6 +5958,10 @@ useEffect(() => {
   }
 
   .back-button:hover {
+    color: #174b96;
+
+    background: #f1f6fd;
+
     transform: translateX(-2px);
   }
 
@@ -6191,11 +6108,11 @@ useEffect(() => {
   }
 
   .hire-card {
+    padding: 25px;
+
     position: sticky;
 
     top: 100px;
-
-    padding: 25px;
   }
 
   .hire-card h3 {
@@ -6497,13 +6414,13 @@ useEffect(() => {
   }
 
   .request-card {
-    padding: 21px;
-
     background: #ffffff;
 
     border: 1px solid #dce6f0;
 
     border-radius: 18px;
+
+    padding: 21px;
 
     box-shadow:
       0 9px 22px rgba(30,55,90,.045);
@@ -6545,6 +6462,7 @@ useEffect(() => {
     display: inline-flex;
 
     align-items: center;
+
     justify-content: center;
 
     padding: 7px 10px;
@@ -6593,22 +6511,22 @@ useEffect(() => {
 
     min-height: 600px;
 
-    overflow: hidden;
-
     background: #ffffff;
 
     border: 1px solid #dce6f0;
 
     border-radius: 20px;
 
+    overflow: hidden;
+
     box-shadow:
       0 15px 35px rgba(30,55,90,.06);
   }
 
   .conversation-list {
-    background: #f8fafc;
-
     border-right: 1px solid #e4ebf2;
+
+    background: #f8fafc;
   }
 
   .conversation-item {
@@ -6623,6 +6541,7 @@ useEffect(() => {
     padding: 14px;
 
     border: 0;
+
     border-bottom: 1px solid #e5ebf2;
 
     background: transparent;
@@ -6757,10 +6676,6 @@ useEffect(() => {
   }
 
   .preview-card {
-    position: sticky;
-
-    top: 100px;
-
     padding: 25px;
 
     background:
@@ -6773,6 +6688,10 @@ useEffect(() => {
     border: 1px solid #dce6f0;
 
     border-radius: 21px;
+
+    position: sticky;
+
+    top: 100px;
 
     box-shadow:
       0 12px 30px rgba(30,55,90,.055);
@@ -7066,11 +6985,6 @@ useEffect(() => {
   ========================================================= */
 
   @media (max-width: 1100px) {
-
-    .header-inner {
-      width: min(1240px, calc(100% - 28px));
-    }
-
     .hero {
       grid-template-columns:
         minmax(0,1fr)
@@ -7108,9 +7022,8 @@ useEffect(() => {
   ========================================================= */
 
   @media (max-width: 980px) {
-
     .header-inner {
-      width: calc(100% - 28px);
+      width: min(calc(100% - 28px),1240px);
 
       gap: 12px;
     }
@@ -7198,52 +7111,36 @@ useEffect(() => {
   ========================================================= */
 
   @media (max-width: 700px) {
-
-    /* ---------- HEADER ---------- */
-
     .header {
       position: sticky;
       top: 0;
-
-      width: 100%;
     }
 
     .header-inner {
       width: calc(100% - 16px);
 
-      min-height: 0;
+      min-height: 58px;
 
-      padding: 8px 0 7px;
+      padding: 8px 0;
 
-      display: grid;
-
-      grid-template-columns:
-        auto
-        minmax(0,1fr)
-        auto;
-
-      grid-template-rows:
-        auto
-        auto;
+      display: flex;
 
       align-items: center;
 
-      column-gap: 8px;
-      row-gap: 6px;
+      justify-content: space-between;
+
+      flex-wrap: wrap;
+
+      gap: 7px;
     }
 
     .brand {
       min-width: 0;
-
-      grid-column: 1;
-      grid-row: 1;
     }
 
     .brand-mark {
       width: 38px;
       height: 38px;
-
-      flex-basis: 38px;
 
       border-radius: 11px;
 
@@ -7259,14 +7156,7 @@ useEffect(() => {
     }
 
     .header-actions {
-      grid-column: 3;
-      grid-row: 1;
-
-      justify-content: flex-end;
-
       gap: 5px;
-
-      min-width: 0;
     }
 
     .profile-mini {
@@ -7288,27 +7178,22 @@ useEffect(() => {
     }
 
     .nav {
-      grid-column: 1 / -1;
-      grid-row: 2;
+      order: 3;
 
       width: 100% !important;
 
-      min-width: 0;
-
-      display: flex !important;
+      flex: 1 0 100%;
 
       justify-content: flex-start;
 
       gap: 3px !important;
 
       overflow-x: auto !important;
-      overflow-y: hidden !important;
-
-      padding: 0 0 1px;
+      overflow-y: hidden;
 
       scrollbar-width: none;
 
-      -webkit-overflow-scrolling: touch;
+      padding-bottom: 1px;
     }
 
     .nav::-webkit-scrollbar {
@@ -7316,11 +7201,11 @@ useEffect(() => {
     }
 
     .nav-link {
-      flex: 0 0 auto;
+      flex: 1 0 auto;
 
       min-height: 38px;
 
-      padding: 8px 12px;
+      padding: 8px 11px;
 
       font-size: 12px;
 
@@ -7341,8 +7226,6 @@ useEffect(() => {
 
       font-size: 9px;
     }
-
-    /* ---------- HERO ---------- */
 
     .hero {
       min-height: auto;
@@ -7368,8 +7251,6 @@ useEffect(() => {
 
     .hero h1 {
       max-width: 100%;
-
-      margin-bottom: 21px;
 
       font-size: clamp(38px,11vw,52px);
 
@@ -7453,8 +7334,6 @@ useEffect(() => {
       left: 0;
     }
 
-    /* ---------- SEARCH ---------- */
-
     .search-section {
       width: calc(100% - 24px);
 
@@ -7498,8 +7377,6 @@ useEffect(() => {
       width: 100%;
     }
 
-    /* ---------- SECTIONS ---------- */
-
     .section {
       width: calc(100% - 24px);
 
@@ -7537,8 +7414,6 @@ useEffect(() => {
       margin-top: 12px;
     }
 
-    /* ---------- CATEGORIES ---------- */
-
     .category-grid {
       grid-template-columns:
         repeat(2,minmax(0,1fr));
@@ -7563,8 +7438,6 @@ useEffect(() => {
       font-size: 22px;
     }
 
-    /* ---------- SERVICES ---------- */
-
     .services-grid,
     .large-grid,
     .professionals-grid {
@@ -7587,15 +7460,11 @@ useEffect(() => {
       font-size: 17px;
     }
 
-    /* ---------- PROFESSIONALS ---------- */
-
     .professional-card {
       padding: 20px;
 
       border-radius: 18px;
     }
-
-    /* ---------- HOW ---------- */
 
     .steps-grid {
       grid-template-columns: 1fr;
@@ -7606,8 +7475,6 @@ useEffect(() => {
     .how-section {
       padding: 70px 12px;
     }
-
-    /* ---------- BENEFITS ---------- */
 
     .benefits-section {
       width: calc(100% - 24px);
@@ -7628,8 +7495,6 @@ useEffect(() => {
       height: 320px;
     }
 
-    /* ---------- CTA ---------- */
-
     .cta-section {
       width: calc(100% - 24px);
 
@@ -7645,8 +7510,6 @@ useEffect(() => {
     .cta-section .button {
       margin-top: 24px;
     }
-
-    /* ---------- PÁGINAS ---------- */
 
     .page-container {
       width: calc(100% - 24px);
@@ -7678,8 +7541,6 @@ useEffect(() => {
       align-items: flex-start;
     }
 
-    /* ---------- SERVICE DETAIL ---------- */
-
     .service-detail {
       width: calc(100% - 24px);
 
@@ -7706,8 +7567,6 @@ useEffect(() => {
     .hire-card {
       padding: 20px;
     }
-
-    /* ---------- ACCOUNT ---------- */
 
     .account-page {
       width: calc(100% - 24px);
@@ -7747,8 +7606,6 @@ useEffect(() => {
       grid-column: auto;
     }
 
-    /* ---------- DASHBOARD ---------- */
-
     .dashboard-grid {
       grid-template-columns:
         repeat(2,minmax(0,1fr));
@@ -7764,13 +7621,9 @@ useEffect(() => {
       font-size: 23px;
     }
 
-    /* ---------- REQUESTS ---------- */
-
     .requests-grid {
       grid-template-columns: 1fr;
     }
-
-    /* ---------- MESSAGES ---------- */
 
     .messages-layout {
       grid-template-columns: 1fr;
@@ -7797,8 +7650,6 @@ useEffect(() => {
       max-width: 86%;
     }
 
-    /* ---------- OFFER ---------- */
-
     .offer-layout {
       grid-template-columns: 1fr;
     }
@@ -7809,8 +7660,6 @@ useEffect(() => {
 
       border-radius: 18px;
     }
-
-    /* ---------- AUTH ---------- */
 
     .auth-layout {
       min-height: auto;
@@ -7836,16 +7685,13 @@ useEffect(() => {
       border-radius: 18px;
     }
 
-    /* ---------- FOOTER ---------- */
-
     .footer {
       padding:
         45px 18px 25px;
     }
 
     .footer-grid {
-      grid-template-columns:
-        1fr 1fr;
+      grid-template-columns: 1fr 1fr;
 
       gap: 30px;
     }
@@ -7862,7 +7708,6 @@ useEffect(() => {
   ========================================================= */
 
   @media (max-width: 420px) {
-
     .header-inner {
       width: calc(100% - 16px);
     }
@@ -7870,8 +7715,6 @@ useEffect(() => {
     .brand-mark {
       width: 36px;
       height: 36px;
-
-      flex-basis: 36px;
 
       border-radius: 10px;
 
@@ -7902,8 +7745,6 @@ useEffect(() => {
 
       font-size: 8px;
     }
-
-    /* ---------- HERO ---------- */
 
     .hero {
       padding-left: 16px;
@@ -8005,8 +7846,6 @@ useEffect(() => {
       left: -5px;
     }
 
-    /* ---------- SEARCH ---------- */
-
     .search-section {
       width: calc(100% - 20px);
     }
@@ -8024,8 +7863,6 @@ useEffect(() => {
       padding-right: 10px;
     }
 
-    /* ---------- SECTIONS ---------- */
-
     .section {
       width: calc(100% - 20px);
     }
@@ -8034,8 +7871,6 @@ useEffect(() => {
       padding-left: 10px;
       padding-right: 10px;
     }
-
-    /* ---------- CATEGORIES ---------- */
 
     .category-grid {
       gap: 9px;
@@ -8055,15 +7890,11 @@ useEffect(() => {
       font-size: 10px;
     }
 
-    /* ---------- SERVICES ---------- */
-
     .service-card {
       padding: 18px;
 
       border-radius: 17px;
     }
-
-    /* ---------- DETAIL ---------- */
 
     .service-detail {
       width: calc(100% - 20px);
@@ -8081,22 +7912,16 @@ useEffect(() => {
       padding: 18px;
     }
 
-    /* ---------- CTA ---------- */
-
     .cta-section {
       width: calc(100% - 20px);
 
       padding: 30px 20px;
     }
 
-    /* ---------- INTERNAL PAGES ---------- */
-
     .page-container,
     .account-page {
       width: calc(100% - 20px);
     }
-
-    /* ---------- ACCOUNT ---------- */
 
     .account-cover {
       height: 125px;
@@ -8114,13 +7939,9 @@ useEffect(() => {
       font-size: 20px;
     }
 
-    /* ---------- DASHBOARD ---------- */
-
     .dashboard-grid {
       grid-template-columns: 1fr;
     }
-
-    /* ---------- NETWORK ---------- */
 
     .network-card {
       width: 290px;
@@ -8166,8 +7987,6 @@ useEffect(() => {
     .network-line {
       width: 120px;
     }
-
-    /* ---------- FOOTER ---------- */
 
     .footer {
       padding-left: 16px;
