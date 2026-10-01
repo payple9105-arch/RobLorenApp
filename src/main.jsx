@@ -5164,33 +5164,60 @@ section {
         .line-c { transform: rotate(145deg); }
 
         .cta-section {
-          width: min(1180px,calc(100% - 40px));
-          margin: 0 auto 80px;
-          padding: 55px 60px;
-          border-radius: 25px;
-          background: linear-gradient(135deg,#153873,#216bd4);
-          color: white;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 30px;
-          box-shadow: 0 25px 55px rgba(22,69,137,.22);
-        }
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto 80px;
+  padding: 58px 60px;
 
-        .cta-section .eyebrow {
-          color: #a9ceff;
-        }
+  border-radius: 26px;
 
-        .cta-section h2 {
-          margin: 0 0 8px;
-          font-size: clamp(27px,3vw,40px);
-          letter-spacing: -1.5px;
-        }
+  background:
+    linear-gradient(
+      135deg,
+      #12366f 0%,
+      #1c5fbd 55%,
+      #2674df 100%
+    );
 
-        .cta-section p {
-          margin: 0;
-          color: #d4e3fb;
-        }
+  color: #ffffff;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 34px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  box-shadow:
+    0 26px 58px rgba(22, 69, 137, 0.22),
+    0 6px 16px rgba(22, 69, 137, 0.08);
+
+  overflow: hidden;
+}
+
+.cta-section .eyebrow {
+  color: #b9d7ff;
+  font-weight: 800;
+}
+
+.cta-section h2 {
+  margin: 0 0 10px;
+
+  color: #ffffff;
+  font-size: clamp(27px, 3vw, 40px);
+  line-height: 1.12;
+  font-weight: 850;
+  letter-spacing: -1.5px;
+}
+
+.cta-section p {
+  margin: 0;
+  max-width: 620px;
+
+  color: #d9e8fb;
+  font-size: 14px;
+  line-height: 1.65;
+  font-weight: 500;
+}
 
         .page-container {
           width: min(1240px,calc(100% - 40px));
