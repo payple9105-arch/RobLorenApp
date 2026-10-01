@@ -4408,10 +4408,10 @@ useEffect(() => {
      BUSCADOR
   ========================================================= */
 
-  .search-section {
-    width: min(1050px, calc(100% - 40px));
+    .search-section {
+    width: min(1080px, calc(100% - 40px));
 
-    margin: -34px auto 0;
+    margin: -38px auto 0;
 
     position: relative;
 
@@ -4419,35 +4419,43 @@ useEffect(() => {
   }
 
   .search-box {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    gap: 10px;
+  gap: 11px;
 
-    min-height: 70px;
+  min-height: 72px;
 
-    padding: 8px 9px 8px 18px;
+  padding: 8px 9px 8px 20px;
 
-    background:
-      linear-gradient(
-        145deg,
-        rgba(255,255,255,.99) 0%,
-        rgba(248,251,255,.98) 100%
-      );
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.995) 0%,
+      rgba(247,250,255,.985) 100%
+    );
 
-    border: 1px solid #d7e2ef;
+  border: 1px solid #d5e1ee;
 
-    border-radius: 18px;
+  border-radius: 19px;
 
-    box-shadow:
-      0 22px 50px rgba(28,59,99,.12),
-      0 5px 14px rgba(28,59,99,.045);
+  box-shadow:
+    0 24px 55px rgba(28,59,99,.13),
+    0 6px 16px rgba(28,59,99,.05);
 
-    transition:
-      border-color .2s ease,
-      box-shadow .2s ease,
-      transform .2s ease;
-  }
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease,
+    transform .2s ease;
+}
+
+.search-box:focus-within {
+  border-color: #b8cce5;
+
+  box-shadow:
+    0 24px 55px rgba(28,59,99,.14),
+    0 0 0 4px rgba(33,102,209,.07);
+}
 
   .search-box:focus-within {
     border-color: #94b6e3;
