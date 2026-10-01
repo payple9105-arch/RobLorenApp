@@ -4914,45 +4914,112 @@ section {
 }
 
         .how-section {
-          padding: 95px 20px;
-          background: #eaf1f9;
-        }
+  padding: 96px 20px;
 
-        .steps-grid {
-          width: min(1100px,100%);
-          margin: 50px auto 0;
-          display: grid;
-          grid-template-columns: repeat(4,1fr);
-          gap: 15px;
-        }
+  background:
+    linear-gradient(
+      180deg,
+      #eef4fa 0%,
+      #e8f0f8 100%
+    );
 
-        .step-card {
-          padding: 25px;
-          background: rgba(255,255,255,.68);
-          border: 1px solid rgba(214,225,239,.9);
-          border-radius: 16px;
-        }
+  border-top: 1px solid #dfe8f2;
+  border-bottom: 1px solid #dfe8f2;
+}
 
-        .step-number {
-          display: inline-block;
-          color: #2b6dce;
-          font-weight: 900;
-          font-size: 12px;
-          margin-bottom: 35px;
-        }
+.steps-grid {
+  width: min(1100px, 100%);
+  margin: 50px auto 0;
 
-        .step-card h3 {
-          margin: 0 0 9px;
-          color: #243b5b;
-          font-size: 16px;
-        }
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
 
-        .step-card p {
-          margin: 0;
-          color: #7b899c;
-          font-size: 12px;
-          line-height: 1.6;
-        }
+.step-card {
+  position: relative;
+  min-width: 0;
+
+  padding: 26px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.96) 0%,
+      rgba(248, 251, 255, 0.9) 100%
+    );
+
+  border: 1px solid #d6e2ee;
+  border-radius: 18px;
+
+  box-shadow:
+    0 10px 24px rgba(30, 55, 90, 0.055),
+    0 2px 7px rgba(30, 55, 90, 0.025);
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.step-card:hover {
+  transform: translateY(-4px);
+  border-color: #c5d7eb;
+
+  box-shadow:
+    0 18px 34px rgba(30, 70, 115, 0.09),
+    0 4px 10px rgba(30, 55, 90, 0.035);
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 34px;
+  height: 34px;
+  padding: 0 9px;
+
+  margin-bottom: 30px;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #e8f1ff 0%,
+      #dceafb 100%
+    );
+
+  border: 1px solid #cddff2;
+
+  color: #2464bd;
+  font-weight: 850;
+  font-size: 11px;
+  line-height: 1;
+
+  box-shadow:
+    0 5px 12px rgba(36, 100, 189, 0.07);
+}
+
+.step-card h3 {
+  margin: 0 0 10px;
+
+  color: #243b5b;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 800;
+  letter-spacing: -0.15px;
+}
+
+.step-card p {
+  margin: 0;
+
+  color: #7b899c;
+  font-size: 12.5px;
+  line-height: 1.65;
+  font-weight: 500;
+}
 
         .benefits-section {
   width: min(1240px, calc(100% - 40px));
