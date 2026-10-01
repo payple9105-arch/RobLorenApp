@@ -183,10 +183,27 @@ input {
 }
 
 .footer {
-  background: #172033;
-  color: white;
-  padding: 30px 0;
+  background:
+    linear-gradient(
+      180deg,
+      #172033 0%,
+      #111a2a 100%
+    );
+
+  color: #ffffff;
+
+  padding: 38px 20px;
+
   text-align: center;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.footer p {
+  margin: 0;
+  color: #aebbd0;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 @media (max-width: 700px) {
