@@ -6546,29 +6546,63 @@ RESPONSIVE — MÓVIL
 }
 
 /* =========================================================
-RESPONSIVE — TELÉFONOS PEQUEÑOS
+   RESPONSIVE — TELÉFONOS PEQUEÑOS
+   RobLoren — ajuste visual
 ========================================================= */
 
 @media (max-width: 420px) {
+
+  /* ---------- HEADER ---------- */
+
   .header-inner {
     width: calc(100% - 16px);
+    min-height: 64px;
+    gap: 8px;
+  }
+
+  .brand {
+    gap: 8px;
+    min-width: 0;
   }
 
   .brand-mark {
     width: 36px;
     height: 36px;
+
+    min-width: 36px;
+
     border-radius: 10px;
+
     font-size: 19px;
   }
 
   .brand-name {
     font-size: 18px;
+    letter-spacing: -0.5px;
+  }
+
+  .nav {
+    gap: 2px !important;
   }
 
   .nav-link {
-    padding-left: 9px;
-    padding-right: 9px;
+    min-height: 36px;
+
+    padding-left: 8px;
+    padding-right: 8px;
+
+    border-radius: 9px;
+
     font-size: 11px;
+  }
+
+  .nav-link.active::after {
+    left: 9px;
+    right: 9px;
+  }
+
+  .header-actions {
+    gap: 5px;
   }
 
   .header-actions .button.ghost {
@@ -6579,50 +6613,135 @@ RESPONSIVE — TELÉFONOS PEQUEÑOS
   .nav-badge {
     min-width: 16px;
     height: 16px;
+
     margin-left: 3px;
+
+    padding: 0 4px;
+
     font-size: 8px;
   }
+
+  .avatar.small {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+
+    border-radius: 9px;
+
+    font-size: 11px;
+  }
+
+  /* ---------- HERO ---------- */
 
   .hero {
     padding-left: 16px;
     padding-right: 16px;
   }
 
+  .hero h1 {
+    font-size: clamp(32px, 10vw, 42px);
+    letter-spacing: -1.8px;
+  }
+
+  .hero p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .hero-buttons {
+    gap: 9px;
+  }
+
+  .hero-trust {
+    gap: 10px;
+  }
+
+  /* ---------- BUSCADOR ---------- */
+
   .search-section {
     width: calc(100% - 20px);
   }
+
+  .search-box {
+    gap: 6px;
+    padding: 5px;
+    border-radius: 14px;
+  }
+
+  .search-box input {
+    font-size: 13px;
+  }
+
+  .search-button {
+    min-width: 44px;
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+
+  /* ---------- SECCIONES ---------- */
 
   .section {
     width: calc(100% - 20px);
   }
 
+  .section-heading h2,
+  .benefits-content h2 {
+    font-size: 25px;
+  }
+
+  /* ---------- CATEGORÍAS ---------- */
+
+  .category-grid {
+    gap: 10px;
+  }
+
   .category-card {
     min-height: 125px;
+
     padding: 15px;
+
+    border-radius: 15px;
   }
+
+  /* ---------- SERVICIOS ---------- */
 
   .service-card {
     padding: 18px;
     border-radius: 17px;
   }
 
+  /* ---------- DETALLE DEL SERVICIO ---------- */
+
   .service-detail-main {
     padding: 20px;
+  }
+
+  .service-detail-main > h1 {
+    font-size: 28px;
   }
 
   .hire-card {
     padding: 18px;
   }
 
+  /* ---------- CTA ---------- */
+
   .cta-section {
     width: calc(100% - 20px);
+
     padding: 30px 20px;
+
+    border-radius: 17px;
   }
+
+  /* ---------- PÁGINAS ---------- */
 
   .page-container,
   .account-page {
     width: calc(100% - 20px);
   }
+
+  /* ---------- CUENTA ---------- */
 
   .account-cover {
     height: 125px;
@@ -6636,19 +6755,31 @@ RESPONSIVE — TELÉFONOS PEQUEÑOS
   .profile-avatar {
     width: 72px;
     height: 72px;
+
     font-size: 20px;
   }
+
+  .account-profile-head h1 {
+    font-size: 21px;
+  }
+
+  /* ---------- RED VISUAL ---------- */
 
   .network-card {
     width: 290px;
     height: 290px;
+
+    max-width: 82vw;
+    max-height: 82vw;
   }
+
+  /* ---------- FOOTER ---------- */
 
   .footer {
     padding-left: 16px;
     padding-right: 16px;
   }
-}        
+}       
       `}</style>
 
       {Header()}
