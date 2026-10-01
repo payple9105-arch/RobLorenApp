@@ -4479,24 +4479,24 @@ useEffect(() => {
     line-height: 1;
   }
 
-  .search-box input {
+    .search-box input {
     flex: 1;
-
     min-width: 0;
 
     border: 0;
     outline: 0;
 
-    padding: 11px 13px;
+    padding: 13px 14px;
 
-    color: #263852;
-
+    color: #1f3149;
     background: transparent;
 
-    font-size: 15px;
-    font-weight: 550;
+    font-size: 16px;
+    font-weight: 500;
 
-    line-height: 1.4;
+    line-height: 1.45;
+
+    font-family: inherit;
   }
 
   .search-box input::placeholder {
@@ -4505,31 +4505,31 @@ useEffect(() => {
   }
 
   .search-button {
-    min-width: 112px;
-    min-height: 50px;
+  min-width: 112px;
+  min-height: 50px;
 
-    padding: 12px 20px;
+  padding: 12px 20px;
 
-    border-radius: 12px;
+  border-radius: 12px;
 
-    font-size: 14px;
-    font-weight: 800;
+  font-size: 14px;
+  font-weight: 800;
 
-    box-shadow:
-      0 9px 20px rgba(33,102,209,.16);
+  box-shadow:
+    0 9px 20px rgba(33,102,209,.16);
 
-    transition:
-      transform .2s ease,
-      box-shadow .2s ease,
-      background .2s ease;
-  }
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease,
+    background .2s ease;
+}
 
-  .search-button:hover {
-    transform: translateY(-2px);
+.search-button:hover {
+  transform: translateY(-2px);
 
-    box-shadow:
-      0 13px 25px rgba(33,102,209,.22);
-  }
+  box-shadow:
+    0 13px 25px rgba(33,102,209,.22);
+}
 
   /* =========================================================
      SECCIONES
