@@ -58,21 +58,20 @@ input {
 }
 
 .hero h1 {
-  margin: 0 0 22px;
+  margin: 0;
   max-width: 720px;
   font-size: clamp(42px, 6vw, 68px);
   line-height: 1.02;
-  letter-spacing: -2.4px;
+  letter-spacing: -2.8px;
   font-weight: 900;
-  color: #10284d;
+  color: #ffffff;
 }
-
 .hero p {
   max-width: 650px;
-  margin: 0 auto 32px;
+  margin: 20px 0 0;
   font-size: clamp(17px, 2vw, 19px);
-  line-height: 1.7;
-  color: #667085;
+  line-height: 1.65;
+  color: #c5d4e7;
   font-weight: 500;
   letter-spacing: -0.15px;
 }
