@@ -3814,88 +3814,180 @@ useEffect(() => {
     font-weight: 800;
   }
 
-  /* =========================================================
+    /* =========================================================
      HEADER ACTIONS
   ========================================================= */
-
   .header-actions {
     display: flex;
     align-items: center;
-
     gap: 10px;
-
     flex: 0 0 auto;
   }
-
   .button {
-    border: 0;
-
-    border-radius: 11px;
-
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 43px;
+    border: 1px solid transparent;
+    border-radius: 12px;
     padding: 11px 17px;
-
+    font-family: inherit;
+    font-size: 13px;
     font-weight: 800;
-
+    line-height: 1.2;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
     transition:
       transform .2s ease,
       box-shadow .2s ease,
       background .2s ease,
-      border-color .2s ease;
+      border-color .2s ease,
+      color .2s ease,
+      opacity .2s ease;
   }
-
   .button:hover:not(:disabled) {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
   }
-
+  .button:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  .button:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 4px rgba(33,102,209,.10);
+  }
+  .button:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+    transform: none;
+    box-shadow: none;
+  }
   .button.primary {
-    background: #185cc2;
-    color: white;
-
+    background:
+      linear-gradient(
+        135deg,
+        #185cc2 0%,
+        #2674dc 100%
+      );
+    color: #ffffff;
+    border-color: #185cc2;
     box-shadow:
       0 9px 22px rgba(24,92,194,.18);
   }
-
   .button.primary:hover:not(:disabled) {
-    background: #124a9f;
-
+    background:
+      linear-gradient(
+        135deg,
+        #1454b2 0%,
+        #2169ca 100%
+      );
+    border-color: #1454b2;
     box-shadow:
-      0 12px 28px rgba(24,92,194,.25);
+      0 13px 29px rgba(24,92,194,.25);
   }
-
   .button.ghost {
-    background: #f1f4f8;
+    background:
+      linear-gradient(
+        135deg,
+        #f5f8fc 0%,
+        #edf2f7 100%
+      );
     color: #41516a;
+    border-color: #e0e7ef;
+    box-shadow:
+      0 4px 10px rgba(30,55,90,.025);
   }
-
+  .button.ghost:hover:not(:disabled) {
+    background:
+      linear-gradient(
+        135deg,
+        #eef4fb 0%,
+        #e6eef7 100%
+      );
+    color: #245da8;
+    border-color: #d2deeb;
+    box-shadow:
+      0 8px 17px rgba(30,55,90,.055);
+  }
   .button.outline {
-    background: white;
+    background:
+      linear-gradient(
+        135deg,
+        #ffffff 0%,
+        #f8fbff 100%
+      );
     color: #1755b4;
-
-    border: 1px solid #cbd8eb;
-
-    box-shadow: none;
+    border: 1px solid #c7d6e8;
+    box-shadow:
+      0 5px 13px rgba(30,55,90,.035);
   }
-
+  .button.outline:hover:not(:disabled) {
+    background: #f3f8ff;
+    color: #124b9f;
+    border-color: #a9c2df;
+    box-shadow:
+      0 10px 21px rgba(33,102,209,.09);
+  }
   .button.light {
-    background: white;
+    background:
+      linear-gradient(
+        135deg,
+        #ffffff 0%,
+        #f7faff 100%
+      );
     color: #163a75;
+    border-color: #d9e4ef;
+    box-shadow:
+      0 6px 15px rgba(30,55,90,.04);
   }
-
+  .button.light:hover:not(:disabled) {
+    background: #f3f8ff;
+    border-color: #c5d7eb;
+    box-shadow:
+      0 10px 21px rgba(30,55,90,.07);
+  }
   .button.white {
-    background: white;
+    background: #ffffff;
     color: #1856ae;
+    border-color: rgba(255,255,255,.78);
+    box-shadow:
+      0 7px 17px rgba(10,35,75,.10);
   }
-
+  .button.white:hover:not(:disabled) {
+    background: #f7faff;
+    color: #124b9f;
+    box-shadow:
+      0 11px 24px rgba(10,35,75,.15);
+  }
   .button.danger {
-    background: #fff1f1;
+    background:
+      linear-gradient(
+        135deg,
+        #fff5f5 0%,
+        #ffeded 100%
+      );
     color: #c83d3d;
+    border-color: #f1d2d2;
   }
-
+  .button.danger:hover:not(:disabled) {
+    background:
+      linear-gradient(
+        135deg,
+        #ffeded 0%,
+        #ffe3e3 100%
+      );
+    color: #b83232;
+    border-color: #e9bcbc;
+    box-shadow:
+      0 9px 19px rgba(200,61,61,.09);
+  }
   .button.large {
+    min-height: 48px;
     padding: 14px 21px;
     font-size: 15px;
+    border-radius: 13px;
   }
-
   .button.full {
     width: 100%;
   }
