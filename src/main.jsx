@@ -3664,73 +3664,84 @@ useEffect(() => {
     gap: 24px;
   }
 
-  .brand {
+    .brand {
     display: flex;
     align-items: center;
-
     gap: 11px;
-
     border: 0;
     background: transparent;
-
     padding: 0;
-
     text-align: left;
-
     flex: 0 0 auto;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
-
   .brand-mark {
     width: 42px;
     height: 42px;
-
-    border-radius: 13px;
-
     display: grid;
     place-items: center;
-
+    flex: 0 0 42px;
+    border-radius: 13px;
     background:
       linear-gradient(
-        135deg,
-        #132f67,
-        #2166d1
+        145deg,
+        #102f63 0%,
+        #1b57ae 52%,
+        #2e7be8 100%
       );
-
-    color: white;
-
+    color: #ffffff;
     font-size: 23px;
     font-weight: 900;
-
+    line-height: 1;
+    border: 1px solid rgba(255,255,255,.10);
     box-shadow:
-      0 10px 25px rgba(25,77,160,.22);
+      0 10px 25px rgba(25,77,160,.20),
+      0 3px 8px rgba(25,77,160,.07);
+    transition:
+      transform .22s ease,
+      box-shadow .22s ease,
+      border-color .22s ease;
   }
-
+  .brand:hover .brand-mark {
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,.20);
+    box-shadow:
+      0 14px 30px rgba(25,77,160,.25),
+      0 5px 11px rgba(25,77,160,.09);
+  }
+  .brand:active .brand-mark {
+    transform: translateY(0);
+  }
   .brand-mark.huge {
     width: 76px;
     height: 76px;
-
+    flex: 0 0 76px;
     border-radius: 22px;
-
     font-size: 40px;
-
     margin-bottom: 25px;
+    box-shadow:
+      0 18px 38px rgba(25,77,160,.24),
+      0 6px 14px rgba(25,77,160,.08);
   }
-
   .brand-name {
+    color: #132b55;
     font-size: 21px;
     font-weight: 900;
-
+    line-height: 1.15;
     letter-spacing: -.6px;
-
-    color: #132b55;
+    transition: color .2s ease;
   }
-
+  .brand:hover .brand-name {
+    color: #174f9f;
+  }
   .brand-slogan {
+    margin-top: 3px;
     color: #718096;
-
     font-size: 10px;
-
-    margin-top: 2px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
   }
 
   /* =========================================================
