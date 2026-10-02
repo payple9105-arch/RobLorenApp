@@ -7784,11 +7784,30 @@ useEffect(() => {
       75px;
     text-align: center;
   }
-  .hero-content {
-    max-width: 100%;
+    .hero-content {
+    max-width: 650px;
+    position: relative;
+    z-index: 2;
   }
   .hero-badge {
-    margin-bottom: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background:
+      rgba(37,123,218,.12);
+    color: #a9d4ff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.2;
+    border:
+      1px solid rgba(93,169,239,.28);
+    box-shadow:
+      0 7px 18px rgba(0,0,0,.08);
+    margin-bottom: 20px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
   .hero h1 {
     max-width: 100%;
