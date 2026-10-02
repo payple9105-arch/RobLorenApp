@@ -3737,81 +3737,107 @@ useEffect(() => {
      NAV
   ========================================================= */
 
-  .nav {
+    .nav {
     display: flex !important;
     align-items: center !important;
-
-    gap: 5px !important;
-
+    gap: 4px !important;
     visibility: visible !important;
     opacity: 1 !important;
-
     width: auto !important;
     height: auto !important;
-
     overflow: visible !important;
-
     flex: 0 1 auto;
   }
-
   .nav button {
     display: inline-flex !important;
     align-items: center !important;
-
+    justify-content: center !important;
     visibility: visible !important;
     opacity: 1 !important;
   }
-
   .nav-link {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
-
     position: relative;
-
-    border: 0;
+    min-height: 40px;
+    border: 1px solid transparent;
     background: transparent;
-
-    padding: 10px 13px;
-
-    color: #68768a;
-
-    font-weight: 700;
-    font-size: 14px;
-
-    border-radius: 9px;
-
+    padding: 9px 13px;
+    color: #64748a;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.2;
+    border-radius: 10px;
     white-space: nowrap;
-
+    cursor: pointer;
     transition:
       color .2s ease,
-      background .2s ease;
+      background .2s ease,
+      border-color .2s ease,
+      transform .2s ease,
+      box-shadow .2s ease;
   }
-
-  .nav-link:hover,
+  .nav-link:hover {
+    color: #1f5fb7;
+    background:
+      linear-gradient(
+        135deg,
+        #f5f9ff 0%,
+        #edf4fd 100%
+      );
+    border-color: #e0eaf5;
+    transform: translateY(-1px);
+  }
   .nav-link.active {
     color: #1755b4;
-    background: #f0f5ff;
+    background:
+      linear-gradient(
+        135deg,
+        #eef5ff 0%,
+        #e6f0fc 100%
+      );
+    border-color: #d5e3f2;
+    box-shadow:
+      0 5px 13px rgba(33,102,209,.055);
   }
-
+  .nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 13px;
+    right: 13px;
+    bottom: 3px;
+    height: 2px;
+    border-radius: 999px;
+    background:
+      linear-gradient(
+        90deg,
+        #185cc2 0%,
+        #2e7be8 100%
+      );
+    opacity: .95;
+  }
   .nav-badge {
     display: inline-grid;
     place-items: center;
-
     min-width: 18px;
     height: 18px;
-
     padding: 0 4px;
     margin-left: 5px;
-
-    border-radius: 20px;
-
-    background: #2166d1;
-    color: white;
-
-    font-size: 10px;
-    font-weight: 800;
+    border-radius: 999px;
+    background:
+      linear-gradient(
+        135deg,
+        #185cc2 0%,
+        #2e7be8 100%
+      );
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 850;
+    line-height: 1;
+    box-shadow:
+      0 4px 9px rgba(33,102,209,.16);
   }
 
     /* =========================================================
