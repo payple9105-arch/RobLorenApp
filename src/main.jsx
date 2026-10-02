@@ -4029,58 +4029,87 @@ useEffect(() => {
     width: 100%;
   }
 
-  .profile-mini {
+    .profile-mini {
     display: flex;
     align-items: center;
-
     gap: 8px;
-
-    background: transparent;
-    border: 0;
-
-    color: #23334d;
-
-    font-weight: 800;
-  }
-
-  .profile-mini-name {
-    max-width: 130px;
-
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* =========================================================
-     AVATARES
-  ========================================================= */
-
-  .avatar {
-    flex: 0 0 auto;
-
-    width: 38px;
-    height: 38px;
-
-    border-radius: 50%;
-
-    display: grid;
-    place-items: center;
-
+    min-height: 42px;
     background:
       linear-gradient(
         135deg,
-        #e0ecff 0%,
-        #bdd3f5 100%
+        #f7faff 0%,
+        #eef4fb 100%
       );
-
+    border: 1px solid #dce6f0;
+    border-radius: 11px;
+    padding: 3px 7px 3px 4px;
+    color: #23334d;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow:
+      0 4px 11px rgba(30,55,90,.035);
+    transition:
+      background .2s ease,
+      border-color .2s ease,
+      box-shadow .2s ease,
+      transform .2s ease;
+  }
+  .profile-mini:hover {
+    background:
+      linear-gradient(
+        135deg,
+        #f2f7fd 0%,
+        #e9f1fa 100%
+      );
+    border-color: #cbd9e8;
+    box-shadow:
+      0 7px 16px rgba(30,55,90,.065);
+    transform: translateY(-1px);
+  }
+  .profile-mini:active {
+    transform: translateY(0);
+  }
+  .profile-mini-name {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #29405f;
+    line-height: 1.2;
+  }
+  /* =========================================================
+     AVATARES
+  ========================================================= */
+  .avatar {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background:
+      linear-gradient(
+        145deg,
+        #e9f2ff 0%,
+        #c9dcf5 100%
+      );
     color: #174c9d;
-
+    font-size: 12px;
     font-weight: 850;
-
-    border: 3px solid #ffffff;
-
+    line-height: 1;
+    border: 2px solid #ffffff;
     box-shadow:
       0 6px 16px rgba(32,65,110,.09);
+    transition:
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+  .profile-mini:hover .avatar {
+    transform: scale(1.03);
+    box-shadow:
+      0 8px 18px rgba(32,65,110,.13);
   }
 
   .avatar.small {
