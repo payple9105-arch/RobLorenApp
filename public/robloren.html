@@ -52,6 +52,17 @@
     }
     .nav a { padding: 8px 10px; border-radius: 10px; }
     .nav a:hover { background: rgb(255 255 255 / 0.08); color: #fff; }
+    .nav-country {
+      height: 36px;
+      margin-left: 4px;
+      border-radius: 10px;
+      border: 1px solid rgb(255 255 255 / 0.28);
+      background: transparent;
+      color: #fff;
+      padding: 0 8px;
+      font-weight: 600;
+    }
+    .nav-country option { color: #101828; }
     .actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
     .icon-btn, .menu {
       width: 40px; height: 40px; border-radius: 12px; font-size: 18px;
@@ -232,6 +243,7 @@
         padding: 8px 12px 14px; background: var(--navy); flex-direction: column;
       }
       .nav.open { display: flex; }
+      .nav-country { width: 100%; margin: 6px 0 0; }
       .hero-grid, .cards, .steps, .foot, .cats { grid-template-columns: 1fr; }
       .cats { grid-auto-flow: column; grid-auto-columns: 92px; grid-template-columns: none; overflow-x: auto; }
       .search { flex-wrap: wrap; }
@@ -258,6 +270,14 @@
         <a href="#como">Cómo funciona</a>
         <a href="#categorias">Categorías</a>
         <a href="#blog">Blog</a>
+        <select class="nav-country" id="nav-country" aria-label="Buscar por país">
+          <option value="">Países</option>
+          <option>Cuba</option>
+          <option>México</option>
+          <option>España</option>
+          <option>Colombia</option>
+          <option>Argentina</option>
+        </select>
       </nav>
       <div class="actions">
         <a class="icon-btn" href="#servicios" aria-label="Buscar">⌕</a>
@@ -451,6 +471,7 @@
       document.getElementById("q").value = q;
       document.getElementById("cat").value = cat;
       document.getElementById("country").value = country;
+      document.getElementById("nav-country").value = country;
       document.getElementById("finder-cat").value = cat;
       document.getElementById("finder-country").value = country;
       const found = services.filter((item) =>
@@ -482,6 +503,15 @@
     };
     document.getElementById("finder-cat").onchange = () => document.getElementById("finder").requestSubmit();
     document.getElementById("finder-country").onchange = () => document.getElementById("finder").requestSubmit();
+    document.getElementById("nav-country").onchange = (event) => {
+      apply(
+        document.getElementById("q").value.toLowerCase(),
+        document.getElementById("cat").value,
+        event.target.value
+      );
+      document.getElementById("nav").classList.remove("open");
+      location.hash = "servicios";
+    };
     document.getElementById("cats").onclick = (event) => {
       const button = event.target.closest(".cat");
       if (!button) return;
