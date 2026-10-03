@@ -228,7 +228,42 @@
     }
     .bottom a { text-align: center; padding: 10px 4px 12px; font-size: 11px; font-weight: 700; color: var(--muted); }
     .bottom a strong { display: block; font-size: 16px; font-weight: 500; }
-    .empty { display: none; padding: 18px; color: var(--muted); }
+    .ask {
+      margin: 0 14px 14px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 700;
+      min-height: 40px;
+      padding: 0 12px;
+    }
+    .fee[hidden] { display: none; }
+    .fee {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgb(7 17 31 / 0.72);
+    }
+    .fee form {
+      width: min(440px, 100%);
+      display: grid;
+      gap: 10px;
+      padding: 22px;
+      border-radius: 20px;
+      background: #fff;
+    }
+    .fee p, .ledger { color: var(--muted); font-size: 14px; }
+    .check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+    .check input { width: auto; }
+    .fee-actions { display: flex; gap: 8px; }
+    .fee-actions button { min-height: 42px; border-radius: 12px; border: 0; padding: 0 14px; font-weight: 700; }
+    .ledger { margin-top: 18px; }
+    .ledger ul { margin: 8px 0 0; padding-left: 18px; }
+    .ledger li { margin: 6px 0; }
 
     @media (max-width: 900px) {
       .hero-grid, .cards, .steps, .foot { grid-template-columns: 1fr 1fr; }
@@ -270,6 +305,7 @@
         <a href="#como">Cómo funciona</a>
         <a href="#categorias">Categorías</a>
         <a href="#blog">Blog</a>
+        <a href="#cuenta" data-publish="1">Publicar</a>
         <select class="nav-country" id="nav-country" aria-label="Buscar por país">
           <option value="">Países</option>
         </select>
@@ -386,6 +422,7 @@
 
     <section class="section wrap" id="cuenta">
       <div class="head"><h2>Crea tu cuenta</h2></div>
+      <p class="lead" style="color:#5d6b80;margin-bottom:14px">Pedir o publicar un servicio deja una comisión de 1 USD para RobLoren.</p>
       <form class="search" style="max-width:420px;flex-direction:column;align-items:stretch" onsubmit="event.preventDefault(); this.querySelector('p').hidden=false;">
         <input required placeholder="Nombre" />
         <input required type="email" placeholder="Correo" />
@@ -393,8 +430,27 @@
         <button type="submit">Registrarse</button>
         <p hidden style="color:#1558c4;font-size:14px">Cuenta lista en esta página. No se envió a ningún servidor.</p>
       </form>
+      <div class="ledger">
+        <h3>Comisiones registradas: <span id="fee-total">0 USD</span></h3>
+        <ul id="fee-list"></ul>
+      </div>
     </section>
   </main>
+
+  <div class="fee" id="fee" hidden>
+    <form id="fee-form">
+      <h2 id="fee-title">Comisión de 1 USD</h2>
+      <p>Para usar RobLoren y pedir o publicar un servicio, la comisión de la página es <strong>1 USD</strong>. Se anota aquí, en este navegador. Esta página no cobra tarjetas.</p>
+      <input name="person" required placeholder="Tu nombre" />
+      <input name="email" required type="email" placeholder="Tu correo" />
+      <input name="label" required placeholder="Servicio" />
+      <label class="check"><input name="accept" type="checkbox" required /> Acepto dejar la comisión de 1 USD</label>
+      <div class="fee-actions">
+        <button class="solid" type="submit">Confirmar 1 USD</button>
+        <button id="fee-close" type="button">Cancelar</button>
+      </div>
+    </form>
+  </div>
 
   <footer class="footer">
     <div class="wrap foot">
@@ -412,7 +468,7 @@
   <nav class="bottom" aria-label="Móvil">
     <a href="#inicio"><strong>⌂</strong>Inicio</a>
     <a href="#servicios"><strong>⌕</strong>Buscar</a>
-    <a href="#cuenta"><strong>+</strong>Publicar</a>
+    <a href="#cuenta" data-publish="1"><strong>+</strong>Publicar</a>
     <a href="#cuenta"><strong>✎</strong>Mensajes</a>
     <a href="#cuenta"><strong>○</strong>Perfil</a>
   </nav>
@@ -479,6 +535,7 @@
           <span class="pill">${cat}</span>
           <h3>${title}</h3>
           <div class="meta"><span class="ava">${name[0]}</span><div><strong>${name}</strong><small>${country} · ★ ${rate}</small></div><b>Desde $${price} USD</b></div>
+          <button class="ask" type="button" data-title="${title}" data-country="${country}">Pedir servicio</button>
         </article>`).join("");
     }
     function apply(q, cat, country) {
@@ -534,10 +591,62 @@
     };
     cards.onclick = (event) => {
       const heart = event.target.closest(".heart");
-      if (!heart) return;
-      heart.classList.toggle("on");
-      heart.textContent = heart.classList.contains("on") ? "♥" : "♡";
+      if (heart) {
+        heart.classList.toggle("on");
+        heart.textContent = heart.classList.contains("on") ? "♥" : "♡";
+        return;
+      }
+      const ask = event.target.closest(".ask");
+      if (!ask) return;
+      openFee("pedir", ask.dataset.title + " · " + ask.dataset.country);
     };
+    const feeBox = document.getElementById("fee");
+    const feeForm = document.getElementById("fee-form");
+    let feeKind = "pedir";
+    function openFee(kind, label) {
+      feeKind = kind;
+      document.getElementById("fee-title").textContent = kind === "publicar"
+        ? "Publicar servicio · comisión 1 USD"
+        : "Pedir servicio · comisión 1 USD";
+      feeForm.elements.label.value = label || "";
+      feeBox.hidden = false;
+    }
+    function renderFees() {
+      const rows = JSON.parse(localStorage.getItem("robloren-fees") || "[]");
+      const total = rows.reduce((sum, row) => sum + row.amount, 0);
+      document.getElementById("fee-total").textContent = total + " USD";
+      document.getElementById("fee-list").innerHTML = rows.length
+        ? rows.map((row) => `<li>${row.kind === "publicar" ? "Publicó" : "Pidió"}: ${row.label} · ${row.person} · ${row.amount} USD</li>`).join("")
+        : "<li>Todavía no hay comisiones.</li>";
+    }
+    document.querySelectorAll("[data-publish]").forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        document.getElementById("nav").classList.remove("open");
+        openFee("publicar", "");
+      });
+    });
+    document.getElementById("fee-close").onclick = () => {
+      feeBox.hidden = true;
+    };
+    feeForm.onsubmit = (event) => {
+      event.preventDefault();
+      const rows = JSON.parse(localStorage.getItem("robloren-fees") || "[]");
+      rows.unshift({
+        kind: feeKind,
+        person: feeForm.elements.person.value.trim(),
+        email: feeForm.elements.email.value.trim(),
+        label: feeForm.elements.label.value.trim(),
+        amount: 1,
+        at: new Date().toISOString()
+      });
+      localStorage.setItem("robloren-fees", JSON.stringify(rows));
+      feeForm.reset();
+      feeBox.hidden = true;
+      renderFees();
+      location.hash = "cuenta";
+    };
+    renderFees();
   </script>
 </body>
 </html>
