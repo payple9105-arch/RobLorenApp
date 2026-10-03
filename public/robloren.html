@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RobLoren — Conecta talento con oportunidades</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #07111f;
+      --ink: #101828;
+      --muted: #5d6b80;
+      --line: #e6ebf2;
+      --paper: #fff;
+      --brand: #1f6feb;
+      --soft: #e8f1ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Plus Jakarta Sans", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    img { display: block; width: 100%; object-fit: cover; }
+    .wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+
+    .header {
+      position: sticky; top: 0; z-index: 20;
+      background: var(--navy); color: #fff;
+    }
+    .header-inner {
+      width: min(1180px, calc(100% - 40px));
+      min-height: 74px; margin: 0 auto;
+      display: flex; align-items: center; gap: 22px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; color: #fff; }
+    .mark {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: grid; place-items: center;
+      background: var(--brand); font-weight: 800; font-size: 22px;
+    }
+    .brand strong { display: block; font-size: 20px; letter-spacing: -0.03em; }
+    .brand small { color: rgb(255 255 255 / 0.62); font-size: 11px; }
+    .nav { display: flex; gap: 6px; margin-left: 8px; }
+    .nav a, .ghost, .solid, .icon-btn, .menu {
+      border: 0; background: transparent; color: rgb(255 255 255 / 0.88);
+      font-weight: 600; font-size: 14px;
+    }
+    .nav a { padding: 8px 10px; border-radius: 10px; }
+    .nav a:hover { background: rgb(255 255 255 / 0.08); color: #fff; }
+    .actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .icon-btn, .menu {
+      width: 40px; height: 40px; border-radius: 12px; font-size: 18px;
+    }
+    .ghost, .solid {
+      min-height: 40px; padding: 0 14px; border-radius: 12px;
+    }
+    .ghost { border: 1px solid rgb(255 255 255 / 0.28); }
+    .solid { background: var(--brand); color: #fff; font-weight: 700; }
+    .menu { display: none; }
+
+    .hero {
+      background: var(--navy); color: #fff;
+      padding: 36px 0 48px;
+    }
+    .hero-grid {
+      display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 28px; align-items: center;
+    }
+    .hero h1 {
+      max-width: 640px; font-size: clamp(38px, 4.7vw, 58px);
+      line-height: 1.04; letter-spacing: -1.8px; font-weight: 800;
+    }
+    .hero h1 span { color: #4c94ff; }
+    .hero .lead { max-width: 540px; margin: 16px 0 22px; color: #c5d4e7; font-size: 15px; }
+    .search {
+      display: flex; align-items: center; gap: 8px; max-width: 680px;
+      padding: 8px; border-radius: 16px; background: #fff;
+    }
+    .search input, .search select {
+      border: 0; outline: none; background: transparent; color: var(--ink); min-width: 0;
+    }
+    .search input { flex: 1; padding: 10px 6px; }
+    .search select { color: var(--muted); max-width: 180px; }
+    .search button {
+      border: 0; background: var(--brand); color: #fff; font-weight: 700;
+      min-height: 44px; padding: 0 18px; border-radius: 12px;
+    }
+    .trust { display: flex; flex-wrap: wrap; gap: 16px 22px; margin-top: 20px; list-style: none; }
+    .trust li { color: #d5e2f2; font-size: 13px; font-weight: 600; }
+    .media { position: relative; min-height: 380px; border-radius: 8px; overflow: hidden; }
+    .media img { height: 420px; }
+    .script {
+      position: absolute; right: 16px; bottom: 22px; max-width: 190px;
+      font-family: Caveat, cursive; font-size: 32px; line-height: 0.95; color: #fff;
+    }
+    .script u { text-decoration-color: #1f6feb; text-underline-offset: 3px; }
+
+    .section { padding: 42px 0 10px; }
+    .head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
+    .head h2 { font-size: 28px; letter-spacing: -0.04em; }
+    .head a { color: var(--brand); font-weight: 700; font-size: 14px; }
+    .cats { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; }
+    .cat { border: 0; background: transparent; text-align: center; color: var(--ink); }
+    .cat i {
+      width: 64px; height: 64px; margin: 0 auto 8px; display: grid; place-items: center;
+      border-radius: 18px; font-style: normal; font-weight: 800; font-size: 20px;
+    }
+    .cat span { display: block; font-size: 13px; font-weight: 600; }
+    .t1 { background: #e7f0ff; color: #2f6adf; }
+    .t2 { background: #ffe8ef; color: #e2547a; }
+    .t3 { background: #efe8ff; color: #7a4ad6; }
+    .t4 { background: #ecebff; color: #5b56c8; }
+    .t5 { background: #ffe6f3; color: #d43d8a; }
+    .t6 { background: #e5f8fb; color: #1296ad; }
+    .t7 { background: #fff4df; color: #d98912; }
+    .t8 { background: #e7f0ff; color: #3a67c9; }
+
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .card {
+      position: relative; border: 1px solid var(--line); border-radius: 18px;
+      overflow: hidden; background: #fff; box-shadow: 0 10px 30px rgb(7 17 31 / 0.06);
+    }
+    .card img { height: 148px; }
+    .heart {
+      position: absolute; top: 10px; right: 10px; width: 32px; height: 32px;
+      border: 0; border-radius: 999px; background: #fff; color: #667;
+    }
+    .heart.on { color: var(--brand); }
+    .pill {
+      display: inline-block; margin: 12px 14px 0; padding: 3px 8px; border-radius: 999px;
+      background: var(--soft); color: #1558c4; font-size: 11px; font-weight: 700;
+    }
+    .card h3 { margin: 8px 14px 0; font-size: 15px; line-height: 1.35; }
+    .meta { display: grid; grid-template-columns: auto 1fr; gap: 8px; padding: 12px 14px 14px; align-items: center; }
+    .ava {
+      width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center;
+      background: var(--soft); color: #1558c4; font-weight: 800;
+    }
+    .meta small { display: block; color: var(--muted); font-size: 12px; }
+    .meta b { grid-column: 1 / -1; font-size: 14px; }
+
+    .how { padding: 48px 0 20px; }
+    .how p { color: var(--muted); margin-top: 6px; }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 22px; }
+    .step-n {
+      width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center;
+      background: var(--brand); color: #fff; font-weight: 800; font-size: 14px;
+    }
+    .step h3 { margin: 10px 0 4px; font-size: 16px; }
+    .step p { font-size: 13px; }
+
+    .cta {
+      position: relative; min-height: 230px; margin: 28px auto 48px; border-radius: 22px; overflow: hidden; color: #fff;
+    }
+    .cta img { position: absolute; inset: 0; height: 100%; }
+    .cta::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgb(7 17 31 / 0.84), rgb(7 17 31 / 0.12)); }
+    .cta div { position: relative; z-index: 1; max-width: 460px; padding: 36px; }
+    .cta h2 { font-size: 32px; letter-spacing: -0.04em; }
+    .cta p { margin: 8px 0 16px; color: #d7e4f5; }
+    .cta .script { z-index: 1; }
+
+    .footer { background: var(--navy); color: #aebbd0; padding: 28px 0 22px; }
+    .foot {
+      display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 18px;
+      padding-bottom: 18px; border-bottom: 1px solid rgb(255 255 255 / 0.08);
+    }
+    .footer h3 { color: #fff; margin-bottom: 6px; }
+    .footer a, .footer button {
+      display: block; border: 0; background: transparent; color: #aebbd0;
+      text-align: left; padding: 4px 0; font-size: 13px;
+    }
+    .legal {
+      display: flex; justify-content: space-between; gap: 12px;
+      padding-top: 14px; font-size: 12px;
+    }
+    .bottom {
+      display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      grid-template-columns: repeat(5, 1fr); background: #fff; border-top: 1px solid var(--line);
+    }
+    .bottom a { text-align: center; padding: 10px 4px 12px; font-size: 11px; font-weight: 700; color: var(--muted); }
+    .bottom a strong { display: block; font-size: 16px; font-weight: 500; }
+    .empty { display: none; padding: 18px; color: var(--muted); }
+
+    @media (max-width: 900px) {
+      .hero-grid, .cards, .steps, .foot { grid-template-columns: 1fr 1fr; }
+      .cats { grid-template-columns: repeat(4, 1fr); }
+      .media img { height: 280px; }
+    }
+    @media (max-width: 720px) {
+      .menu { display: grid; place-items: center; }
+      .ghost { display: none; }
+      .nav {
+        display: none; position: absolute; top: 64px; left: 0; right: 0;
+        padding: 8px 12px 14px; background: var(--navy); flex-direction: column;
+      }
+      .nav.open { display: flex; }
+      .hero-grid, .cards, .steps, .foot, .cats { grid-template-columns: 1fr; }
+      .cats { grid-auto-flow: column; grid-auto-columns: 92px; grid-template-columns: none; overflow-x: auto; }
+      .search { flex-wrap: wrap; }
+      .search select, .search button { width: 100%; max-width: none; }
+      .hero { padding-top: 22px; }
+      .hero h1 { font-size: 34px; }
+      .bottom { display: grid; }
+      body { padding-bottom: 64px; }
+      .legal { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a class="brand" href="#inicio">
+        <span class="mark">R</span>
+        <span><strong>RobLoren</strong><small>Conecta talento con oportunidades</small></span>
+      </a>
+      <nav class="nav" id="nav">
+        <a href="#inicio">Inicio</a>
+        <a href="#servicios">Explorar servicios</a>
+        <a href="#como">Cómo funciona</a>
+        <a href="#categorias">Categorías</a>
+        <a href="#blog">Blog</a>
+      </nav>
+      <div class="actions">
+        <a class="icon-btn" href="#servicios" aria-label="Buscar">⌕</a>
+        <a class="ghost" href="#cuenta">Iniciar sesión</a>
+        <a class="solid" href="#cuenta">Registrarse</a>
+        <button class="menu" id="menu" aria-label="Abrir menú">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="inicio">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <h1>Encuentra el <span>talento</span> que necesitas, o ofrece <span>tus habilidades</span> al mundo</h1>
+          <p class="lead">RobLoren es una plataforma donde profesionales de todo tipo ofrecen sus servicios y clientes de todo el mundo los contratan. Tú pones el talento, nosotros conectamos.</p>
+          <form class="search" id="search-form">
+            <span style="color:#5d6b80;padding-left:8px">⌕</span>
+            <input id="q" placeholder="¿Qué servicio necesitas?" />
+            <select id="cat" aria-label="Categoría">
+              <option value="">Todas las categorías</option>
+              <option>Programación</option>
+              <option>Diseño gráfico</option>
+              <option>Edición de video</option>
+              <option>Traducción y redacción</option>
+              <option>Redes sociales</option>
+              <option>Asistencia virtual</option>
+              <option>Música y audio</option>
+              <option>Otros servicios</option>
+            </select>
+            <button type="submit">Buscar</button>
+          </form>
+          <ul class="trust">
+            <li>Perfiles verificados y seguros</li>
+            <li>Calificaciones reales de clientes</li>
+            <li>Proceso rápido y sencillo</li>
+            <li>Desde Cuba para el mundo</li>
+          </ul>
+        </div>
+        <div class="media">
+          <img src="media/hero.jpg" alt="Profesional con la bandera de Cuba" />
+          <p class="script">Grandes proyectos comienzan con una buena <u>conexión</u></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="categorias">
+      <div class="head"><h2>Categorías populares</h2><a href="#servicios">Ver todas →</a></div>
+      <div class="cats" id="cats"></div>
+    </section>
+
+    <section class="section wrap" id="servicios">
+      <div class="head"><h2>Servicios destacados</h2><a href="#servicios">Ver todos →</a></div>
+      <div class="cards" id="cards"></div>
+      <p class="empty" id="empty">No hay servicios con esa búsqueda.</p>
+    </section>
+
+    <section class="how wrap" id="como">
+      <h2>¿Cómo funciona RobLoren?</h2>
+      <p>Es muy fácil. En solo unos pasos estarás conectado con el talento que necesitas.</p>
+      <div class="steps">
+        <article class="step"><span class="step-n">1</span><h3>Regístrate</h3><p>Crea tu cuenta como cliente o como proveedor de servicios.</p></article>
+        <article class="step"><span class="step-n">2</span><h3>Busca o publica</h3><p>Encuentra el servicio que necesitas o comparte lo que sabes hacer.</p></article>
+        <article class="step"><span class="step-n">3</span><h3>Coordina</h3><p>Habla con la otra parte, acuerda detalles y precio.</p></article>
+        <article class="step"><span class="step-n">4</span><h3>¡Listo!</h3><p>Completa el servicio y deja tu calificación.</p></article>
+      </div>
+    </section>
+
+    <section class="cta wrap">
+      <img src="media/cta.jpg" alt="" />
+      <div>
+        <h2>¿Listo para empezar?</h2>
+        <p>Únete a miles de personas que ya están generando ingresos y encontrando el talento que necesitan en RobLoren.</p>
+        <a class="solid" href="#cuenta">Crear cuenta gratis →</a>
+      </div>
+      <p class="script">Tu talento también vale</p>
+    </section>
+
+    <section class="section wrap" id="blog">
+      <div class="head"><h2>Blog</h2></div>
+      <div class="steps">
+        <article class="step"><h3>Empieza desde donde estás</h3><p>Un perfil claro y un precio de entrada bastan para el primer encargo.</p></article>
+        <article class="step"><h3>Qué se está pidiendo</h3><p>Páginas, diseño, video y traducción son los encargos que más se abren.</p></article>
+        <article class="step"><h3>Cómo escribir tu servicio</h3><p>Di qué entregas, en cuántos días y qué queda fuera.</p></article>
+      </div>
+    </section>
+
+    <section class="section wrap" id="cuenta">
+      <div class="head"><h2>Crea tu cuenta</h2></div>
+      <form class="search" style="max-width:420px;flex-direction:column;align-items:stretch" onsubmit="event.preventDefault(); this.querySelector('p').hidden=false;">
+        <input required placeholder="Nombre" />
+        <input required type="email" placeholder="Correo" />
+        <input required type="password" placeholder="Contraseña" />
+        <button type="submit">Registrarse</button>
+        <p hidden style="color:#1558c4;font-size:14px">Cuenta lista en esta página. No se envió a ningún servidor.</p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap foot">
+      <div><h3>R &nbsp; RobLoren</h3><p>Conecta talento con oportunidades</p></div>
+      <div><a href="#inicio">Inicio</a><a href="#servicios">Explorar servicios</a><a href="#como">Cómo funciona</a></div>
+      <div><a href="#categorias">Categorías</a><a href="#blog">Blog</a><a href="#cuenta">Contacto</a></div>
+      <div><span>Facebook</span><br /><span>Instagram</span><br /><span>X</span><br /><span>YouTube</span></div>
+    </div>
+    <div class="wrap legal">
+      <span>© 2025 RobLoren. Todos los derechos reservados.</span>
+      <span>Términos de uso · Política de privacidad · Ayuda</span>
+    </div>
+  </footer>
+
+  <nav class="bottom" aria-label="Móvil">
+    <a href="#inicio"><strong>⌂</strong>Inicio</a>
+    <a href="#servicios"><strong>⌕</strong>Buscar</a>
+    <a href="#cuenta"><strong>+</strong>Publicar</a>
+    <a href="#cuenta"><strong>✎</strong>Mensajes</a>
+    <a href="#cuenta"><strong>○</strong>Perfil</a>
+  </nav>
+
+  <script>
+    const cats = [
+      ["</>", "Programación", "t1"],
+      ["◐", "Diseño gráfico", "t2"],
+      ["▷", "Edición de video", "t3"],
+      ["A", "Traducción y redacción", "t4"],
+      ["◉", "Redes sociales", "t5"],
+      ["☺", "Asistencia virtual", "t6"],
+      ["♪", "Música y audio", "t7"],
+      ["▦", "Otros servicios", "t8"],
+    ];
+    const services = [
+      ["code.jpg", "Programación", "Desarrollo de sitios web modernos y responsivos", "CarlosMDev", "5.0 (28)", 50],
+      ["design.jpg", "Diseño gráfico", "Diseño de logotipos e identidad visual profesional", "YuleisyDiseña", "5.0 (42)", 30],
+      ["video.jpg", "Edición de video", "Edición de videos para redes sociales y YouTube", "JavierEdita", "5.0 (19)", 25],
+      ["translate.jpg", "Traducción y redacción", "Traducción de textos (Inglés – Español)", "AnaTraduce", "5.0 (16)", 15],
+    ];
+    document.getElementById("cats").innerHTML = cats.map(([icon, name, tone]) =>
+      `<button class="cat" data-name="${name}"><i class="${tone}">${icon}</i><span>${name}</span></button>`
+    ).join("");
+    const cards = document.getElementById("cards");
+    function draw(list) {
+      cards.innerHTML = list.map(([img, cat, title, name, rate, price]) => `
+        <article class="card" data-cat="${cat}" data-title="${title.toLowerCase()}">
+          <img src="media/${img}" alt="" />
+          <button class="heart" aria-label="Guardar">♡</button>
+          <span class="pill">${cat}</span>
+          <h3>${title}</h3>
+          <div class="meta"><span class="ava">${name[0]}</span><div><strong>${name}</strong><small>★ ${rate}</small></div><b>Desde $${price} USD</b></div>
+        </article>`).join("");
+    }
+    draw(services);
+    document.getElementById("menu").onclick = () => document.getElementById("nav").classList.toggle("open");
+    document.getElementById("search-form").onsubmit = (event) => {
+      event.preventDefault();
+      const q = document.getElementById("q").value.toLowerCase();
+      const cat = document.getElementById("cat").value;
+      const found = services.filter((item) =>
+        (!cat || item[1] === cat) && (!q || item[2].toLowerCase().includes(q) || item[3].toLowerCase().includes(q))
+      );
+      draw(found);
+      document.getElementById("empty").style.display = found.length ? "none" : "block";
+      location.hash = "servicios";
+    };
+    document.getElementById("cats").onclick = (event) => {
+      const button = event.target.closest(".cat");
+      if (!button) return;
+      document.getElementById("cat").value = button.dataset.name;
+      document.getElementById("search-form").requestSubmit();
+    };
+    cards.onclick = (event) => {
+      const heart = event.target.closest(".heart");
+      if (!heart) return;
+      heart.classList.toggle("on");
+      heart.textContent = heart.classList.contains("on") ? "♥" : "♡";
+    };
+  </script>
+</body>
+</html>
