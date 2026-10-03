@@ -440,13 +440,14 @@
   <div class="fee" id="fee" hidden>
     <form id="fee-form">
       <h2 id="fee-title">Comisión de 1 USD</h2>
-      <p>Para usar RobLoren y pedir o publicar un servicio, la comisión de la página es <strong>1 USD</strong>. Se anota aquí, en este navegador. Esta página no cobra tarjetas.</p>
+      <p>La comisión es <strong>1 USD</strong>. El pago se hace en Stripe, no en esta página. Stripe pide la tarjeta en su sitio.</p>
       <input name="person" required placeholder="Tu nombre" />
       <input name="email" required type="email" placeholder="Tu correo" />
       <input name="label" required placeholder="Servicio" />
       <label class="check"><input name="accept" type="checkbox" required /> Acepto dejar la comisión de 1 USD</label>
+      <p id="fee-error" hidden></p>
       <div class="fee-actions">
-        <button class="solid" type="submit">Confirmar 1 USD</button>
+        <button class="solid" type="submit">Pagar 1 USD con Stripe</button>
         <button id="fee-close" type="button">Cancelar</button>
       </div>
     </form>
@@ -611,12 +612,13 @@
       feeForm.elements.label.value = label || "";
       feeBox.hidden = false;
     }
+    const STRIPE_PAYMENT_LINK = "";
     function renderFees() {
       const rows = JSON.parse(localStorage.getItem("robloren-fees") || "[]");
       const total = rows.reduce((sum, row) => sum + row.amount, 0);
       document.getElementById("fee-total").textContent = total + " USD";
       document.getElementById("fee-list").innerHTML = rows.length
-        ? rows.map((row) => `<li>${row.kind === "publicar" ? "Publicó" : "Pidió"}: ${row.label} · ${row.person} · ${row.amount} USD</li>`).join("")
+        ? rows.map((row) => `<li>${row.kind === "publicar" ? "Publicó" : "Pidió"}: ${row.label} · ${row.person} · ${row.amount} USD${row.paid ? " · pagado con Stripe" : ""}</li>`).join("")
         : "<li>Todavía no hay comisiones.</li>";
     }
     document.querySelectorAll("[data-publish]").forEach((link) => {
@@ -631,21 +633,39 @@
     };
     feeForm.onsubmit = (event) => {
       event.preventDefault();
-      const rows = JSON.parse(localStorage.getItem("robloren-fees") || "[]");
-      rows.unshift({
+      const error = document.getElementById("fee-error");
+      if (!STRIPE_PAYMENT_LINK.startsWith("https://buy.stripe.com/") && !STRIPE_PAYMENT_LINK.startsWith("https://donate.stripe.com/")) {
+        error.hidden = false;
+        error.textContent = "Stripe todavía no está conectado. Falta el enlace de pago de 1 USD.";
+        return;
+      }
+      const pending = {
         kind: feeKind,
         person: feeForm.elements.person.value.trim(),
         email: feeForm.elements.email.value.trim(),
         label: feeForm.elements.label.value.trim(),
         amount: 1,
         at: new Date().toISOString()
-      });
-      localStorage.setItem("robloren-fees", JSON.stringify(rows));
-      feeForm.reset();
-      feeBox.hidden = true;
-      renderFees();
-      location.hash = "cuenta";
+      };
+      sessionStorage.setItem("robloren-pending", JSON.stringify(pending));
+      const url = new URL(STRIPE_PAYMENT_LINK);
+      url.searchParams.set("prefilled_email", pending.email);
+      url.searchParams.set("client_reference_id", pending.kind + "-" + Date.now());
+      location.href = url.toString();
     };
+    const paid = new URLSearchParams(location.search).get("pago");
+    if (paid === "ok") {
+      const pending = JSON.parse(sessionStorage.getItem("robloren-pending") || "null");
+      if (pending) {
+        const rows = JSON.parse(localStorage.getItem("robloren-fees") || "[]");
+        pending.paid = true;
+        pending.via = "stripe";
+        rows.unshift(pending);
+        localStorage.setItem("robloren-fees", JSON.stringify(rows));
+        sessionStorage.removeItem("robloren-pending");
+      }
+      history.replaceState({}, "", location.pathname + location.hash);
+    }
     renderFees();
   </script>
 </body>
