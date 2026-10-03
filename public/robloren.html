@@ -77,7 +77,7 @@
     .hero h1 span { color: #4c94ff; }
     .hero .lead { max-width: 540px; margin: 16px 0 22px; color: #c5d4e7; font-size: 15px; }
     .search {
-      display: flex; align-items: center; gap: 8px; max-width: 680px;
+      display: flex; align-items: center; gap: 8px; max-width: 920px;
       padding: 8px; border-radius: 16px; background: #fff;
     }
     .search input, .search select {
@@ -253,6 +253,14 @@
               <option>Música y audio</option>
               <option>Otros servicios</option>
             </select>
+            <select id="country" aria-label="País">
+              <option value="">Todos los países</option>
+              <option>Cuba</option>
+              <option>México</option>
+              <option>España</option>
+              <option>Colombia</option>
+              <option>Argentina</option>
+            </select>
             <button type="submit">Buscar</button>
           </form>
           <ul class="trust">
@@ -355,23 +363,27 @@
       ["▦", "Otros servicios", "t8"],
     ];
     const services = [
-      ["code.jpg", "Programación", "Desarrollo de sitios web modernos y responsivos", "CarlosMDev", "5.0 (28)", 50],
-      ["design.jpg", "Diseño gráfico", "Diseño de logotipos e identidad visual profesional", "YuleisyDiseña", "5.0 (42)", 30],
-      ["video.jpg", "Edición de video", "Edición de videos para redes sociales y YouTube", "JavierEdita", "5.0 (19)", 25],
-      ["translate.jpg", "Traducción y redacción", "Traducción de textos (Inglés – Español)", "AnaTraduce", "5.0 (16)", 15],
+      ["code.jpg", "Programación", "Desarrollo de sitios web modernos y responsivos", "CarlosMDev", "5.0 (28)", 50, "Cuba"],
+      ["design.jpg", "Diseño gráfico", "Diseño de logotipos e identidad visual profesional", "YuleisyDiseña", "5.0 (42)", 30, "Cuba"],
+      ["video.jpg", "Edición de video", "Edición de videos para redes sociales y YouTube", "JavierEdita", "5.0 (19)", 25, "Cuba"],
+      ["translate.jpg", "Traducción y redacción", "Traducción de textos (Inglés – Español)", "AnaTraduce", "5.0 (16)", 15, "Cuba"],
+      ["code.jpg", "Programación", "Tienda en línea para pequeños negocios", "MateoWeb", "4.9 (21)", 60, "México"],
+      ["design.jpg", "Diseño gráfico", "Identidad visual para cafeterías", "LuciaMarca", "5.0 (17)", 45, "España"],
+      ["video.jpg", "Edición de video", "Reels y anuncios para Instagram", "CamiloClip", "4.8 (12)", 35, "Colombia"],
+      ["translate.jpg", "Traducción y redacción", "Textos de venta en español neutro", "SofiaTexto", "5.0 (9)", 20, "Argentina"],
     ];
     document.getElementById("cats").innerHTML = cats.map(([icon, name, tone]) =>
       `<button class="cat" data-name="${name}"><i class="${tone}">${icon}</i><span>${name}</span></button>`
     ).join("");
     const cards = document.getElementById("cards");
     function draw(list) {
-      cards.innerHTML = list.map(([img, cat, title, name, rate, price]) => `
+      cards.innerHTML = list.map(([img, cat, title, name, rate, price, country]) => `
         <article class="card" data-cat="${cat}" data-title="${title.toLowerCase()}">
           <img src="media/${img}" alt="" />
           <button class="heart" aria-label="Guardar">♡</button>
           <span class="pill">${cat}</span>
           <h3>${title}</h3>
-          <div class="meta"><span class="ava">${name[0]}</span><div><strong>${name}</strong><small>★ ${rate}</small></div><b>Desde $${price} USD</b></div>
+          <div class="meta"><span class="ava">${name[0]}</span><div><strong>${name}</strong><small>${country} · ★ ${rate}</small></div><b>Desde $${price} USD</b></div>
         </article>`).join("");
     }
     draw(services);
@@ -380,8 +392,11 @@
       event.preventDefault();
       const q = document.getElementById("q").value.toLowerCase();
       const cat = document.getElementById("cat").value;
+      const country = document.getElementById("country").value;
       const found = services.filter((item) =>
-        (!cat || item[1] === cat) && (!q || item[2].toLowerCase().includes(q) || item[3].toLowerCase().includes(q))
+        (!cat || item[1] === cat) &&
+        (!country || item[6] === country) &&
+        (!q || item[2].toLowerCase().includes(q) || item[3].toLowerCase().includes(q) || item[6].toLowerCase().includes(q))
       );
       draw(found);
       document.getElementById("empty").style.display = found.length ? "none" : "block";
