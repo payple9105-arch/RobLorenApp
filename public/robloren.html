@@ -62,7 +62,7 @@
       padding: 0 8px;
       font-weight: 600;
     }
-    .nav-country option { color: #101828; }
+    .nav-country option, .nav-country optgroup { color: #101828; }
     .actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
     .icon-btn, .menu {
       width: 40px; height: 40px; border-radius: 12px; font-size: 18px;
@@ -272,11 +272,6 @@
         <a href="#blog">Blog</a>
         <select class="nav-country" id="nav-country" aria-label="Buscar por país">
           <option value="">Países</option>
-          <option>Cuba</option>
-          <option>México</option>
-          <option>España</option>
-          <option>Colombia</option>
-          <option>Argentina</option>
         </select>
       </nav>
       <div class="actions">
@@ -310,11 +305,6 @@
             </select>
             <select id="country" aria-label="País">
               <option value="">Todos los países</option>
-              <option>Cuba</option>
-              <option>México</option>
-              <option>España</option>
-              <option>Colombia</option>
-              <option>Argentina</option>
             </select>
             <button type="submit">Buscar</button>
           </form>
@@ -356,11 +346,6 @@
         <label>País
           <select id="finder-country" aria-label="País">
             <option value="">Todos los países</option>
-            <option>Cuba</option>
-            <option>México</option>
-            <option>España</option>
-            <option>Colombia</option>
-            <option>Argentina</option>
           </select>
         </label>
         <button type="submit">Buscar</button>
@@ -453,6 +438,35 @@
       ["video.jpg", "Edición de video", "Reels y anuncios para Instagram", "CamiloClip", "4.8 (12)", 35, "Colombia"],
       ["translate.jpg", "Traducción y redacción", "Textos de venta en español neutro", "SofiaTexto", "5.0 (9)", 20, "Argentina"],
     ];
+    const markets = [
+      ["América", ["Cuba", "Estados Unidos", "Canadá", "México", "Brasil", "Chile", "Colombia", "Argentina", "Perú"]],
+      ["Europa", ["Alemania", "Reino Unido", "Francia", "Italia", "España", "Países Bajos", "Suiza", "Suecia", "Noruega", "Dinamarca", "Irlanda", "Bélgica", "Austria", "Polonia", "Portugal"]],
+      ["Asia y Pacífico", ["China", "Japón", "India", "Corea del Sur", "Australia", "Singapur"]],
+      ["Medio Oriente", ["Emiratos Árabes Unidos", "Arabia Saudita", "Israel", "Catar"]],
+    ];
+    const offers = [
+      ["code.jpg", "Programación", "Desarrollo web para empresas", 90],
+      ["design.jpg", "Diseño gráfico", "Marca y piezas comerciales", 55],
+      ["video.jpg", "Edición de video", "Video comercial para redes", 48],
+      ["translate.jpg", "Traducción y redacción", "Textos y traducción de negocio", 35],
+    ];
+    const premium = new Set(["Estados Unidos", "Suiza", "Noruega", "Dinamarca", "Singapur", "Emiratos Árabes Unidos", "Australia", "Alemania", "Reino Unido", "Japón", "Catar", "Irlanda"]);
+    const covered = new Set(services.map((item) => item[6]));
+    markets.flatMap(([, list]) => list).forEach((country, index) => {
+      if (covered.has(country)) return;
+      const [img, cat, title, price] = offers[index % offers.length];
+      const seller = ["Nora", "Leo", "Mia", "Andrés", "Elena", "Hugo"][index % 6];
+      const rate = premium.has(country) ? "5.0 (24)" : "4.9 (14)";
+      services.push([img, cat, title, seller, rate, premium.has(country) ? price + 40 : price, country]);
+    });
+    function countryMenu(placeholder) {
+      return `<option value="">${placeholder}</option>` + markets.map(([group, list]) =>
+        `<optgroup label="${group}">${list.map((name) => `<option>${name}</option>`).join("")}</optgroup>`
+      ).join("");
+    }
+    document.getElementById("country").innerHTML = countryMenu("Todos los países");
+    document.getElementById("finder-country").innerHTML = countryMenu("Todos los países");
+    document.getElementById("nav-country").innerHTML = countryMenu("Países");
     document.getElementById("cats").innerHTML = cats.map(([icon, name, tone]) =>
       `<button class="cat" data-name="${name}"><i class="${tone}">${icon}</i><span>${name}</span></button>`
     ).join("");
