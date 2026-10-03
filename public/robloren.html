@@ -119,7 +119,41 @@
     .t7 { background: #fff4df; color: #d98912; }
     .t8 { background: #e7f0ff; color: #3a67c9; }
 
-    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .finder {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #f5f7fb;
+    }
+    .finder label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .finder select {
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      padding: 0 10px;
+      color: var(--ink);
+    }
+    .finder button {
+      height: 44px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 700;
+      padding: 0 18px;
+    }
     .card {
       position: relative; border: 1px solid var(--line); border-radius: 18px;
       overflow: hidden; background: #fff; box-shadow: 0 10px 30px rgb(7 17 31 / 0.06);
@@ -201,7 +235,8 @@
       .hero-grid, .cards, .steps, .foot, .cats { grid-template-columns: 1fr; }
       .cats { grid-auto-flow: column; grid-auto-columns: 92px; grid-template-columns: none; overflow-x: auto; }
       .search { flex-wrap: wrap; }
-      .search select, .search button { width: 100%; max-width: none; }
+      .search select, .search button, .finder { width: 100%; max-width: none; }
+      .finder { grid-template-columns: 1fr; }
       .hero { padding-top: 22px; }
       .hero h1 { font-size: 34px; }
       .bottom { display: grid; }
@@ -284,6 +319,32 @@
 
     <section class="section wrap" id="servicios">
       <div class="head"><h2>Servicios destacados</h2><a href="#servicios">Ver todos →</a></div>
+      <form class="finder" id="finder">
+        <label>Categoría
+          <select id="finder-cat" aria-label="Categoría">
+            <option value="">Todas las categorías</option>
+            <option>Programación</option>
+            <option>Diseño gráfico</option>
+            <option>Edición de video</option>
+            <option>Traducción y redacción</option>
+            <option>Redes sociales</option>
+            <option>Asistencia virtual</option>
+            <option>Música y audio</option>
+            <option>Otros servicios</option>
+          </select>
+        </label>
+        <label>País
+          <select id="finder-country" aria-label="País">
+            <option value="">Todos los países</option>
+            <option>Cuba</option>
+            <option>México</option>
+            <option>España</option>
+            <option>Colombia</option>
+            <option>Argentina</option>
+          </select>
+        </label>
+        <button type="submit">Buscar</button>
+      </form>
       <div class="cards" id="cards"></div>
       <p class="empty" id="empty">No hay servicios con esa búsqueda.</p>
     </section>
@@ -386,13 +447,12 @@
           <div class="meta"><span class="ava">${name[0]}</span><div><strong>${name}</strong><small>${country} · ★ ${rate}</small></div><b>Desde $${price} USD</b></div>
         </article>`).join("");
     }
-    draw(services);
-    document.getElementById("menu").onclick = () => document.getElementById("nav").classList.toggle("open");
-    document.getElementById("search-form").onsubmit = (event) => {
-      event.preventDefault();
-      const q = document.getElementById("q").value.toLowerCase();
-      const cat = document.getElementById("cat").value;
-      const country = document.getElementById("country").value;
+    function apply(q, cat, country) {
+      document.getElementById("q").value = q;
+      document.getElementById("cat").value = cat;
+      document.getElementById("country").value = country;
+      document.getElementById("finder-cat").value = cat;
+      document.getElementById("finder-country").value = country;
       const found = services.filter((item) =>
         (!cat || item[1] === cat) &&
         (!country || item[6] === country) &&
@@ -400,8 +460,28 @@
       );
       draw(found);
       document.getElementById("empty").style.display = found.length ? "none" : "block";
+    }
+    draw(services);
+    document.getElementById("menu").onclick = () => document.getElementById("nav").classList.toggle("open");
+    document.getElementById("search-form").onsubmit = (event) => {
+      event.preventDefault();
+      apply(
+        document.getElementById("q").value.toLowerCase(),
+        document.getElementById("cat").value,
+        document.getElementById("country").value
+      );
       location.hash = "servicios";
     };
+    document.getElementById("finder").onsubmit = (event) => {
+      event.preventDefault();
+      apply(
+        document.getElementById("q").value.toLowerCase(),
+        document.getElementById("finder-cat").value,
+        document.getElementById("finder-country").value
+      );
+    };
+    document.getElementById("finder-cat").onchange = () => document.getElementById("finder").requestSubmit();
+    document.getElementById("finder-country").onchange = () => document.getElementById("finder").requestSubmit();
     document.getElementById("cats").onclick = (event) => {
       const button = event.target.closest(".cat");
       if (!button) return;
