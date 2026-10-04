@@ -612,7 +612,7 @@
       feeForm.elements.label.value = label || "";
       feeBox.hidden = false;
     }
-    const PAYPAL_BUSINESS = "";
+    const PAYPAL_BUSINESS = "roblorentodonegocio@gmail.com";
     function renderFees() {
       const rows = JSON.parse(localStorage.getItem("robloren-fees") || "[]");
       const total = rows.reduce((sum, row) => sum + row.amount, 0);
