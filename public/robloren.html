@@ -440,16 +440,17 @@
   <div class="fee" id="fee" hidden>
     <form id="fee-form">
       <h2 id="fee-title">Comisión de 1 USD</h2>
-      <p>La comisión es <strong>1 USD</strong>. El pago se hace en PayPal, no en esta página.</p>
+      <p>La comisión es <strong>1 USD</strong>. Después de aceptar, paga con el botón de PayPal.</p>
       <input name="person" required placeholder="Tu nombre" />
       <input name="email" required type="email" placeholder="Tu correo" />
       <input name="label" required placeholder="Servicio" />
       <label class="check"><input name="accept" type="checkbox" required /> Acepto dejar la comisión de 1 USD</label>
       <p id="fee-error" hidden></p>
       <div class="fee-actions">
-        <button class="solid" type="submit">Pagar 1 USD con PayPal</button>
+        <button class="solid" type="submit">Continuar al pago</button>
         <button id="fee-close" type="button">Cancelar</button>
       </div>
+      <div id="paypal-buttons" hidden></div>
     </form>
   </div>
 
@@ -634,29 +635,59 @@
     feeForm.onsubmit = (event) => {
       event.preventDefault();
       const error = document.getElementById("fee-error");
-      if (!PAYPAL_BUSINESS.includes("@")) {
-        error.hidden = false;
-        error.textContent = "PayPal todavía no está conectado. Falta el correo de la cuenta Business.";
+      error.hidden = true;
+      const box = document.getElementById("paypal-buttons");
+      box.hidden = false;
+      if (window.paypal && !box.dataset.ready) {
+        box.dataset.ready = "1";
+        paypal.Buttons({
+          style: { layout: "vertical", color: "gold", shape: "rect", label: "pay" },
+          createOrder: (data, actions) => actions.order.create({
+            purchase_units: [{
+              description: "Comisión RobLoren · " + feeForm.elements.label.value.trim(),
+              amount: { currency_code: "USD", value: "1.00" }
+            }]
+          }),
+          onApprove: (data, actions) => actions.order.capture().then((details) => {
+            const rows = JSON.parse(localStorage.getItem("robloren-fees") || "[]");
+            rows.unshift({
+              kind: feeKind,
+              person: feeForm.elements.person.value.trim(),
+              email: feeForm.elements.email.value.trim(),
+              label: feeForm.elements.label.value.trim(),
+              amount: 1,
+              paid: true,
+              via: "paypal",
+              orderId: details.id,
+              at: new Date().toISOString()
+            });
+            localStorage.setItem("robloren-fees", JSON.stringify(rows));
+            feeForm.reset();
+            feeBox.hidden = true;
+            box.hidden = true;
+            renderFees();
+            location.hash = "cuenta";
+          })
+        }).render("#paypal-buttons");
+      }
+      if (!window.paypal) {
+        if (!PAYPAL_BUSINESS.includes("@")) {
+          error.hidden = false;
+          error.textContent = "PayPal no cargó. Recarga la página.";
+          return;
+        }
+        const url = new URL("https://www.paypal.com/cgi-bin/webscr");
+        url.searchParams.set("cmd", "_xclick");
+        url.searchParams.set("business", PAYPAL_BUSINESS);
+        url.searchParams.set("item_name", "Comisión RobLoren · " + feeForm.elements.label.value.trim());
+        url.searchParams.set("amount", "1.00");
+        url.searchParams.set("currency_code", "USD");
+        url.searchParams.set("return", "https://payple9105-arch.github.io/RobLorenApp/robloren.html?pago=ok");
+        url.searchParams.set("cancel_return", "https://payple9105-arch.github.io/RobLorenApp/robloren.html");
+        location.href = url.toString();
         return;
       }
-      const pending = {
-        kind: feeKind,
-        person: feeForm.elements.person.value.trim(),
-        email: feeForm.elements.email.value.trim(),
-        label: feeForm.elements.label.value.trim(),
-        amount: 1,
-        at: new Date().toISOString()
-      };
-      sessionStorage.setItem("robloren-pending", JSON.stringify(pending));
-      const url = new URL("https://www.paypal.com/cgi-bin/webscr");
-      url.searchParams.set("cmd", "_xclick");
-      url.searchParams.set("business", PAYPAL_BUSINESS);
-      url.searchParams.set("item_name", "Comisión RobLoren · " + pending.label);
-      url.searchParams.set("amount", "1.00");
-      url.searchParams.set("currency_code", "USD");
-      url.searchParams.set("return", "https://payple9105-arch.github.io/RobLorenApp/robloren.html?pago=ok");
-      url.searchParams.set("cancel_return", "https://payple9105-arch.github.io/RobLorenApp/robloren.html");
-      location.href = url.toString();
+      box.hidden = false;
     };
     const paid = new URLSearchParams(location.search).get("pago");
     if (paid === "ok") {
@@ -673,5 +704,6 @@
     }
     renderFees();
   </script>
+  <script src="https://www.paypal.com/sdk/js?client-id=AXF4fzjb-05kw6T4_x-yT9BSWZC5hy1C9P97luB4Motl5TvlBgnTK4SmMePkCtkNGPs88CDxsmVqb3ZS&currency=USD&intent=capture"></script>
 </body>
 </html>
