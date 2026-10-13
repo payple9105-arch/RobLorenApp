@@ -2404,7 +2404,18 @@ useEffect(() => {
                       : "new-password"
                   }
                 />
-              </label>
+                           </label>
+
+              {accountMode === "login" && (
+                <button
+                  type="button"
+                  className="forgot-password"
+                  onClick={requestPasswordReset}
+                  disabled={authLoading}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              )}
 
               <button
                 className="button primary full large"
