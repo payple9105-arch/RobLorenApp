@@ -2360,10 +2360,61 @@ const submitReview = async (request) => {
                   Crear cuenta
                 </button>
               </div>
-
-              {accountMode ===
-                "register" && (
-                <>
+          {accountMode === "reset" ? (
+            <>
+              <h2>Crear nueva contraseña</h2>
+              <p>
+                Escribe tu nueva contraseña y confírmala
+                para recuperar el acceso a tu cuenta.
+              </p>
+              <label>
+                Nueva contraseña
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(event) =>
+                    setNewPassword(event.target.value)
+                  }
+                  placeholder="Mínimo 6 caracteres"
+                  autoComplete="new-password"
+                />
+              </label>
+              <label>
+                Confirmar nueva contraseña
+                <input
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(event) =>
+                    setConfirmNewPassword(event.target.value)
+                  }
+                  placeholder="Repite tu contraseña"
+                  autoComplete="new-password"
+                />
+              </label>
+              <button
+                type="button"
+                className="button primary full large"
+                disabled={authLoading}
+                onClick={saveNewPassword}
+              >
+                {authLoading
+                  ? "Guardando..."
+                  : "Guardar nueva contraseña"}
+              </button>
+              <button
+                type="button"
+                className="button full"
+                disabled={authLoading}
+                onClick={() => setAccountMode("login")}
+              >
+                Volver a iniciar sesión
+              </button>
+            </>
+          ) : (
+            <>
+          {accountMode ===
+            "register" && (
+            <>
                   <label>
                     Nombre completo
 
