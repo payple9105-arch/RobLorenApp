@@ -1231,39 +1231,75 @@ const submitReview = async (request) => {
     }
   };
 
-  const loginWithProvider = async (provider, label) => {
-    setOauthName(label);
-    setAuthLoading(true);
+ const requestPasswordReset = async () => {
+const email = authForm.email.trim();
 
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
-        },
-      });
+if (!email) {
+  alert(
+    "Escribe tu correo electrónico para recuperar tu contraseña."
+  );
+  return;
+}
+setAuthLoading(true);
+try {
+  const { error } =
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+    });
+  if (error) {
+    alert(
+      "No se pudo enviar el correo: " + error.message
+    );
+    return;
+  }
+  setAccountMode("login");
+  alert(
+    "Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de spam."
+  );
+} catch (error) {
+  alert(
+    "Ocurrió un error: " +
+      (error?.message || "Error desconocido")
+  );
+} finally {
+  setAuthLoading(false);
+}
 
-      if (error) {
-        alert(
-          "No se pudo iniciar sesión con " +
-            label +
-            ": " +
-            error.message
-        );
-        setOauthName("");
-        setAuthLoading(false);
-      }
-    } catch (error) {
-      alert(
-        "Ocurrió un error al conectar con " +
-          label +
-          ": " +
-          (error?.message || "Error desconocido")
-      );
-      setOauthName("");
-      setAuthLoading(false);
-    }
-  };
+};
+
+const loginWithProvider = async (provider, label) => {
+setOauthName(label);
+setAuthLoading(true);
+
+try {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+    },
+  });
+  if (error) {
+    alert(
+      "No se pudo iniciar sesión con " +
+        label +
+        ": " +
+        error.message
+    );
+    setOauthName("");
+    setAuthLoading(false);
+  }
+} catch (error) {
+  alert(
+    "Ocurrió un error al conectar con " +
+      label +
+      ": " +
+      (error?.message || "Error desconocido")
+  );
+  setOauthName("");
+  setAuthLoading(false);
+}
+
+};
 
   const logout = async () => {
     await supabase.auth.signOut();
