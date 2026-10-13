@@ -1231,7 +1231,40 @@ const submitReview = async (request) => {
     }
   };
 
-  const loginWithProvider = async (provider, label) => {
+  const requestPasswordReset = async () => {
+  const email = authForm.email.trim();
+
+  if (!email) {
+    alert("Escribe tu correo electrónico para recuperar tu contraseña.");
+    return;
+  }
+
+  setAuthLoading(true);
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+    });
+
+    if (error) {
+      alert("No se pudo enviar el correo: " + error.message);
+      return;
+    }
+
+    setAccountMode("login");
+
+    alert(
+      "Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de spam."
+    );
+  } catch (error) {
+    alert(
+      "Ocurrió un error: " +
+        (error?.message || "Error desconocido")
+    );
+  } finally {
+    setAuthLoading(false);
+  }
+};
     setOauthName(label);
     setAuthLoading(true);
 
