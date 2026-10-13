@@ -1231,41 +1231,111 @@ const submitReview = async (request) => {
     }
   };
 
- const requestPasswordReset = async () => {
-const email = authForm.email.trim();
-
-if (!email) {
-  alert(
-    "Escribe tu correo electrónico para recuperar tu contraseña."
-  );
-  return;
-}
-setAuthLoading(true);
-try {
-  const { error } =
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
-    });
-  if (error) {
-    alert(
-      "No se pudo enviar el correo: " + error.message
-    );
-    return;
-  }
-  setAccountMode("login");
-  alert(
-    "Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de spam."
-  );
-} catch (error) {
-  alert(
-    "Ocurrió un error: " +
-      (error?.message || "Error desconocido")
-  );
-} finally {
-  setAuthLoading(false);
-}
-
-};
+   const requestPasswordReset = async () => {
+    const email = authForm.email.trim();
+    if (!email) {
+      alert(
+        "Escribe tu correo electrónico para recuperar tu contraseña."
+      );
+      return;
+    }
+    setAuthLoading(true);
+    try {
+      const { error } =
+        await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+        });
+      if (error) {
+        alert(
+          "No se pudo enviar el correo: " + error.message
+        );
+        return;
+      }
+      setAccountMode("login");
+      alert(
+        "Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de spam."
+      );
+    } catch (error) {
+      alert(
+        "Ocurrió un error: " +
+          (error?.message || "Error desconocido")
+      );
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+  const saveNewPassword = async () => {
+    if (newPassword.length < 6) {
+      alert(
+        "La contraseña debe tener al menos 6 caracteres."
+      );
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      alert("Las contraseñas no coinciden.");
+      return;
+    }
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (error) {
+        alert(
+          "No se pudo actualizar la contraseña: " +
+            error.message
+        );
+        return;
+      }
+      await supabase.auth.signOut();
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setAuthForm(defaultAuthForm);
+      setAccountMode("login");
+      setPage("account");
+      alert(
+        "¡Contraseña actualizada correctamente! Ya puedes iniciar sesión."
+      );
+    } catch (error) {
+      alert(
+        "Ocurrió un error al cambiar la contraseña: " +
+          (error?.message || "Error desconocido")
+      );
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+  const loginWithProvider = async (provider, label) => {
+    setOauthName(label);
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+        },
+      });
+      if (error) {
+        alert(
+          "No se pudo iniciar sesión con " +
+            label +
+            ": " +
+            error.message
+        );
+        setOauthName("");
+        setAuthLoading(false);
+      }
+    } catch (error) {
+      alert(
+        "Ocurrió un error al conectar con " +
+          label +
+          ": " +
+          (error?.message || "Error desconocido")
+      );
+      setOauthName("");
+      setAuthLoading(false);
+    }
+  };
 
 const loginWithProvider = async (provider, label) => {
 setOauthName(label);
