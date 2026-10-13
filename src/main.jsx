@@ -1228,6 +1228,34 @@ const submitReview = async (request) => {
     }
   };
 
+  const loginWithGoogle = async () => {
+    setAuthLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+        },
+      });
+
+      if (error) {
+        alert(
+          "No se pudo iniciar sesión con Google: " +
+            error.message
+        );
+        setAuthLoading(false);
+      }
+    } catch (error) {
+      alert(
+        "Ocurrió un error al conectar con Google: " +
+          (error?.message || "Error desconocido")
+      );
+
+      setAuthLoading(false);
+    }
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
 
@@ -2349,6 +2377,17 @@ useEffect(() => {
                     "login"
                   ? "Entrar a RobLoren"
                   : "Crear mi cuenta"}
+              </button>
+
+              <button
+                type="button"
+                className="button ghost full large"
+                onClick={loginWithGoogle}
+                disabled={authLoading}
+              >
+                {authLoading
+                  ? "Conectando con Google..."
+                  : "Continuar con Google"}
               </button>
 
               <p className="form-note">
