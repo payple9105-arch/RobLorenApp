@@ -115,6 +115,30 @@ a {
   width: 100%;
 }
 
+.social-or {
+  margin: 14px 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.social-logins {
+  display: grid;
+  gap: 8px;
+}
+
+.button.social {
+  background: #fff;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.button.social svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
 .header {
   position: sticky;
   top: 0;
