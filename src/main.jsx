@@ -281,6 +281,8 @@ function App() {
   const [oauthName, setOauthName] = useState("");
 
   const [authForm, setAuthForm] = useState(defaultAuthForm);
+const [newPassword, setNewPassword] = useState("");
+const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
