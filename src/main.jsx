@@ -1127,173 +1127,72 @@ const submitReview = async (request) => {
   }
 };
   const register = async () => {
-const email = authForm.email.trim();
-const password = authForm.password;
+    const email = authForm.email.trim();
+    const password = authForm.password;
 
-if (!profileForm.full_name.trim()) {
-  alert("Escribe tu nombre.");
-  return;
-}
-if (!profileForm.username.trim()) {
-  alert("Escribe un nombre de usuario.");
-  return;
-}
-if (!email) {
-  alert("Escribe tu correo electrónico.");
-  return;
-}
-if (!password || password.length < 6) {
-  alert("La contraseña debe tener al menos 6 caracteres.");
-  return;
-}
-setAuthLoading(true);
-try {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
-      data: {
-        full_name: profileForm.full_name.trim(),
-        username: profileForm.username.trim(),
-      },
-    },
-  });
-  if (error) {
-    alert(error.message);
-    return;
-  }
-  if (data.user) {
-    if (data.session) {
-      await refreshUser(data.user);
-      setAuthForm(defaultAuthForm);
-      setPage("home");
-    } else {
-      setAuthForm({
-        ...defaultAuthForm,
-        email,
-      });
-      setAccountMode("login");
-      setPage("account");
+    if (!profileForm.full_name.trim()) {
+      alert("Escribe tu nombre.");
+      return;
+    }
+
+    if (!profileForm.username.trim()) {
+      alert("Escribe un nombre de usuario.");
+      return;
+    }
+
+    if (!email) {
+      alert("Escribe tu correo electrónico.");
+      return;
+    }
+
+    if (!password || password.length < 6) {
       alert(
-        "Cuenta creada. Revisa tu correo electrónico y confirma tu cuenta antes de iniciar sesión."
+        "La contraseña debe tener al menos 6 caracteres."
       );
+      return;
     }
-  }
-} catch (error) {
-  alert(
-    "Ocurrió un error al crear la cuenta: " +
-      (error?.message || "Error desconocido")
-  );
-} finally {
-  setAuthLoading(false);
-}
 
-};
+    setAuthLoading(true);
 
-const login = async () => {
-const email = authForm.email.trim();
-const password = authForm.password;
+    try {
+      const { data, error } =
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name:
+                profileForm.full_name.trim(),
+              username:
+                profileForm.username.trim(),
+            },
+          },
+        });
 
-if (!email || !password) {
-  alert("Escribe tu correo y contraseña.");
-  return;
-}
-setAuthLoading(true);
-try {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  if (error) {
-    alert(error.message);
-    return;
-  }
-  if (data.user) {
-    await refreshUser(data.user);
-    setAuthForm(defaultAuthForm);
-    setPage("home");
-  }
-} catch (error) {
-  alert(
-    "Ocurrió un error al iniciar sesión: " +
-      (error?.message || "Error desconocido")
-  );
-} finally {
-  setAuthLoading(false);
-}
+      if (error) {
+        alert(error.message);
+        return;
+      }
 
-};
+      if (data.user) {
+        await refreshUser(data.user);
 
-const requestPasswordReset = async () => {
-const email = authForm.email.trim();
+        setAuthForm(defaultAuthForm);
 
-if (!email) {
-  alert(
-    "Escribe tu correo electrónico para recuperar tu contraseña."
-  );
-  return;
-}
-setAuthLoading(true);
-try {
-  const { error } = await supabase.auth.resetPasswordForEmail(
-    email,
-    {
-      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+        setPage("home");
+
+        if (!data.session) {
+          alert(
+            "Cuenta creada. Si Supabase tiene activada la confirmación de correo, revisa tu email para confirmar la cuenta."
+          );
+        }
+      }
+    } catch {
+      alert("Ocurrió un error al crear la cuenta.");
+    } finally {
+      setAuthLoading(false);
     }
-  );
-  if (error) {
-    alert("No se pudo enviar el correo: " + error.message);
-    return;
-  }
-  setAccountMode("login");
-  alert(
-    "Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de spam."
-  );
-} catch (error) {
-  alert(
-    "Ocurrió un error: " +
-      (error?.message || "Error desconocido")
-  );
-} finally {
-  setAuthLoading(false);
-}
-
-};
-
-const loginWithProvider = async (provider, label) => {
-setOauthName(label);
-setAuthLoading(true);
-
-try {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
-    },
-  });
-  if (error) {
-    alert(
-      "No se pudo iniciar sesión con " +
-        label +
-        ": " +
-        error.message
-    );
-    setOauthName("");
-    setAuthLoading(false);
-  }
-} catch (error) {
-  alert(
-    "Ocurrió un error al conectar con " +
-      label +
-      ": " +
-      (error?.message || "Error desconocido")
-  );
-  setOauthName("");
-  setAuthLoading(false);
-}
-
-};
+  };
 
   const login = async () => {
     const email = authForm.email.trim();
@@ -1332,40 +1231,7 @@ try {
     }
   };
 
-  const requestPasswordReset = async () => {
-  const email = authForm.email.trim();
-
-  if (!email) {
-    alert("Escribe tu correo electrónico para recuperar tu contraseña.");
-    return;
-  }
-
-  setAuthLoading(true);
-
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
-    });
-
-    if (error) {
-      alert("No se pudo enviar el correo: " + error.message);
-      return;
-    }
-
-    setAccountMode("login");
-
-    alert(
-      "Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de spam."
-    );
-  } catch (error) {
-    alert(
-      "Ocurrió un error: " +
-        (error?.message || "Error desconocido")
-    );
-  } finally {
-    setAuthLoading(false);
-  }
-};
+  const loginWithProvider = async (provider, label) => {
     setOauthName(label);
     setAuthLoading(true);
 
