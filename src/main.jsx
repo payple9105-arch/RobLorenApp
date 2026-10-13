@@ -2565,11 +2565,13 @@ const submitReview = async (request) => {
                 </button>
               </div>
 
-              <p className="form-note">
+             <p className="form-note">
                 Al continuar aceptas utilizar
                 RobLoren de manera responsable y
                 profesional.
               </p>
+                </>
+              )}
             </div>
           </div>
         )}
