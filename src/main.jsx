@@ -278,6 +278,7 @@ function App() {
   const [loggedUser, setLoggedUser] = useState(null);
   const [accountMode, setAccountMode] = useState("login");
   const [authLoading, setAuthLoading] = useState(false);
+  const [oauthName, setOauthName] = useState("");
 
   const [authForm, setAuthForm] = useState(defaultAuthForm);
 
@@ -1228,12 +1229,13 @@ const submitReview = async (request) => {
     }
   };
 
-  const loginWithGoogle = async () => {
+  const loginWithProvider = async (provider, label) => {
+    setOauthName(label);
     setAuthLoading(true);
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
+        provider,
         options: {
           redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
         },
@@ -1241,17 +1243,22 @@ const submitReview = async (request) => {
 
       if (error) {
         alert(
-          "No se pudo iniciar sesión con Google: " +
+          "No se pudo iniciar sesión con " +
+            label +
+            ": " +
             error.message
         );
+        setOauthName("");
         setAuthLoading(false);
       }
     } catch (error) {
       alert(
-        "Ocurrió un error al conectar con Google: " +
+        "Ocurrió un error al conectar con " +
+          label +
+          ": " +
           (error?.message || "Error desconocido")
       );
-
+      setOauthName("");
       setAuthLoading(false);
     }
   };
@@ -2379,16 +2386,51 @@ useEffect(() => {
                   : "Crear mi cuenta"}
               </button>
 
-              <button
-                type="button"
-                className="button ghost full large"
-                onClick={loginWithGoogle}
-                disabled={authLoading}
-              >
-                {authLoading
-                  ? "Conectando con Google..."
-                  : "Continuar con Google"}
-              </button>
+              <p className="social-or">o continúa con</p>
+              <div className="social-logins">
+                <button
+                  type="button"
+                  className="button social full large"
+                  onClick={() => loginWithProvider("google", "Google")}
+                  disabled={authLoading}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5c-.3 1.5-1.1 2.8-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.7z" />
+                    <path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.9-3c-1.1.7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9H1.4v3.1C3.4 21.3 7.4 24 12 24z" />
+                    <path fill="#FBBC05" d="M5.4 14.4c-.2-.7-.4-1.4-.4-2.4s.1-1.7.4-2.4V6.5H1.4C.5 8.3 0 10.1 0 12s.5 3.7 1.4 5.5l4-3.1z" />
+                    <path fill="#EA4335" d="M12 4.8c1.7 0 3.3.6 4.5 1.8l3.4-3.4C17.9 1.1 15.2 0 12 0 7.4 0 3.4 2.7 1.4 6.5l4 3.1C6.3 6.8 8.9 4.8 12 4.8z" />
+                  </svg>
+                  {authLoading && oauthName === "Google"
+                    ? "Conectando con Google..."
+                    : "Continuar con Google"}
+                </button>
+                <button
+                  type="button"
+                  className="button social full large"
+                  onClick={() => loginWithProvider("facebook", "Facebook")}
+                  disabled={authLoading}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#1877F2" d="M24 12.1C24 5.4 18.6 0 12 0S0 5.4 0 12.1C0 18.1 4.4 23 10.1 24v-8.4H7.1v-3.5h3V9.4c0-3 1.8-4.6 4.5-4.6 1.3 0 2.6.2 2.6.2v2.9h-1.5c-1.5 0-1.9.9-1.9 1.8v2.2h3.3l-.5 3.5h-2.8V24C19.6 23 24 18.1 24 12.1z" />
+                  </svg>
+                  {authLoading && oauthName === "Facebook"
+                    ? "Conectando con Facebook..."
+                    : "Continuar con Facebook"}
+                </button>
+                <button
+                  type="button"
+                  className="button social full large"
+                  onClick={() => loginWithProvider("apple", "Apple")}
+                  disabled={authLoading}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M16.7 12.7c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.2-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.2 1.1 0 1.6-.7 3-.7s1.8.7 3 .7 2-.1 2.8-2.2c.6-1 1.1-2 1.4-3.1-3.7-1.4-3.8-5.2-2.8-6zM14.8 6.3c.6-.8 1-1.8.9-2.8-1 .1-2 .6-2.7 1.4-.6.7-1.1 1.8-.9 2.8 1 .1 2-.5 2.7-1.4z" />
+                  </svg>
+                  {authLoading && oauthName === "Apple"
+                    ? "Conectando con Apple..."
+                    : "Continuar con Apple"}
+                </button>
+              </div>
 
               <p className="form-note">
                 Al continuar aceptas utilizar
