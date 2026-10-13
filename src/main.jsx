@@ -1439,10 +1439,16 @@ const submitReview = async (request) => {
     initialize();
     loadServices();
 
-    const {
+       const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
+        if (event === "PASSWORD_RECOVERY") {
+          setAccountMode("reset");
+          setPage("account");
+          setNewPassword("");
+          setConfirmNewPassword("");
+        }
         if (session?.user) {
           await refreshUser(session.user);
         } else {
@@ -1450,42 +1456,36 @@ const submitReview = async (request) => {
         }
       }
     );
-
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
-
-   useEffect(() => {
-  if (loggedUser) {
-    loadRequests();
-    loadReviewedRequests();
-  } else {
-    setRequests([]);
-    setReviewedRequests({});
-  }
-}, [loggedUser]);
-useEffect(() => {
-  if (loggedUser) {
-    loadConversationContacts();
-  } else {
-    setConversationContacts([]);
-  }
-}, [loggedUser]);
-
+  useEffect(() => {
+    if (loggedUser) {
+      loadRequests();
+      loadReviewedRequests();
+    } else {
+      setRequests([]);
+      setReviewedRequests({});
+    }
+  }, [loggedUser]);
+  useEffect(() => {
+    if (loggedUser) {
+      loadConversationContacts();
+    } else {
+      setConversationContacts([]);
+    }
+  }, [loggedUser]);
   const filteredServices = useMemo(() => {
     const text = deferredSearch
       .trim()
       .toLowerCase();
-
     return services.filter((service) => {
       const matchesCategory =
         category === "Todas" ||
         service.category === category;
-
       if (!text) return matchesCategory;
-
       const content = [
         service.service_title,
         service.description,
@@ -1498,7 +1498,6 @@ useEffect(() => {
       ]
         .join(" ")
         .toLowerCase();
-
       return (
         matchesCategory &&
         content.includes(text)
@@ -1509,53 +1508,51 @@ useEffect(() => {
     deferredSearch,
     category,
   ]);
-
   const featuredServices = useMemo(
     () => filteredServices.slice(0, 3),
     [filteredServices]
   );
-
   const professionals = useMemo(() => {
     const unique = new Map();
-
     filteredServices.forEach((service) => {
       const key =
         service.provider_id ||
         service.provider_username ||
         service.provider_name ||
         service.id;
-
       if (!unique.has(key)) {
         unique.set(key, service);
       }
     });
-
     return [...unique.values()].slice(0, 3);
   }, [filteredServices]);
-
   const publishedCount = services.filter(
     (service) =>
       service.provider_id === loggedUser?.id ||
       service.user_id === loggedUser?.id
   ).length;
-
   const pendingRequests = requests.filter(
     (request) => request.status === "pending"
   ).length;
-
   const acceptedRequests = requests.filter(
     (request) => request.status === "accepted"
   ).length;
-
-
   const go = (next, anchor) => {
     setPage(next);
     setMenuOpen(false);
     window.setTimeout(() => {
       if (anchor) {
-        document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document
+          .getElementById(anchor)
+          ?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
       } else {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
       }
     }, 30);
   };
