@@ -250,6 +250,63 @@ function getInitials(name = "RL") {
   );
 }
 
+const PROFILE_PHOTOS_KEY = "robloren-profile-photos";
+
+function readProfilePhotos(userId) {
+  if (!userId) return { avatar: "", cover: "" };
+
+  try {
+    const all = JSON.parse(
+      localStorage.getItem(PROFILE_PHOTOS_KEY) || "{}"
+    );
+    return {
+      avatar: all[userId]?.avatar || "",
+      cover: all[userId]?.cover || "",
+    };
+  } catch {
+    return { avatar: "", cover: "" };
+  }
+}
+
+function writeProfilePhotos(userId, photos) {
+  const all = JSON.parse(
+    localStorage.getItem(PROFILE_PHOTOS_KEY) || "{}"
+  );
+  all[userId] = photos;
+  localStorage.setItem(PROFILE_PHOTOS_KEY, JSON.stringify(all));
+}
+
+function fileToImage(file, maxWidth, maxHeight) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onerror = () => reject(new Error("No se pudo leer la imagen."));
+
+    reader.onload = () => {
+      const image = new Image();
+
+      image.onerror = () => reject(new Error("La imagen no es válida."));
+
+      image.onload = () => {
+        const scale = Math.min(
+          maxWidth / image.width,
+          maxHeight / image.height,
+          1
+        );
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.72));
+      };
+
+      image.src = reader.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
 function normalizeSkills(skills = "") {
   if (Array.isArray(skills)) {
     return skills
@@ -281,8 +338,6 @@ function App() {
   const [oauthName, setOauthName] = useState("");
 
   const [authForm, setAuthForm] = useState(defaultAuthForm);
-const [newPassword, setNewPassword] = useState("");
-const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -309,6 +364,10 @@ const [sendingRequest, setSendingRequest] = useState(false);
   const [form, setForm] = useState(defaultForm);
   const [profileForm, setProfileForm] =
     useState(defaultProfileForm);
+  const [profilePhotos, setProfilePhotos] = useState({
+    avatar: "",
+    cover: "",
+  });
 
   const [offer, setOffer] = useState("");
   const [publishing, setPublishing] = useState(false);
@@ -409,6 +468,8 @@ const [sendingRequest, setSendingRequest] = useState(false);
       location: completeUser.location || "",
       skills: completeUser.skills || "",
     });
+
+    setProfilePhotos(readProfilePhotos(user.id));
   };
 
   const loadServices = async () => {
@@ -1042,6 +1103,44 @@ const submitReview = async (request) => {
   }
 };
 
+  const pickProfilePhoto = async (kind, file) => {
+    if (!loggedUser || !file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Elige una imagen.");
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      alert("La imagen es muy grande. Usa una de menos de 8 MB.");
+      return;
+    }
+
+    try {
+      const dataUrl = await fileToImage(
+        file,
+        kind === "cover" ? 1400 : 512,
+        kind === "cover" ? 480 : 512
+      );
+      const next = {
+        ...readProfilePhotos(loggedUser.id),
+        [kind]: dataUrl,
+      };
+
+      writeProfilePhotos(loggedUser.id, next);
+      setProfilePhotos(next);
+
+      const column = kind === "cover" ? "cover_url" : "avatar_url";
+      supabase
+        .from("profiles")
+        .update({ [column]: dataUrl })
+        .eq("id", loggedUser.id)
+        .then(() => {});
+    } catch (error) {
+      alert(error?.message || "No se pudo usar esa imagen.");
+    }
+  };
+
   const saveProfile = async () => {
   if (!loggedUser) return;
 
@@ -1231,83 +1330,10 @@ const submitReview = async (request) => {
     }
   };
 
-   const requestPasswordReset = async () => {
-    const email = authForm.email.trim();
-    if (!email) {
-      alert(
-        "Escribe tu correo electrónico para recuperar tu contraseña."
-      );
-      return;
-    }
-    setAuthLoading(true);
-    try {
-      const { error } =
-        await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
-        });
-      if (error) {
-        alert(
-          "No se pudo enviar el correo: " + error.message
-        );
-        return;
-      }
-      setAccountMode("login");
-      alert(
-        "Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de spam."
-      );
-    } catch (error) {
-      alert(
-        "Ocurrió un error: " +
-          (error?.message || "Error desconocido")
-      );
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-  const saveNewPassword = async () => {
-    if (newPassword.length < 6) {
-      alert(
-        "La contraseña debe tener al menos 6 caracteres."
-      );
-      return;
-    }
-    if (newPassword !== confirmNewPassword) {
-      alert("Las contraseñas no coinciden.");
-      return;
-    }
-    setAuthLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      if (error) {
-        alert(
-          "No se pudo actualizar la contraseña: " +
-            error.message
-        );
-        return;
-      }
-      await supabase.auth.signOut();
-      setNewPassword("");
-      setConfirmNewPassword("");
-      setAuthForm(defaultAuthForm);
-      setAccountMode("login");
-      setPage("account");
-      alert(
-        "¡Contraseña actualizada correctamente! Ya puedes iniciar sesión."
-      );
-    } catch (error) {
-      alert(
-        "Ocurrió un error al cambiar la contraseña: " +
-          (error?.message || "Error desconocido")
-      );
-    } finally {
-      setAuthLoading(false);
-    }
-  };
   const loginWithProvider = async (provider, label) => {
     setOauthName(label);
     setAuthLoading(true);
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -1315,6 +1341,7 @@ const submitReview = async (request) => {
           redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
         },
       });
+
       if (error) {
         alert(
           "No se pudo iniciar sesión con " +
@@ -1341,6 +1368,7 @@ const submitReview = async (request) => {
     await supabase.auth.signOut();
 
     setLoggedUser(null);
+    setProfilePhotos({ avatar: "", cover: "" });
     setRequests([]);
     setMessages([]);
     setSelectedContact(null);
@@ -1439,16 +1467,10 @@ const submitReview = async (request) => {
     initialize();
     loadServices();
 
-       const {
+    const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "PASSWORD_RECOVERY") {
-          setAccountMode("reset");
-          setPage("account");
-          setNewPassword("");
-          setConfirmNewPassword("");
-        }
+      async (_event, session) => {
         if (session?.user) {
           await refreshUser(session.user);
         } else {
@@ -1456,36 +1478,42 @@ const submitReview = async (request) => {
         }
       }
     );
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
-  useEffect(() => {
-    if (loggedUser) {
-      loadRequests();
-      loadReviewedRequests();
-    } else {
-      setRequests([]);
-      setReviewedRequests({});
-    }
-  }, [loggedUser]);
-  useEffect(() => {
-    if (loggedUser) {
-      loadConversationContacts();
-    } else {
-      setConversationContacts([]);
-    }
-  }, [loggedUser]);
+
+   useEffect(() => {
+  if (loggedUser) {
+    loadRequests();
+    loadReviewedRequests();
+  } else {
+    setRequests([]);
+    setReviewedRequests({});
+  }
+}, [loggedUser]);
+useEffect(() => {
+  if (loggedUser) {
+    loadConversationContacts();
+  } else {
+    setConversationContacts([]);
+  }
+}, [loggedUser]);
+
   const filteredServices = useMemo(() => {
     const text = deferredSearch
       .trim()
       .toLowerCase();
+
     return services.filter((service) => {
       const matchesCategory =
         category === "Todas" ||
         service.category === category;
+
       if (!text) return matchesCategory;
+
       const content = [
         service.service_title,
         service.description,
@@ -1498,6 +1526,7 @@ const submitReview = async (request) => {
       ]
         .join(" ")
         .toLowerCase();
+
       return (
         matchesCategory &&
         content.includes(text)
@@ -1508,51 +1537,53 @@ const submitReview = async (request) => {
     deferredSearch,
     category,
   ]);
+
   const featuredServices = useMemo(
     () => filteredServices.slice(0, 3),
     [filteredServices]
   );
+
   const professionals = useMemo(() => {
     const unique = new Map();
+
     filteredServices.forEach((service) => {
       const key =
         service.provider_id ||
         service.provider_username ||
         service.provider_name ||
         service.id;
+
       if (!unique.has(key)) {
         unique.set(key, service);
       }
     });
+
     return [...unique.values()].slice(0, 3);
   }, [filteredServices]);
+
   const publishedCount = services.filter(
     (service) =>
       service.provider_id === loggedUser?.id ||
       service.user_id === loggedUser?.id
   ).length;
+
   const pendingRequests = requests.filter(
     (request) => request.status === "pending"
   ).length;
+
   const acceptedRequests = requests.filter(
     (request) => request.status === "accepted"
   ).length;
+
+
   const go = (next, anchor) => {
     setPage(next);
     setMenuOpen(false);
     window.setTimeout(() => {
       if (anchor) {
-        document
-          .getElementById(anchor)
-          ?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
+        document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
       } else {
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth",
-        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }, 30);
   };
@@ -2124,14 +2155,63 @@ const submitReview = async (request) => {
       <div className="account-card">
         {loggedUser ? (
           <>
-            <div className="account-cover"></div>
+            <div
+              className="account-cover"
+              style={
+                profilePhotos.cover
+                  ? {
+                      backgroundImage: `url(${profilePhotos.cover})`,
+                    }
+                  : undefined
+              }
+            >
+              <label className="cover-photo-button">
+                {profilePhotos.cover
+                  ? "Cambiar portada"
+                  : "Agregar portada"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(event) => {
+                    pickProfilePhoto(
+                      "cover",
+                      event.target.files?.[0]
+                    );
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
 
             <div className="account-main">
               <div className="account-profile-head">
                 <div className="avatar profile-avatar">
-                  {getInitials(
-                    loggedUser.full_name
+                  {profilePhotos.avatar ? (
+                    <img
+                      src={profilePhotos.avatar}
+                      alt=""
+                    />
+                  ) : (
+                    getInitials(
+                      loggedUser.full_name
+                    )
                   )}
+                  <label className="avatar-photo-button">
+                    Foto
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(event) => {
+                        pickProfilePhoto(
+                          "avatar",
+                          event.target.files?.[0]
+                        );
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
                 </div>
 
                 <div>
@@ -2360,61 +2440,10 @@ const submitReview = async (request) => {
                   Crear cuenta
                 </button>
               </div>
-          {accountMode === "reset" ? (
-            <>
-              <h2>Crear nueva contraseña</h2>
-              <p>
-                Escribe tu nueva contraseña y confírmala
-                para recuperar el acceso a tu cuenta.
-              </p>
-              <label>
-                Nueva contraseña
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(event) =>
-                    setNewPassword(event.target.value)
-                  }
-                  placeholder="Mínimo 6 caracteres"
-                  autoComplete="new-password"
-                />
-              </label>
-              <label>
-                Confirmar nueva contraseña
-                <input
-                  type="password"
-                  value={confirmNewPassword}
-                  onChange={(event) =>
-                    setConfirmNewPassword(event.target.value)
-                  }
-                  placeholder="Repite tu contraseña"
-                  autoComplete="new-password"
-                />
-              </label>
-              <button
-                type="button"
-                className="button primary full large"
-                disabled={authLoading}
-                onClick={saveNewPassword}
-              >
-                {authLoading
-                  ? "Guardando..."
-                  : "Guardar nueva contraseña"}
-              </button>
-              <button
-                type="button"
-                className="button full"
-                disabled={authLoading}
-                onClick={() => setAccountMode("login")}
-              >
-                Volver a iniciar sesión
-              </button>
-            </>
-          ) : (
-            <>
-          {accountMode ===
-            "register" && (
-            <>
+
+              {accountMode ===
+                "register" && (
+                <>
                   <label>
                     Nombre completo
 
@@ -2488,18 +2517,7 @@ const submitReview = async (request) => {
                       : "new-password"
                   }
                 />
-                           </label>
-
-              {accountMode === "login" && (
-                <button
-                  type="button"
-                  className="forgot-password"
-                  onClick={requestPasswordReset}
-                  disabled={authLoading}
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
-              )}
+              </label>
 
               <button
                 className="button primary full large"
@@ -2565,13 +2583,11 @@ const submitReview = async (request) => {
                 </button>
               </div>
 
-             <p className="form-note">
+              <p className="form-note">
                 Al continuar aceptas utilizar
                 RobLoren de manera responsable y
                 profesional.
               </p>
-                </>
-              )}
             </div>
           </div>
         )}
@@ -2616,6 +2632,8 @@ const submitReview = async (request) => {
       loggedUser &&
       providerId === loggedUser.id;
 
+    const providerPhotos = readProfilePhotos(providerId);
+
     return (
       <main className="page-container">
         <button
@@ -2645,10 +2663,32 @@ const submitReview = async (request) => {
               reviews={service.reviews}
             />
 
+            {providerPhotos.cover && (
+              <div
+                className="account-cover profile-public-cover"
+                style={{
+                  backgroundImage: `url(${providerPhotos.cover})`,
+                }}
+              />
+            )}
+
             <div className="detail-provider">
-              <div className="avatar large">
-                {getInitials(
-                  service.provider_name
+              <div
+                className={
+                  providerPhotos.avatar
+                    ? "avatar profile-avatar"
+                    : "avatar large"
+                }
+              >
+                {providerPhotos.avatar ? (
+                  <img
+                    src={providerPhotos.avatar}
+                    alt=""
+                  />
+                ) : (
+                  getInitials(
+                    service.provider_name
+                  )
                 )}
               </div>
 
