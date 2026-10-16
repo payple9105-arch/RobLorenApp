@@ -338,6 +338,8 @@ function App() {
   const [oauthName, setOauthName] = useState("");
 
   const [authForm, setAuthForm] = useState(defaultAuthForm);
+const [newPassword, setNewPassword] = useState("");
+const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -1330,10 +1332,83 @@ const submitReview = async (request) => {
     }
   };
 
+   const requestPasswordReset = async () => {
+    const email = authForm.email.trim();
+    if (!email) {
+      alert(
+        "Escribe tu correo electrónico para recuperar tu contraseña."
+      );
+      return;
+    }
+    setAuthLoading(true);
+    try {
+      const { error } =
+        await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+        });
+      if (error) {
+        alert(
+          "No se pudo enviar el correo: " + error.message
+        );
+        return;
+      }
+      setAccountMode("login");
+      alert(
+        "Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de spam."
+      );
+    } catch (error) {
+      alert(
+        "Ocurrió un error: " +
+          (error?.message || "Error desconocido")
+      );
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+  const saveNewPassword = async () => {
+    if (newPassword.length < 6) {
+      alert(
+        "La contraseña debe tener al menos 6 caracteres."
+      );
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      alert("Las contraseñas no coinciden.");
+      return;
+    }
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (error) {
+        alert(
+          "No se pudo actualizar la contraseña: " +
+            error.message
+        );
+        return;
+      }
+      await supabase.auth.signOut();
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setAuthForm(defaultAuthForm);
+      setAccountMode("login");
+      setPage("account");
+      alert(
+        "¡Contraseña actualizada correctamente! Ya puedes iniciar sesión."
+      );
+    } catch (error) {
+      alert(
+        "Ocurrió un error al cambiar la contraseña: " +
+          (error?.message || "Error desconocido")
+      );
+    } finally {
+      setAuthLoading(false);
+    }
+  };
   const loginWithProvider = async (provider, label) => {
     setOauthName(label);
     setAuthLoading(true);
-
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -1341,7 +1416,6 @@ const submitReview = async (request) => {
           redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
         },
       });
-
       if (error) {
         alert(
           "No se pudo iniciar sesión con " +
@@ -1467,10 +1541,16 @@ const submitReview = async (request) => {
     initialize();
     loadServices();
 
-    const {
+       const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
+        if (event === "PASSWORD_RECOVERY") {
+          setAccountMode("reset");
+          setPage("account");
+          setNewPassword("");
+          setConfirmNewPassword("");
+        }
         if (session?.user) {
           await refreshUser(session.user);
         } else {
@@ -1478,42 +1558,36 @@ const submitReview = async (request) => {
         }
       }
     );
-
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
-
-   useEffect(() => {
-  if (loggedUser) {
-    loadRequests();
-    loadReviewedRequests();
-  } else {
-    setRequests([]);
-    setReviewedRequests({});
-  }
-}, [loggedUser]);
-useEffect(() => {
-  if (loggedUser) {
-    loadConversationContacts();
-  } else {
-    setConversationContacts([]);
-  }
-}, [loggedUser]);
-
+  useEffect(() => {
+    if (loggedUser) {
+      loadRequests();
+      loadReviewedRequests();
+    } else {
+      setRequests([]);
+      setReviewedRequests({});
+    }
+  }, [loggedUser]);
+  useEffect(() => {
+    if (loggedUser) {
+      loadConversationContacts();
+    } else {
+      setConversationContacts([]);
+    }
+  }, [loggedUser]);
   const filteredServices = useMemo(() => {
     const text = deferredSearch
       .trim()
       .toLowerCase();
-
     return services.filter((service) => {
       const matchesCategory =
         category === "Todas" ||
         service.category === category;
-
       if (!text) return matchesCategory;
-
       const content = [
         service.service_title,
         service.description,
@@ -1526,7 +1600,6 @@ useEffect(() => {
       ]
         .join(" ")
         .toLowerCase();
-
       return (
         matchesCategory &&
         content.includes(text)
@@ -1537,53 +1610,51 @@ useEffect(() => {
     deferredSearch,
     category,
   ]);
-
   const featuredServices = useMemo(
     () => filteredServices.slice(0, 3),
     [filteredServices]
   );
-
   const professionals = useMemo(() => {
     const unique = new Map();
-
     filteredServices.forEach((service) => {
       const key =
         service.provider_id ||
         service.provider_username ||
         service.provider_name ||
         service.id;
-
       if (!unique.has(key)) {
         unique.set(key, service);
       }
     });
-
     return [...unique.values()].slice(0, 3);
   }, [filteredServices]);
-
   const publishedCount = services.filter(
     (service) =>
       service.provider_id === loggedUser?.id ||
       service.user_id === loggedUser?.id
   ).length;
-
   const pendingRequests = requests.filter(
     (request) => request.status === "pending"
   ).length;
-
   const acceptedRequests = requests.filter(
     (request) => request.status === "accepted"
   ).length;
-
-
   const go = (next, anchor) => {
     setPage(next);
     setMenuOpen(false);
     window.setTimeout(() => {
       if (anchor) {
-        document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document
+          .getElementById(anchor)
+          ?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
       } else {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
       }
     }, 30);
   };
@@ -2440,10 +2511,61 @@ useEffect(() => {
                   Crear cuenta
                 </button>
               </div>
-
-              {accountMode ===
-                "register" && (
-                <>
+          {accountMode === "reset" ? (
+            <>
+              <h2>Crear nueva contraseña</h2>
+              <p>
+                Escribe tu nueva contraseña y confírmala
+                para recuperar el acceso a tu cuenta.
+              </p>
+              <label>
+                Nueva contraseña
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(event) =>
+                    setNewPassword(event.target.value)
+                  }
+                  placeholder="Mínimo 6 caracteres"
+                  autoComplete="new-password"
+                />
+              </label>
+              <label>
+                Confirmar nueva contraseña
+                <input
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(event) =>
+                    setConfirmNewPassword(event.target.value)
+                  }
+                  placeholder="Repite tu contraseña"
+                  autoComplete="new-password"
+                />
+              </label>
+              <button
+                type="button"
+                className="button primary full large"
+                disabled={authLoading}
+                onClick={saveNewPassword}
+              >
+                {authLoading
+                  ? "Guardando..."
+                  : "Guardar nueva contraseña"}
+              </button>
+              <button
+                type="button"
+                className="button full"
+                disabled={authLoading}
+                onClick={() => setAccountMode("login")}
+              >
+                Volver a iniciar sesión
+              </button>
+            </>
+          ) : (
+            <>
+          {accountMode ===
+            "register" && (
+            <>
                   <label>
                     Nombre completo
 
@@ -2517,7 +2639,18 @@ useEffect(() => {
                       : "new-password"
                   }
                 />
-              </label>
+                           </label>
+
+              {accountMode === "login" && (
+                <button
+                  type="button"
+                  className="forgot-password"
+                  onClick={requestPasswordReset}
+                  disabled={authLoading}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              )}
 
               <button
                 className="button primary full large"
@@ -2583,11 +2716,13 @@ useEffect(() => {
                 </button>
               </div>
 
-              <p className="form-note">
+             <p className="form-note">
                 Al continuar aceptas utilizar
                 RobLoren de manera responsable y
                 profesional.
               </p>
+                </>
+              )}
             </div>
           </div>
         )}
