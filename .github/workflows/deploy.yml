@@ -11,6 +11,12 @@ permissions:
   pages: write
   id-token: write
 
+# One deploy at a time. Two pushes together were failing with
+# "in progress deployment".
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
