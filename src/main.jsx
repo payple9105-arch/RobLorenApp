@@ -1952,6 +1952,9 @@ const submitReview = async (request) => {
           <button className={page === "home" ? "nav-link active" : "nav-link"} onClick={() => go("home")}>
             Inicio
           </button>
+          <button className={page === "market" ? "nav-link active" : "nav-link"} onClick={() => go("market")}>
+            Panel
+          </button>
           <button className={page === "services" ? "nav-link active" : "nav-link"} onClick={() => go("services")}>
             Explorar servicios
           </button>
@@ -2254,6 +2257,13 @@ const submitReview = async (request) => {
               Buscar
             </button>
           </form>
+          <button
+            type="button"
+            className="button light market-entry"
+            onClick={() => go("market")}
+          >
+            Ver panel del mercado
+          </button>
           <ul className="photo-trust">
             <li>Perfiles verificados y seguros</li>
             <li>Calificaciones reales de clientes</li>
@@ -3979,10 +3989,214 @@ const submitReview = async (request) => {
     </main>
   );
 
+  const MarketPage = () => {
+    const people = [];
+    const seen = new Set();
+
+    services.forEach((service) => {
+      const key =
+        service.provider_id ||
+        service.provider_username ||
+        service.provider_name;
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      people.push(service);
+    });
+
+    const bars = categories
+      .map(([icon, name]) => ({
+        icon,
+        name,
+        count: services.filter((service) => service.category === name).length,
+      }))
+      .sort((left, right) => right.count - left.count)
+      .slice(0, 5);
+    const maxBar = Math.max(1, ...bars.map((item) => item.count));
+    const notes = [];
+
+    if (loggedUser && pendingRequests > 0) {
+      notes.push(["Solicitud", `${pendingRequests} solicitudes pendientes`]);
+    }
+    if (loggedUser && acceptedRequests > 0) {
+      notes.push(["Trabajo", `${acceptedRequests} trabajos aceptados`]);
+    }
+
+    services.slice(0, 4).forEach((service) => {
+      notes.push([
+        service.category || "Aviso",
+        `${service.service_title || service.title} · ${service.provider_name}`,
+      ]);
+    });
+
+    const dots = [
+      [80, 80],
+      [140, 60],
+      [210, 100],
+      [280, 70],
+      [350, 120],
+      [430, 80],
+      [510, 130],
+      [170, 170],
+      [300, 190],
+      [420, 180],
+    ];
+
+    return (
+      <main className="market-page">
+        <div className="market-wrap">
+          <header className="market-top">
+            <div>
+              <span className="eyebrow">MERCADO</span>
+              <h1>Conecta talento en todo el mundo</h1>
+            </div>
+            <button type="button" className="button light" onClick={() => go("services")}>
+              Buscar
+            </button>
+          </header>
+
+          <div className="market-grid">
+            <aside className="market-side">
+              <section className="market-card">
+                <div className="market-card-head">
+                  <h2>Conexiones</h2>
+                  <span>{people.length}</span>
+                </div>
+                <div className="market-people">
+                  {people.slice(0, 4).map((person) => (
+                    <button
+                      type="button"
+                      key={person.id}
+                      onClick={() => {
+                        setSelectedService(person);
+                        setRequestMessage("");
+                        setPage("service");
+                      }}
+                    >
+                      <span className="avatar">{getInitials(person.provider_name)}</span>
+                      {person.provider_name}
+                    </button>
+                  ))}
+                  {people.length === 0 && <p>Aún no hay profesionales publicados.</p>}
+                </div>
+              </section>
+
+              <section className="market-card">
+                <h2>Soluciones</h2>
+                <div className="market-solutions">
+                  {["Tecnología", "Diseño", "Marketing", "Video"].map((name) => (
+                    <button
+                      type="button"
+                      key={name}
+                      onClick={() => {
+                        setCategory(name);
+                        go("services");
+                      }}
+                    >
+                      <span>
+                        {categories.find((item) => item[1] === name)?.[0] || "✨"}
+                      </span>
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            </aside>
+
+            <section className="market-stage">
+              <div className="market-map">
+                <svg viewBox="0 0 640 280" className="market-svg" aria-hidden="true">
+                  <line x1="80" y1="80" x2="210" y2="100" />
+                  <line x1="210" y1="100" x2="350" y2="120" />
+                  <line x1="350" y1="120" x2="510" y2="130" />
+                  <line x1="140" y1="60" x2="300" y2="190" />
+                  <line x1="430" y1="80" x2="420" y2="180" />
+                  {dots.map(([x, y]) => (
+                    <g key={`${x}-${y}`}>
+                      <circle cx={x} cy={y} r="10" className="market-glow" />
+                      <circle cx={x} cy={y} r="3.5" className="market-dot" />
+                    </g>
+                  ))}
+                </svg>
+                <div className="market-actions">
+                  <button
+                    type="button"
+                    className="button light"
+                    onClick={() =>
+                      loggedUser
+                        ? go("offer")
+                        : (setAccountMode("register"), go("account"))
+                    }
+                  >
+                    Haz crecer tu negocio
+                  </button>
+                  <button type="button" className="button ghost" onClick={() => go("services")}>
+                    Encontrar profesionales
+                  </button>
+                  <button
+                    type="button"
+                    className="button ghost"
+                    onClick={() => {
+                      setSearch("");
+                      setCategory("Todas");
+                      go("services");
+                    }}
+                  >
+                    Llegar a más países
+                  </button>
+                </div>
+              </div>
+
+              <div className="market-lower">
+                <section className="market-card">
+                  <h2>Actividad del mercado</h2>
+                  <div className="market-bars">
+                    {bars.map((item) => (
+                      <div key={item.name}>
+                        <span>
+                          {item.icon} {item.name}
+                        </span>
+                        <span className="market-bar">
+                          <span style={{ width: `${(item.count / maxBar) * 100}%` }} />
+                        </span>
+                        <b>{item.count}</b>
+                      </div>
+                    ))}
+                  </div>
+                  <button type="button" className="button primary" onClick={() => go("services")}>
+                    Conectar
+                  </button>
+                </section>
+
+                <section className="market-card">
+                  <div className="market-card-head">
+                    <h2>Avisos</h2>
+                    <span>{notes.length}</span>
+                  </div>
+                  <ul className="market-notes">
+                    {notes.map(([label, text]) => (
+                      <li key={text}>
+                        <b>{label}</b>
+                        {text}
+                      </li>
+                    ))}
+                    {notes.length === 0 && <li>No hay avisos todavía.</li>}
+                  </ul>
+                </section>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    );
+  };
+
   const renderPage = () => {
   switch (page) {
     case "services":
       return ServicesPage();
+
+    case "market":
+      return MarketPage();
 
     case "account":
       return AccountPage();
@@ -4051,6 +4265,7 @@ const submitReview = async (request) => {
           <div className="footer-links">
             <button onClick={() => go("home")}>Inicio</button>
             <button onClick={() => go("services")}>Explorar servicios</button>
+            <button onClick={() => go("market")}>Panel</button>
             <button onClick={() => go("home", "como")}>Cómo funciona</button>
           </div>
           <div className="footer-links">
