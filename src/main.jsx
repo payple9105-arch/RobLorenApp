@@ -10,6 +10,7 @@ import ReactDOM from "react-dom/client";
 import { supabase } from "./supabaseClient";
 import "./index.css";
 import StorePage from "./StorePage";
+import ProductForm from "./ProductForm";
 
 const PAYPAL_CLIENT_ID =
   "BAA_Ux_XQQKppjplmdc2V6jZZGOlSQATrlf2UKoc4Pi1lRIbKqtejqk2di8a9hRJ5e0xZFL46K_xfEYt-I";
@@ -2098,6 +2099,11 @@ const submitReview = async (request) => {
           <button className={page === "store" ? "nav-link active" : "nav-link"} onClick={() => go("store")}>
             Tienda
           </button>
+          {loggedUser && (
+            <button className={page === "publish-product" ? "nav-link active" : "nav-link"} onClick={() => go("publish-product")}>
+              Publicar producto
+            </button>
+          )}
           <button className="nav-link" onClick={() => go("home", "como")}>
             Cómo funciona
           </button>
@@ -4383,12 +4389,24 @@ const submitReview = async (request) => {
         <StorePage
           onViewProduct={(product) => {
             console.log("Ver producto:", product);
-            // Más adelante: abrir detalle
           }}
           onAddToCart={(product) => {
             console.log("Añadido al carrito:", product);
           }}
         />
+      );
+
+    case "publish-product":
+      return (
+        <main className="page-container">
+          <ProductForm
+            user={loggedUser}
+            onPublished={() => {
+              alert("Producto publicado correctamente");
+              go("store");
+            }}
+          />
+        </main>
       );
 
     case "market":
@@ -4489,4 +4507,5 @@ const submitReview = async (request) => {
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(<App />);
+
 
