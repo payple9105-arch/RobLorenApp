@@ -19,7 +19,7 @@ function loadPayPal() {
 
   window.__roblorenPayPal = new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=USD&intent=capture`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=USD&intent=capture&enable-funding=card,paylater`;
     script.async = true;
     script.onload = () => resolve(window.paypal);
     script.onerror = () => reject(new Error("PayPal no cargó"));
@@ -45,35 +45,47 @@ function PayPalCheckout({ amount, description, onPaid }) {
       .then((paypal) => {
         if (!alive || !host.current || !paypal) return;
         host.current.innerHTML = "";
-        return paypal
-          .Buttons({
-            style: {
-              layout: "vertical",
-              shape: "rect",
-              color: "gold",
-              label: "pay",
-            },
-            createOrder: (_data, actions) =>
-              actions.order.create({
-                purchase_units: [
-                  {
-                    description,
-                    amount: {
-                      currency_code: "USD",
-                      value: money(amount),
-                    },
+
+        const order = {
+          createOrder: (_data, actions) =>
+            actions.order.create({
+              purchase_units: [
+                {
+                  description,
+                  amount: {
+                    currency_code: "USD",
+                    value: money(amount),
                   },
-                ],
-              }),
-            onApprove: async (_data, actions) => {
-              const details = await actions.order.capture();
-              paid.current?.(details);
-            },
-            onError: () => {
-              alert("PayPal no pudo completar el pago. Inténtalo de nuevo.");
-            },
-          })
-          .render(host.current);
+                },
+              ],
+            }),
+          onApprove: async (_data, actions) => {
+            const details = await actions.order.capture();
+            paid.current?.(details);
+          },
+          onError: () => {
+            alert("No se pudo completar el pago. Inténtalo de nuevo.");
+          },
+        };
+
+        const buttons = [
+          paypal.Buttons({
+            ...order,
+            fundingSource: paypal.FUNDING.PAYPAL,
+            style: { shape: "rect", color: "gold", label: "paypal" },
+          }),
+          paypal.Buttons({
+            ...order,
+            fundingSource: paypal.FUNDING.CARD,
+            style: { shape: "rect", color: "black", label: "pay" },
+          }),
+        ];
+
+        return Promise.all(
+          buttons
+            .filter((button) => button.isEligible())
+            .map((button) => button.render(host.current))
+        );
       })
       .catch(() => {
         if (host.current) {
@@ -3413,6 +3425,9 @@ const submitReview = async (request) => {
             {!service.is_demo && !ownService && Number(service.price || 0) > 0 && (
               <div className="pay-box">
                 <h3>Pagar en esta página</h3>
+                <p className="secure-note">
+                  Puedes pagar con PayPal o con tarjeta. El dinero entra en la misma cuenta.
+                </p>
                 <p>
                   Precio del servicio
                   <strong> ${money(service.price)}</strong>
