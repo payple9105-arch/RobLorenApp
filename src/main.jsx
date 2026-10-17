@@ -13,6 +13,7 @@ import StorePage from "./StorePage";
 import ProductForm from "./ProductForm";
 import PlansPage from "./PlansPage";
 import CommissionsPage from "./CommissionsPage";
+import ProductDetailPage from "./ProductDetailPage";
 
 const PAYPAL_CLIENT_ID =
   "BAA_Ux_XQQKppjplmdc2V6jZZGOlSQATrlf2UKoc4Pi1lRIbKqtejqk2di8a9hRJ5e0xZFL46K_xfEYt-I";
@@ -556,6 +557,7 @@ const [sendingRequest, setSendingRequest] = useState(false);
 
   const [offer, setOffer] = useState("");
   const [publishing, setPublishing] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const updateForm = (field, value) => {
     setForm((current) => ({
@@ -4397,14 +4399,20 @@ const submitReview = async (request) => {
       return ServicesPage();
 
     case "store":
-      return (
+      return selectedProduct ? (
+        <ProductDetailPage
+          product={selectedProduct}
+          user={loggedUser}
+          onBack={() => setSelectedProduct(null)}
+          onOrderCreated={() => {
+            setSelectedProduct(null);
+            alert("Pedido creado y comisión registrada");
+          }}
+        />
+      ) : (
         <StorePage
-          onViewProduct={(product) => {
-            console.log("Ver producto:", product);
-          }}
-          onAddToCart={(product) => {
-            console.log("Añadido al carrito:", product);
-          }}
+          onViewProduct={(product) => setSelectedProduct(product)}
+          onAddToCart={(product) => console.log("Añadido:", product)}
         />
       );
 
@@ -4530,6 +4538,7 @@ const submitReview = async (request) => {
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(<App />);
+
 
 
 
