@@ -9,6 +9,7 @@ import React, {
 import ReactDOM from "react-dom/client";
 import { supabase } from "./supabaseClient";
 import "./index.css";
+import StorePage from "./StorePage";
 
 const PAYPAL_CLIENT_ID =
   "BAA_Ux_XQQKppjplmdc2V6jZZGOlSQATrlf2UKoc4Pi1lRIbKqtejqk2di8a9hRJ5e0xZFL46K_xfEYt-I";
@@ -2093,6 +2094,9 @@ const submitReview = async (request) => {
           </button>
           <button className={page === "services" ? "nav-link active" : "nav-link"} onClick={() => go("services")}>
             Explorar servicios
+          </button>
+          <button className={page === "store" ? "nav-link active" : "nav-link"} onClick={() => go("store")}>
+            Tienda
           </button>
           <button className="nav-link" onClick={() => go("home", "como")}>
             Cómo funciona
@@ -4374,6 +4378,19 @@ const submitReview = async (request) => {
     case "services":
       return ServicesPage();
 
+    case "store":
+      return (
+        <StorePage
+          onViewProduct={(product) => {
+            console.log("Ver producto:", product);
+            // Más adelante: abrir detalle
+          }}
+          onAddToCart={(product) => {
+            console.log("Añadido al carrito:", product);
+          }}
+        />
+      );
+
     case "market":
       return MarketPage();
 
@@ -4431,6 +4448,7 @@ const submitReview = async (request) => {
       <nav className="bottom-nav" aria-label="Navegación">
         <button className={page === "home" ? "active" : ""} onClick={() => go("home")}>Inicio</button>
         <button className={page === "services" ? "active" : ""} onClick={() => go("services")}>Buscar</button>
+        <button className={page === "store" ? "active" : ""} onClick={() => go("store")}>Tienda</button>
         <button onClick={() => (loggedUser ? go("offer") : (setAccountMode("register"), go("account")))}>Publicar</button>
         <button className={page === "messages" ? "active" : ""} onClick={() => (loggedUser ? go("messages") : (setAccountMode("login"), go("account")))}>Mensajes</button>
         <button className={page === "account" ? "active" : ""} onClick={() => go("account")}>Perfil</button>
@@ -4471,3 +4489,4 @@ const submitReview = async (request) => {
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(<App />);
+
