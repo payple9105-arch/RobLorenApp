@@ -307,6 +307,90 @@ function fileToImage(file, maxWidth, maxHeight) {
   });
 }
 
+const SERVICE_MEDIA_KEY = "robloren-service-media";
+
+function readServiceMedia(serviceId) {
+  if (!serviceId) return { photos: [] };
+
+  try {
+    const all = JSON.parse(localStorage.getItem(SERVICE_MEDIA_KEY) || "{}");
+    const item = all[serviceId] || {};
+    return { photos: Array.isArray(item.photos) ? item.photos : [] };
+  } catch {
+    return { photos: [] };
+  }
+}
+
+function writeServicePhotos(serviceId, photos) {
+  const all = JSON.parse(localStorage.getItem(SERVICE_MEDIA_KEY) || "{}");
+  all[serviceId] = { ...(all[serviceId] || {}), photos };
+  localStorage.setItem(SERVICE_MEDIA_KEY, JSON.stringify(all));
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [head, body] = dataUrl.split(",");
+  const mime = (head.match(/:(.*?);/) || [])[1] || "image/jpeg";
+  const binary = atob(body);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return new Blob([bytes], { type: mime });
+}
+
+function openMediaDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("robloren-media", 1);
+
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains("videos")) {
+        request.result.createObjectStore("videos");
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveServiceVideo(serviceId, file) {
+  const db = await openMediaDb();
+
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction("videos", "readwrite");
+    tx.objectStore("videos").put(file, String(serviceId));
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+
+  db.close();
+}
+
+async function loadServiceVideoUrl(serviceId) {
+  try {
+    const db = await openMediaDb();
+    const file = await new Promise((resolve, reject) => {
+      const tx = db.transaction("videos", "readonly");
+      const request = tx.objectStore("videos").get(String(serviceId));
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+
+    db.close();
+    return file ? URL.createObjectURL(file) : "";
+  } catch {
+    return "";
+  }
+}
+
+function servicePhoto(service) {
+  if (!service) return "";
+  if (service.image_url) return service.image_url;
+  return readServiceMedia(service.id).photos[0] || "";
+}
+
 function normalizeSkills(skills = "") {
   if (Array.isArray(skills)) {
     return skills
@@ -365,6 +449,8 @@ const [profileSettings, setProfileSettings] = useState(false);
 const [sendingRequest, setSendingRequest] = useState(false);
 
   const [form, setForm] = useState(defaultForm);
+  const [offerMedia, setOfferMedia] = useState([]);
+  const [viewMedia, setViewMedia] = useState({ photos: [], video: "" });
   const [profileForm, setProfileForm] =
     useState(defaultProfileForm);
   const [profilePhotos, setProfilePhotos] = useState({
@@ -1451,6 +1537,83 @@ const submitReview = async (request) => {
     setPage("home");
   };
 
+  const addOfferPhotos = async (fileList) => {
+    const files = [...fileList].filter((file) => file.type.startsWith("image/"));
+    const room = 4 - offerMedia.filter((item) => item.kind === "photo").length;
+
+    if (room <= 0) {
+      alert("Puedes subir hasta 4 fotos.");
+      return;
+    }
+
+    const next = [];
+
+    for (const file of files.slice(0, room)) {
+      if (file.size > 12 * 1024 * 1024) {
+        alert("Usa una foto de menos de 12 MB.");
+        continue;
+      }
+
+      try {
+        const dataUrl = await fileToImage(file, 1400, 1400);
+        next.push({
+          id: `${Date.now()}-${next.length}`,
+          kind: "photo",
+          name: file.name,
+          preview: dataUrl,
+          dataUrl,
+        });
+      } catch {
+        alert("No se pudo usar una de las fotos.");
+      }
+    }
+
+    if (next.length) {
+      setOfferMedia((items) => [...items, ...next]);
+    }
+  };
+
+  const addOfferVideo = (file) => {
+    if (!file) return;
+
+    if (!file.type.startsWith("video/")) {
+      alert("Elige un video.");
+      return;
+    }
+
+    if (file.size > 40 * 1024 * 1024) {
+      alert("El video es muy grande. Usa uno de menos de 40 MB.");
+      return;
+    }
+
+    setOfferMedia((items) => {
+      items
+        .filter((item) => item.kind === "video" && item.preview)
+        .forEach((item) => URL.revokeObjectURL(item.preview));
+
+      return [
+        ...items.filter((item) => item.kind !== "video"),
+        {
+          id: `video-${Date.now()}`,
+          kind: "video",
+          name: file.name,
+          preview: URL.createObjectURL(file),
+          file,
+        },
+      ];
+    });
+  };
+
+  const removeOfferMedia = (id) => {
+    setOfferMedia((items) => {
+      const item = items.find((entry) => entry.id === id);
+      if (item?.kind === "video" && item.preview) {
+        URL.revokeObjectURL(item.preview);
+      }
+      return items.filter((entry) => entry.id !== id);
+    });
+  };
+
   const publishService = async () => {
     if (!loggedUser) {
       setPage("account");
@@ -1512,6 +1675,86 @@ const submitReview = async (request) => {
         ]);
       }
 
+      if (data?.id && offerMedia.length) {
+        const photos = offerMedia
+          .filter((item) => item.kind === "photo")
+          .map((item) => item.dataUrl);
+        const video = offerMedia.find((item) => item.kind === "video");
+
+        try {
+          if (photos.length) writeServicePhotos(data.id, photos);
+        } catch {
+          // El servicio ya quedó publicado.
+        }
+
+        if (video?.file) {
+          try {
+            await saveServiceVideo(data.id, video.file);
+          } catch {
+            // El servicio ya quedó publicado.
+          }
+        }
+
+        try {
+          const folder = `${loggedUser.id}/${data.id}`;
+          const photoUrls = [];
+
+          for (let index = 0; index < photos.length; index += 1) {
+            const path = `${folder}/photo-${index}.jpg`;
+            const { error: uploadError } = await supabase.storage
+              .from("service-media")
+              .upload(path, dataUrlToBlob(photos[index]), {
+                upsert: true,
+                contentType: "image/jpeg",
+              });
+
+            if (uploadError) throw uploadError;
+
+            photoUrls.push(
+              supabase.storage.from("service-media").getPublicUrl(path).data
+                .publicUrl
+            );
+          }
+
+          let videoUrl = "";
+
+          if (video?.file) {
+            const ext = (video.file.name.split(".").pop() || "mp4").toLowerCase();
+            const path = `${folder}/video.${ext}`;
+            const { error: uploadError } = await supabase.storage
+              .from("service-media")
+              .upload(path, video.file, {
+                upsert: true,
+                contentType: video.file.type || "video/mp4",
+              });
+
+            if (uploadError) throw uploadError;
+
+            videoUrl = supabase.storage
+              .from("service-media")
+              .getPublicUrl(path).data.publicUrl;
+          }
+
+          if (photoUrls[0] || videoUrl) {
+            await supabase
+              .from("services")
+              .update({
+                image_url: photoUrls[0] || null,
+                video_url: videoUrl || null,
+              })
+              .eq("id", data.id);
+          }
+        } catch {
+          // Si Supabase no tiene el almacén, las fotos siguen en este dispositivo.
+        }
+      }
+
+      offerMedia.forEach((item) => {
+        if (item.kind === "video" && item.preview) {
+          URL.revokeObjectURL(item.preview);
+        }
+      });
+      setOfferMedia([]);
       setForm(defaultForm);
       setPage("services");
 
@@ -1581,6 +1824,39 @@ const submitReview = async (request) => {
       setConversationContacts([]);
     }
   }, [loggedUser]);
+
+  useEffect(() => {
+    let cancel = false;
+    const serviceId = selectedService?.id;
+
+    if (!serviceId) {
+      setViewMedia({ photos: [], video: "" });
+      return undefined;
+    }
+
+    const photos = [
+      ...(selectedService.image_url ? [selectedService.image_url] : []),
+      ...readServiceMedia(serviceId).photos,
+    ].filter((url, index, list) => url && list.indexOf(url) === index);
+
+    setViewMedia({
+      photos,
+      video: selectedService.video_url || "",
+    });
+
+    loadServiceVideoUrl(serviceId).then((url) => {
+      if (!cancel && url) {
+        setViewMedia((current) => ({
+          ...current,
+          video: current.video || url,
+        }));
+      }
+    });
+
+    return () => {
+      cancel = true;
+    };
+  }, [selectedService]);
   const filteredServices = useMemo(() => {
     const text = deferredSearch
       .trim()
@@ -1788,6 +2064,13 @@ const submitReview = async (request) => {
           setPage("service");
         }}
       >
+        {servicePhoto(service) && (
+          <img
+            className="service-card-photo"
+            src={servicePhoto(service)}
+            alt=""
+          />
+        )}
         <div className="service-card-top">
           <span className="category-pill">
             {icon} {service.category}
@@ -2755,6 +3038,17 @@ const submitReview = async (request) => {
 
             <h1>{service.service_title || service.title || "Servicio profesional"}</h1>
 
+            {(viewMedia.photos.length > 0 || viewMedia.video) && (
+              <div className="service-gallery">
+                {viewMedia.photos.map((src) => (
+                  <img key={src.slice(0, 80)} src={src} alt="" />
+                ))}
+                {viewMedia.video && (
+                  <video src={viewMedia.video} controls playsInline />
+                )}
+              </div>
+            )}
+
             <Rating
               rating={service.rating}
               reviews={service.reviews}
@@ -3476,8 +3770,8 @@ const submitReview = async (request) => {
         </h1>
 
         <p>
-          Muestra tus habilidades y conecta con
-          clientes que necesitan lo que sabes hacer.
+          Muestra tu trabajo con fotos y un video.
+          El título, la categoría y el precio siguen igual.
         </p>
       </section>
 
@@ -3538,6 +3832,60 @@ const submitReview = async (request) => {
             />
           </label>
 
+          <div className="media-uploader">
+            <div>
+              <strong>Fotos y video</strong>
+              <p>Hasta 4 fotos y 1 video desde tu dispositivo.</p>
+            </div>
+            <div className="media-actions">
+              <label className="button outline">
+                Subir fotos
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  onChange={(event) => {
+                    addOfferPhotos(event.target.files || []);
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+              <label className="button outline">
+                Subir video
+                <input
+                  type="file"
+                  accept="video/*"
+                  hidden
+                  onChange={(event) => {
+                    addOfferVideo(event.target.files?.[0]);
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
+            {offerMedia.length > 0 && (
+              <div className="media-preview-row">
+                {offerMedia.map((item) => (
+                  <div className="media-thumb" key={item.id}>
+                    {item.kind === "photo" ? (
+                      <img src={item.preview} alt="" />
+                    ) : (
+                      <video src={item.preview} muted />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeOfferMedia(item.id)}
+                      aria-label="Quitar archivo"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <label>
             Precio inicial
 
@@ -3578,13 +3926,19 @@ const submitReview = async (request) => {
           </span>
 
           <div className="preview-service">
-            <div className="service-icon">
-              {categories.find(
-                (item) =>
-                  item[1] ===
-                  form.category
-              )?.[0] || "✨"}
-            </div>
+            {offerMedia.some((item) => item.kind === "photo") ? (
+              <img
+                className="preview-photo"
+                src={offerMedia.find((item) => item.kind === "photo").preview}
+                alt=""
+              />
+            ) : (
+              <div className="service-icon">
+                {categories.find(
+                  (item) => item[1] === form.category
+                )?.[0] || "✨"}
+              </div>
+            )}
 
             <span className="category-pill">
               {form.category}
