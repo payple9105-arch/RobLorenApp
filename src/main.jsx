@@ -2227,7 +2227,12 @@ const submitReview = async (request) => {
               setPage("services");
             }}
           >
-            <span className="search-icon">⌕</span>
+            <span className="search-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                <path d="M16 16l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </span>
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -2390,7 +2395,7 @@ const submitReview = async (request) => {
     <main className="page-container">
       <section className="page-header">
         <span className="eyebrow">
-          MARKETPLACE
+          SERVICIOS
         </span>
 
         <h1>
