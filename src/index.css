@@ -2334,5 +2334,7 @@ select:focus {
 }
 
 .paypal-slot {
+  display: grid;
+  gap: 8px;
   min-height: 45px;
 }
