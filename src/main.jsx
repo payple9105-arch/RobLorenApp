@@ -1496,6 +1496,7 @@ const submitReview = async (request) => {
               username:
                 profileForm.username.trim(),
             },
+            emailRedirectTo: window.location.origin,
           },
         });
 
@@ -1505,16 +1506,16 @@ const submitReview = async (request) => {
       }
 
       if (data.user) {
-        await refreshUser(data.user);
-
         setAuthForm(defaultAuthForm);
-
-        setPage("home");
 
         if (!data.session) {
           alert(
-            "Cuenta creada. Si Supabase tiene activada la confirmación de correo, revisa tu email para confirmar la cuenta."
+            "Cuenta creada. Revisa tu correo electrónico y haz clic en el enlace de confirmación para activar tu cuenta."
           );
+          setPage("login");
+        } else {
+          await refreshUser(data.user);
+          setPage("home");
         }
       }
     } catch {
@@ -4538,6 +4539,7 @@ const submitReview = async (request) => {
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(<App />);
+
 
 
 
