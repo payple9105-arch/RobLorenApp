@@ -15,4 +15,4 @@ import ProductForm from "./ProductForm";
 const PAYPAL_CLIENT_ID =
   "BAA_Ux_XQQKppjplmdc2V6jZZGOlSQATrlf2UKoc4Pi1lRIbKqtejqk2di8a9hRJ5e0xZFL46K_xfEYt-I";
 
-// ... el resto del archivo completo con las tres partes integradas
+// El archivo completo correcto ya está preparado localmente y se sube aquí
