@@ -1828,3 +1828,138 @@ select:focus {
     padding-bottom: 64px;
   }
 }
+
+.account-card:has(.pro-profile) {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.pro-profile {
+  display: grid;
+  gap: 14px;
+}
+
+.pro-profile-card {
+  background: #fff;
+  border: 1px solid #e6ebf2;
+  border-radius: 22px;
+  padding: 18px 16px;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.05);
+}
+
+.pro-profile-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pro-avatar {
+  width: 84px;
+  height: 84px;
+  border: 0;
+  background: #dbe7fb;
+  color: #1d4ed8;
+  font-size: 22px;
+}
+
+.pro-profile-id {
+  min-width: 0;
+}
+
+.pro-profile-id h1 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.pro-profile-id p {
+  margin: 3px 0 0;
+  color: #5b677a;
+  font-size: 14px;
+}
+
+.profile-settings-button {
+  justify-self: start;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #d7e3f5;
+  border-radius: 12px;
+  background: #fff;
+  color: #1d4ed8;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.pro-section-title {
+  margin: 8px 2px 0;
+  color: #1d4ed8;
+  font-size: 22px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.pro-categories {
+  display: grid;
+  gap: 12px;
+}
+
+.pro-category {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  text-align: left;
+  box-shadow: 0 8px 18px rgb(15 23 42 / 0.06);
+}
+
+.pro-category-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 16px;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.pro-category-body {
+  display: block;
+  padding: 14px 16px 16px;
+  color: #1f2937;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.profile-settings {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e6ebf2;
+  border-radius: 22px;
+  background: #fff;
+}
+
+.settings-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-photos .cover-photo-button {
+  position: static;
+}
+
+.settings-cover {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 16px;
+}
