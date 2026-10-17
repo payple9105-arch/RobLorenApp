@@ -16,7 +16,12 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
 
   const buyProduct = async () => {
     if (!user) {
-      alert("Debes iniciar sesión para comprar");
+      setMessage("Debes iniciar sesión para comprar.");
+      return;
+    }
+
+    if (!product.seller_id) {
+      setMessage("Este producto no tiene vendedor asignado. No se puede comprar.");
       return;
     }
 
@@ -30,13 +35,17 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
           buyer_id: user.id,
           seller_id: product.seller_id,
           product_id: product.id,
-          amount: product.price,
+          amount: Number(product.price) || 0,
           status: "pending",
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creando pedido:", error);
+        setMessage(`Error: ${error.message || "No se pudo crear el pedido."}`);
+        return;
+      }
 
       setMessage("Pedido creado correctamente. La comisión se registró automáticamente.");
       onOrderCreated?.(data);
