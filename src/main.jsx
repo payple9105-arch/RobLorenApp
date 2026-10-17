@@ -361,6 +361,7 @@ const [sendingMessage, setSendingMessage] = useState(false);
 
   const [servicesLoading, setServicesLoading] = useState(true);
 const [savingProfile, setSavingProfile] = useState(false);
+const [profileSettings, setProfileSettings] = useState(false);
 const [sendingRequest, setSendingRequest] = useState(false);
 
   const [form, setForm] = useState(defaultForm);
@@ -1443,6 +1444,7 @@ const submitReview = async (request) => {
 
     setLoggedUser(null);
     setProfilePhotos({ avatar: "", cover: "" });
+    setProfileSettings(false);
     setRequests([]);
     setMessages([]);
     setSelectedContact(null);
@@ -2225,244 +2227,194 @@ const submitReview = async (request) => {
     <main className="account-page">
       <div className="account-card">
         {loggedUser ? (
-          <>
-            <div
-              className="account-cover"
-              style={
-                profilePhotos.cover
-                  ? {
-                      backgroundImage: `url(${profilePhotos.cover})`,
-                    }
-                  : undefined
-              }
-            >
-              <label className="cover-photo-button">
-                {profilePhotos.cover
-                  ? "Cambiar portada"
-                  : "Agregar portada"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={(event) => {
-                    pickProfilePhoto(
-                      "cover",
-                      event.target.files?.[0]
-                    );
-                    event.target.value = "";
-                  }}
-                />
-              </label>
-            </div>
-
-            <div className="account-main">
-              <div className="account-profile-head">
-                <div className="avatar profile-avatar">
+          <div className="pro-profile">
+            <article className="pro-profile-card">
+              <div className="pro-profile-top">
+                <div className="avatar profile-avatar pro-avatar">
                   {profilePhotos.avatar ? (
-                    <img
-                      src={profilePhotos.avatar}
-                      alt=""
-                    />
+                    <img src={profilePhotos.avatar} alt="" />
                   ) : (
-                    getInitials(
-                      loggedUser.full_name
-                    )
+                    getInitials(loggedUser.full_name)
                   )}
-                  <label className="avatar-photo-button">
-                    Foto
+                </div>
+                <div className="pro-profile-id">
+                  <h1>{loggedUser.full_name}</h1>
+                  <p>
+                    {String(profileForm.skills || "")
+                      .split(",")[0]
+                      .trim() || "Profesional RobLoren"}
+                  </p>
+                  <p>ID: {loggedUser.username}</p>
+                </div>
+              </div>
+            </article>
+
+            <button
+              type="button"
+              className="profile-settings-button"
+              onClick={() => setProfileSettings((open) => !open)}
+            >
+              {profileSettings ? "Ver perfil" : "Configuración del perfil"}
+            </button>
+
+            {profileSettings ? (
+              <div className="profile-settings">
+                <div className="section-heading small">
+                  <div>
+                    <span className="eyebrow">INFORMACIÓN PROFESIONAL</span>
+                    <h2>Tus datos</h2>
+                  </div>
+                </div>
+
+                <div className="settings-photos">
+                  <label className="cover-photo-button">
+                    {profilePhotos.avatar ? "Cambiar foto" : "Foto de perfil"}
                     <input
                       type="file"
                       accept="image/*"
                       hidden
                       onChange={(event) => {
-                        pickProfilePhoto(
-                          "avatar",
-                          event.target.files?.[0]
-                        );
+                        pickProfilePhoto("avatar", event.target.files?.[0]);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
+                  <label className="cover-photo-button">
+                    {profilePhotos.cover ? "Cambiar portada" : "Agregar portada"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(event) => {
+                        pickProfilePhoto("cover", event.target.files?.[0]);
                         event.target.value = "";
                       }}
                     />
                   </label>
                 </div>
-
-                <div>
-                  <span className="eyebrow">
-                    MI PERFIL
-                  </span>
-
-                  <h1>
-  {loggedUser.full_name}
-</h1>
-
-<p>
-  @{loggedUser.username}
-</p>
-
-<span className="profile-tagline">
-  Profesional RobLoren · Conecta talento con oportunidades.
-</span>
-                </div>
-              </div>
-
-              <div className="dashboard-grid">
-  <button
-    type="button"
-    className="stat-card"
-    onClick={() => setPage("services")}
-  >
-    <span>
-      Servicios publicados
-    </span>
-
-    <strong>
-      {publishedCount}
-    </strong>
-  </button>
-
-  <button
-    type="button"
-    className="stat-card"
-    onClick={() => {
-      setPage("requests");
-    }}
-  >
-    <span>
-      Solicitudes pendientes
-    </span>
-
-    <strong>
-      {pendingRequests}
-    </strong>
-  </button>
-
-  <button
-    type="button"
-    className="stat-card"
-    onClick={() => {
-      setPage("requests");
-    }}
-  >
-    <span>
-      Trabajos aceptados
-    </span>
-
-    <strong>
-      {acceptedRequests}
-    </strong>
-  </button>
-</div>
-              <div className="profile-form">
-                <div className="section-heading small">
-                  <div>
-                    <span className="eyebrow">
-                      INFORMACIÓN PROFESIONAL
-                    </span>
-
-                    <h2>
-                      Tu perfil
-                    </h2>
-                  </div>
-                </div>
+                {profilePhotos.cover && (
+                  <img
+                    className="settings-cover"
+                    src={profilePhotos.cover}
+                    alt=""
+                  />
+                )}
 
                 <div className="form-grid">
                   <label>
                     Nombre completo
-
                     <input
-                      value={
-                        profileForm.full_name
-                      }
+                      value={profileForm.full_name}
                       onChange={(event) =>
-                        updateProfileForm(
-                          "full_name",
-                          event.target.value
-                        )
+                        updateProfileForm("full_name", event.target.value)
                       }
                     />
                   </label>
-
                   <label>
                     Nombre de usuario
-
                     <input
-                      value={
-                        profileForm.username
-                      }
+                      value={profileForm.username}
                       onChange={(event) =>
-                        updateProfileForm(
-                          "username",
-                          event.target.value
-                        )
+                        updateProfileForm("username", event.target.value)
                       }
                     />
                   </label>
-
                   <label>
                     Ubicación
-
                     <input
-                      value={
-                        profileForm.location
-                      }
+                      value={profileForm.location}
                       onChange={(event) =>
-                        updateProfileForm(
-                          "location",
-                          event.target.value
-                        )
+                        updateProfileForm("location", event.target.value)
                       }
                       placeholder="Ciudad / País"
                     />
                   </label>
-
                   <label>
                     Habilidades
-
                     <input
-                      value={
-                        profileForm.skills
-                      }
+                      value={profileForm.skills}
                       onChange={(event) =>
-                        updateProfileForm(
-                          "skills",
-                          event.target.value
-                        )
+                        updateProfileForm("skills", event.target.value)
                       }
                       placeholder="Ej. Diseño, React, Marketing"
                     />
                   </label>
                 </div>
-
                 <label>
                   Sobre ti
-
                   <textarea
-                    value={
-                      profileForm.bio
-                    }
+                    value={profileForm.bio}
                     onChange={(event) =>
-                      updateProfileForm(
-                        "bio",
-                        event.target.value
-                      )
+                      updateProfileForm("bio", event.target.value)
                     }
                     placeholder="Cuéntales a otros profesionales y clientes quién eres y qué haces."
                   />
                 </label>
-
                 <button
                   className="button primary"
                   onClick={saveProfile}
-                  disabled={
-                    savingProfile
-                  }
+                  disabled={savingProfile}
                 >
-                  {savingProfile
-                    ? "Guardando..."
-                    : "Guardar perfil"}
+                  {savingProfile ? "Guardando..." : "Guardar perfil"}
                 </button>
               </div>
-            </div>
-          </>
+            ) : (
+              <>
+                <h2 className="pro-section-title">Categorías de servicio</h2>
+                <div className="pro-categories">
+                  {services.filter(
+                    (service) =>
+                      service.provider_id === loggedUser.id ||
+                      service.user_id === loggedUser.id
+                  ).length === 0 ? (
+                    <button
+                      type="button"
+                      className="pro-category"
+                      onClick={() => setPage("offer")}
+                    >
+                      <span className="pro-category-bar">Publicar</span>
+                      <span className="pro-category-body">
+                        Todavía no tienes servicios. Publica el primero.
+                      </span>
+                    </button>
+                  ) : (
+                    services
+                      .filter(
+                        (service) =>
+                          service.provider_id === loggedUser.id ||
+                          service.user_id === loggedUser.id
+                      )
+                      .map((service) => (
+                        <button
+                          type="button"
+                          className="pro-category"
+                          key={service.id}
+                          onClick={() => {
+                            setSelectedService(service);
+                            setRequestMessage("");
+                            setPage("service");
+                          }}
+                        >
+                          <span className="pro-category-bar">
+                            <span>
+                              {categories.find(
+                                (item) => item[1] === service.category
+                              )?.[0] || "✨"}
+                            </span>
+                            {service.category || "Servicio"}
+                          </span>
+                          <span className="pro-category-body">
+                            {service.service_title ||
+                              service.title ||
+                              "Servicio profesional"}
+                          </span>
+                        </button>
+                      ))
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         ) : (
           <div className="auth-layout">
             <div className="auth-brand">
