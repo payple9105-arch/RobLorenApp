@@ -105,7 +105,7 @@ export default function PlansPage({ user, onPlanChanged }) {
               <div style={{ fontSize: 28, fontWeight: 700, margin: "8px 0" }}>
                 ${plan.price}
                 <span style={{ fontSize: 14, fontWeight: 400, color: "var(--muted)" }}>
-                  {plan.id === "weekly" ? "/semana" : plan.id === "annual" ? "/año" : "/mes"}
+                  {plan.id.startsWith("weekly") ? "/semana" : plan.id.startsWith("annual") ? "/año" : "/mes"}
                 </span>
               </div>
 
