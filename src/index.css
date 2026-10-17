@@ -1861,6 +1861,7 @@ select:focus {
   background: #dbe7fb;
   color: #1d4ed8;
   font-size: 22px;
+  cursor: pointer;
 }
 
 .pro-profile-id {
