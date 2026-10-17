@@ -2306,3 +2306,33 @@ select:focus {
     width: 100%;
   }
 }
+
+.pay-box {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e6ebf2;
+}
+
+.pay-box h3,
+.pay-box p {
+  margin: 0;
+}
+
+.pay-box p {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #5b677a;
+  font-size: 14px;
+}
+
+.pay-total {
+  color: #101828;
+  font-weight: 800;
+}
+
+.paypal-slot {
+  min-height: 45px;
+}
