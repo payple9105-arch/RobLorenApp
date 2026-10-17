@@ -1,96 +1,45 @@
-import React, { useMemo, useState } from "react";
-
-const mockProducts = [
-  {
-    id: "p1",
-    title: "Plantilla de logo minimalista",
-    description: "Pack de 5 plantillas editables para marcas modernas.",
-    price: 19,
-    category: "Diseño",
-    seller: "Ana Martínez",
-    sellerUsername: "ana_disena",
-    image: "/media/design.jpg",
-    type: "digital",
-    stock: 99,
-  },
-  {
-    id: "p2",
-    title: "Libro electrónico: Guía de freelancing",
-    description: "Cómo conseguir tus primeros clientes como profesional independiente.",
-    price: 12,
-    category: "Educación",
-    seller: "Carlos Rodríguez",
-    sellerUsername: "carlos_dev",
-    image: "/media/code.jpg",
-    type: "digital",
-    stock: 99,
-  },
-  {
-    id: "p3",
-    title: "Camiseta RobLoren edición limitada",
-    description: "Algodón premium. Disponible en tallas S a XL.",
-    price: 28,
-    category: "Ropa",
-    seller: "Luis Gómez",
-    sellerUsername: "luis_crea",
-    image: "/media/cta.jpg",
-    type: "physical",
-    stock: 15,
-  },
-  {
-    id: "p4",
-    title: "Pack de música lo-fi para contenido",
-    description: "10 tracks libres de derechos para YouTube y redes.",
-    price: 25,
-    category: "Música",
-    seller: "Javier Audio",
-    sellerUsername: "javier_audio",
-    image: "/media/video.jpg",
-    type: "digital",
-    stock: 99,
-  },
-  {
-    id: "p5",
-    title: "Fotografía de stock – Ciudad de noche",
-    description: "Alta resolución. Uso comercial incluido.",
-    price: 15,
-    category: "Fotografía",
-    seller: "Ana Martínez",
-    sellerUsername: "ana_disena",
-    image: "/media/hero.jpg",
-    type: "digital",
-    stock: 1,
-  },
-  {
-    id: "p6",
-    title: "Artesanía: Collar de plata",
-    description: "Hecho a mano. Envío a toda España.",
-    price: 45,
-    category: "Artesanía",
-    seller: "Marta Joyas",
-    sellerUsername: "marta_joyas",
-    image: "/media/translate.jpg",
-    type: "physical",
-    stock: 3,
-  },
-];
+import React, { useEffect, useMemo, useState } from "react";
+import { supabase } from "./supabaseClient";
 
 const categories = ["Todas", "Diseño", "Educación", "Ropa", "Música", "Fotografía", "Artesanía", "Tecnología"];
 
 export default function StorePage({ onViewProduct, onAddToCart }) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Todas");
   const [cart, setCart] = useState([]);
 
+  useEffect(() => {
+    const loadProducts = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_available", true)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error cargando productos:", error);
+        setProducts([]);
+      } else {
+        setProducts(data || []);
+      }
+      setLoading(false);
+    };
+
+    loadProducts();
+  }, []);
+
   const filtered = useMemo(() => {
     const text = search.trim().toLowerCase();
-    return mockProducts.filter((p) => {
+    return products.filter((p) => {
       const matchCat = category === "Todas" || p.category === category;
       if (!text) return matchCat;
-      const content = `${p.title} ${p.description} ${p.seller} ${p.category}`.toLowerCase();
+      const content = `${p.title || ""} ${p.description || ""} ${p.category || ""}`.toLowerCase();
       return matchCat && content.includes(text);
     });
-  }, [search, category]);
+  }, [products, search, category]);
 
   const handleAddToCart = (product) => {
     setCart((prev) => {
@@ -106,6 +55,16 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
   };
 
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  if (loading) {
+    return (
+      <main className="page-container">
+        <p style={{ textAlign: "center", color: "var(--muted)", marginTop: 60 }}>
+          Cargando productos...
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="page-container">
@@ -151,7 +110,7 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
 
       {filtered.length === 0 ? (
         <p style={{ textAlign: "center", color: "var(--muted)", marginTop: 40 }}>
-          No se encontraron productos.
+          No hay productos disponibles todavía.
         </p>
       ) : (
         <div className="services-grid">
@@ -159,29 +118,22 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
             <article className="service-card" key={product.id}>
               <div style={{ borderRadius: 14, overflow: "hidden", marginBottom: 12 }}>
                 <img
-                  src={product.image}
+                  src={product.image_url || "/media/design.jpg"}
                   alt={product.title}
                   style={{ width: "100%", height: 180, objectFit: "cover" }}
                 />
               </div>
 
               <div className="service-card-top">
-                <span className="category-pill">{product.category}</span>
+                <span className="category-pill">{product.category || "Producto"}</span>
                 <strong className="service-price">${product.price}</strong>
               </div>
 
               <h3>{product.title}</h3>
               <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 6 }}>
-                {product.description.slice(0, 80)}
-                {product.description.length > 80 ? "..." : ""}
+                {(product.description || "").slice(0, 80)}
+                {(product.description || "").length > 80 ? "..." : ""}
               </p>
-
-              <div className="service-provider">
-                <div>
-                  <strong>{product.seller}</strong>
-                  <span>@{product.sellerUsername}</span>
-                </div>
-              </div>
 
               <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
                 <button
@@ -203,12 +155,12 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
                 </button>
               </div>
 
-              {product.type === "physical" && (
+              {product.product_type === "physical" && (
                 <div style={{ marginTop: 8, fontSize: 12, color: "var(--muted)" }}>
                   Envío disponible · Stock: {product.stock}
                 </div>
               )}
-              {product.type === "digital" && (
+              {product.product_type === "digital" && (
                 <div style={{ marginTop: 8, fontSize: 12, color: "var(--muted)" }}>
                   Descarga digital inmediata
                 </div>
