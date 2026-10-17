@@ -653,6 +653,12 @@ a {
   font-size: 13px;
 }
 
+.service-provider > div {
+  display: grid;
+  min-width: 0;
+  line-height: 1.35;
+}
+
 .rating,
 .stars,
 .review-count,
@@ -1513,6 +1519,7 @@ select:focus {
 
 .photo-search input {
   flex: 1;
+  min-width: 0;
 }
 
 .photo-search select {
@@ -1531,6 +1538,21 @@ select:focus {
   color: #d5e2f2;
   font-size: 13px;
   font-weight: 600;
+}
+
+.photo-trust li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.photo-trust li::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4c94ff;
+  flex: none;
 }
 
 .photo-hero-media {
@@ -1758,6 +1780,13 @@ select:focus {
 
   .photo-hero {
     grid-template-columns: 1fr;
+    padding: 28px 18px 36px;
+  }
+
+  .photo-hero h1 {
+    font-size: 34px;
+    line-height: 1.12;
+    letter-spacing: -0.5px;
   }
 }
 
@@ -1791,12 +1820,25 @@ select:focus {
   }
 
   .photo-search {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
   }
 
   .photo-search select,
   .photo-search .button {
+    grid-column: 1 / -1;
     width: 100%;
+    max-width: none;
+  }
+
+  .filters-bar {
+    display: grid;
+  }
+
+  .category-scroll,
+  .search-box.compact {
+    min-width: 0;
   }
 
   .bottom-nav {
