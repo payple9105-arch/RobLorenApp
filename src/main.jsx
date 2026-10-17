@@ -2230,13 +2230,23 @@ const submitReview = async (request) => {
           <div className="pro-profile">
             <article className="pro-profile-card">
               <div className="pro-profile-top">
-                <div className="avatar profile-avatar pro-avatar">
+                <label className="avatar profile-avatar pro-avatar">
                   {profilePhotos.avatar ? (
                     <img src={profilePhotos.avatar} alt="" />
                   ) : (
                     getInitials(loggedUser.full_name)
                   )}
-                </div>
+                  <span className="avatar-photo-button">Foto</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(event) => {
+                      pickProfilePhoto("avatar", event.target.files?.[0]);
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
                 <div className="pro-profile-id">
                   <h1>{loggedUser.full_name}</h1>
                   <p>
