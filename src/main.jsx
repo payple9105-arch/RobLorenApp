@@ -12,6 +12,7 @@ import "./index.css";
 import StorePage from "./StorePage";
 import ProductForm from "./ProductForm";
 import PlansPage from "./PlansPage";
+import CommissionsPage from "./CommissionsPage";
 
 const PAYPAL_CLIENT_ID =
   "BAA_Ux_XQQKppjplmdc2V6jZZGOlSQATrlf2UKoc4Pi1lRIbKqtejqk2di8a9hRJ5e0xZFL46K_xfEYt-I";
@@ -2108,6 +2109,11 @@ const submitReview = async (request) => {
           {loggedUser && (
             <button className={page === "plans" ? "nav-link active" : "nav-link"} onClick={() => go("plans")}>
               Planes
+            </button>
+          )}
+          {loggedUser && (
+            <button className={page === "commissions" ? "nav-link active" : "nav-link"} onClick={() => go("commissions")}>
+              Comisiones
             </button>
           )}
           <button className="nav-link" onClick={() => go("home", "como")}>
@@ -4423,6 +4429,9 @@ const submitReview = async (request) => {
         />
       );
 
+    case "commissions":
+      return <CommissionsPage user={loggedUser} />;
+
     case "market":
       return MarketPage();
 
@@ -4521,6 +4530,7 @@ const submitReview = async (request) => {
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(<App />);
+
 
 
 
