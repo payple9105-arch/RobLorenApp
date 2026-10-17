@@ -44,6 +44,34 @@ export default function ProductForm({ user, onPublished }) {
     setSaving(true);
     setMessage("");
 
+    // Verificar límite según el plan
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan_id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const planId = profile?.plan_id || "free";
+
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("max_products, name")
+      .eq("id", planId)
+      .maybeSingle();
+
+    const maxProducts = plan?.max_products ?? 5;
+
+    const { count } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .eq("seller_id", user.id);
+
+    if ((count || 0) >= maxProducts) {
+      setSaving(false);
+      setMessage(`Has alcanzado el límite de ${maxProducts} productos de tu plan ${plan?.name || "Gratis"}. Actualiza tu plan para publicar más.`);
+      return;
+    }
+
     const { error } = await supabase.from("products").insert({
       seller_id: user.id,
       title: form.title.trim(),
