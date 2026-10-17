@@ -3,11 +3,91 @@ import React, {
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import ReactDOM from "react-dom/client";
 import { supabase } from "./supabaseClient";
 import "./index.css";
+
+const PAYPAL_CLIENT_ID =
+  "AXF4fzjb-05kw6T4_x-yT9BSWZC5hy1C9P97luB4Motl5TvlBgnTK4SmMePkCtkNGPs88CDxsmVqb3ZS";
+
+function loadPayPal() {
+  if (window.paypal) return Promise.resolve(window.paypal);
+  if (window.__roblorenPayPal) return window.__roblorenPayPal;
+
+  window.__roblorenPayPal = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=USD&intent=capture`;
+    script.async = true;
+    script.onload = () => resolve(window.paypal);
+    script.onerror = () => reject(new Error("PayPal no cargó"));
+    document.head.appendChild(script);
+  });
+
+  return window.__roblorenPayPal;
+}
+
+function money(value) {
+  return (Math.round(Number(value || 0) * 100) / 100).toFixed(2);
+}
+
+function PayPalCheckout({ amount, description, onPaid }) {
+  const host = useRef(null);
+  const paid = useRef(onPaid);
+  paid.current = onPaid;
+
+  useEffect(() => {
+    let alive = true;
+
+    loadPayPal()
+      .then((paypal) => {
+        if (!alive || !host.current || !paypal) return;
+        host.current.innerHTML = "";
+        return paypal
+          .Buttons({
+            style: {
+              layout: "vertical",
+              shape: "rect",
+              color: "gold",
+              label: "pay",
+            },
+            createOrder: (_data, actions) =>
+              actions.order.create({
+                purchase_units: [
+                  {
+                    description,
+                    amount: {
+                      currency_code: "USD",
+                      value: money(amount),
+                    },
+                  },
+                ],
+              }),
+            onApprove: async (_data, actions) => {
+              const details = await actions.order.capture();
+              paid.current?.(details);
+            },
+            onError: () => {
+              alert("PayPal no pudo completar el pago. Inténtalo de nuevo.");
+            },
+          })
+          .render(host.current);
+      })
+      .catch(() => {
+        if (host.current) {
+          host.current.textContent = "No se pudo abrir PayPal en este momento.";
+        }
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [amount, description]);
+
+  return <div className="paypal-slot" ref={host} />;
+}
 
 const categories = [
   ["💻", "Tecnología"],
@@ -1048,6 +1128,50 @@ const loadConversationContacts = async () => {
       );
     } finally {
       setSendingRequest(false);
+    }
+  };
+
+  const confirmPayPalPayment = async (details) => {
+    if (!loggedUser || !selectedService) {
+      setRequestMessage(
+        "Pago recibido en PayPal. Inicia sesión con el mismo correo para dejar la solicitud."
+      );
+      return;
+    }
+
+    const providerId =
+      selectedService.provider_id || selectedService.user_id || null;
+    const orderId = details?.id || "";
+
+    try {
+      const payload = {
+        service_id: selectedService.id,
+        client_id: loggedUser.id,
+        provider_id: providerId,
+        message: `Pago confirmado por PayPal ${orderId}. ${
+          offer.trim() || "Me interesa contratar este servicio."
+        }`,
+        status: "pending",
+      };
+      const { error } = await supabase
+        .from("service_requests")
+        .insert(payload)
+        .select()
+        .maybeSingle();
+
+      if (error) {
+        setRequestMessage(
+          "El pago ya entró en PayPal. La solicitud no se pudo guardar en la página."
+        );
+        return;
+      }
+
+      setOffer("");
+      setRequestMessage(
+        "Pago recibido correctamente. El profesional ya puede ver tu solicitud."
+      );
+    } catch {
+      setRequestMessage("El pago ya entró en PayPal.");
     }
   };
 
@@ -3285,6 +3409,46 @@ const submitReview = async (request) => {
               🔒 Tu solicitud se gestiona de
               forma segura.
             </p>
+
+            {!service.is_demo && !ownService && Number(service.price || 0) > 0 && (
+              <div className="pay-box">
+                <h3>Pagar en esta página</h3>
+                <p>
+                  Precio del servicio
+                  <strong> ${money(service.price)}</strong>
+                </p>
+                <p>
+                  Comisión del cliente, 1%
+                  <strong> ${money(Number(service.price) * 0.01)}</strong>
+                </p>
+                <p className="pay-total">
+                  Total a pagar
+                  <strong> ${money(Number(service.price) * 1.01)}</strong>
+                </p>
+                <p className="secure-note">
+                  El profesional también aporta 1%. De este trabajo recibe $
+                  {money(Number(service.price) * 0.99)}.
+                </p>
+                {loggedUser ? (
+                  <PayPalCheckout
+                    amount={Number(service.price) * 1.01}
+                    description={`${service.service_title || service.title || "Servicio RobLoren"} + comisión 1%`}
+                    onPaid={confirmPayPalPayment}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className="button primary full"
+                    onClick={() => {
+                      setAccountMode("login");
+                      setPage("account");
+                    }}
+                  >
+                    Inicia sesión para pagar
+                  </button>
+                )}
+              </div>
+            )}
           </aside>
         </div>
       </main>
