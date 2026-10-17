@@ -36,6 +36,7 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
           seller_id: product.seller_id,
           product_id: product.id,
           amount: Number(product.price) || 0,
+          total: Number(product.price) || 0,
           status: "pending",
         })
         .select()
