@@ -17,6 +17,7 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
         .from("products")
         .select("*")
         .eq("is_available", true)
+        .order("is_featured", { ascending: false })
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -126,6 +127,11 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
 
               <div className="service-card-top">
                 <span className="category-pill">{product.category || "Producto"}</span>
+                {product.is_featured && (
+                  <span className="category-pill" style={{ background: "#f59e0b", color: "#fff" }}>
+                    Destacado
+                  </span>
+                )}
                 <strong className="service-price">${product.price}</strong>
               </div>
 
