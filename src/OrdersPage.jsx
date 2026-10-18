@@ -33,7 +33,6 @@ export default function OrdersPage({ user }) {
   const markAsReceived = async (orderId) => {
     setUpdating(orderId);
 
-    // 1. Marcar el pedido como completed
     const { error: orderError } = await supabase
       .from("orders")
       .update({ status: "completed" })
@@ -46,28 +45,25 @@ export default function OrdersPage({ user }) {
       return;
     }
 
-    // 2. Liberar las comisiones relacionadas con este pedido
-    // (cambia su status a 'released' para que el vendedor pueda cobrar)
+    // Liberar comisiones relacionadas
     await supabase
       .from("commissions")
       .update({ status: "released" })
       .eq("order_id", orderId);
 
-    // 3. Actualizar la UI
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: "completed" } : o))
     );
 
     setUpdating(null);
-    alert("Pedido marcado como recibido. El pago se ha liberado al vendedor.");
+    alert("Pedido marcado como recibido. El pago se ha liberado al vendedor (menos la comisión de RobLoren).");
   };
 
   const statusLabel = (status) => {
     const map = {
-      pending: "Pendiente",
-      paid: "Pagado",
-      completed: "Recibido",
-      released: "Pagado al vendedor",
+      pending: "Pendiente de confirmación",
+      paid: "Pagado (en retención)",
+      completed: "Recibido — pago liberado",
     };
     return map[status] || status || "Pendiente";
   };
@@ -93,6 +89,9 @@ export default function OrdersPage({ user }) {
       <header className="page-header">
         <span className="eyebrow">PEDIDOS</span>
         <h1>Mis pedidos</h1>
+        <p style={{ color: "var(--muted)", marginTop: 8 }}>
+          El pago se retiene hasta que el comprador confirme que recibió el producto.
+        </p>
       </header>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
@@ -145,8 +144,14 @@ export default function OrdersPage({ user }) {
               )}
 
               {tab === "seller" && order.status === "completed" && (
-                <p style={{ marginTop: 12, fontSize: 13, color: "green" }}>
-                  Pago liberado — listo para cobrar
+                <p style={{ marginTop: 12, fontSize: 13, color: "#16a34a" }}>
+                  ✓ Pago liberado — listo para cobrar (menos comisión)
+                </p>
+              )}
+
+              {tab === "seller" && order.status !== "completed" && (
+                <p style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>
+                  Esperando confirmación del comprador
                 </p>
               )}
             </article>
