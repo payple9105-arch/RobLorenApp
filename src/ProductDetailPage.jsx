@@ -4,6 +4,7 @@ import { supabase } from "./supabaseClient";
 export default function ProductDetailPage({ product, user, onBack, onOrderCreated, onAddToCart }) {
   const [buying, setBuying] = useState(false);
   const [message, setMessage] = useState("");
+  const [qty, setQty] = useState(1);
 
   if (!product) {
     return (
@@ -97,13 +98,31 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
             {product.product_type === "both" && "Digital y físico"}
           </div>
 
+          <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 14, color: "var(--muted)" }}>Cantidad:</span>
+            <button
+              className="button outline small"
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+            >
+              −
+            </button>
+            <span style={{ minWidth: 28, textAlign: "center", fontWeight: 600 }}>{qty}</span>
+            <button
+              className="button outline small"
+              onClick={() => setQty((q) => q + 1)}
+            >
+              +
+            </button>
+          </div>
+
           <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
             <button
               className="button outline large"
               style={{ flex: 1 }}
               onClick={() => {
-                onAddToCart?.(product);
-                alert("Producto añadido al carrito");
+                const productWithQty = { ...product, qty };
+                onAddToCart?.(productWithQty);
+                alert(`${qty} producto${qty > 1 ? "s" : ""} añadido${qty > 1 ? "s" : ""} al carrito`);
               }}
             >
               Añadir al carrito
