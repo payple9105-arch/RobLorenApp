@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "./supabaseClient";
 
-export default function ProductDetailPage({ product, user, onBack, onOrderCreated }) {
+export default function ProductDetailPage({ product, user, onBack, onOrderCreated, onAddToCart }) {
   const [buying, setBuying] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -97,14 +97,26 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
             {product.product_type === "both" && "Digital y físico"}
           </div>
 
-          <button
-            className="button primary large"
-            style={{ marginTop: 24, width: "100%" }}
-            disabled={buying || product.stock === 0}
-            onClick={buyProduct}
-          >
-            {buying ? "Procesando..." : product.stock === 0 ? "Agotado" : "Comprar ahora"}
-          </button>
+          <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
+            <button
+              className="button outline large"
+              style={{ flex: 1 }}
+              onClick={() => {
+                onAddToCart?.(product);
+                alert("Producto añadido al carrito");
+              }}
+            >
+              Añadir al carrito
+            </button>
+            <button
+              className="button primary large"
+              style={{ flex: 1 }}
+              disabled={buying || product.stock === 0}
+              onClick={buyProduct}
+            >
+              {buying ? "Procesando..." : product.stock === 0 ? "Agotado" : "Comprar ahora"}
+            </button>
+          </div>
 
           {message && (
             <p style={{ marginTop: 16, color: message.includes("correctamente") ? "#16a34a" : "#dc2626" }}>
