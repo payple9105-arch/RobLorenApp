@@ -14,6 +14,7 @@ import ProductForm from "./ProductForm";
 import PlansPage from "./PlansPage";
 import CommissionsPage from "./CommissionsPage";
 import ProductDetailPage from "./ProductDetailPage";
+import CartPage, { addToCart } from "./CartPage";
 
 const PAYPAL_CLIENT_ID =
   "BAA_Ux_XQQKppjplmdc2V6jZZGOlSQATrlf2UKoc4Pi1lRIbKqtejqk2di8a9hRJ5e0xZFL46K_xfEYt-I";
@@ -2119,6 +2120,9 @@ const submitReview = async (request) => {
               Comisiones
             </button>
           )}
+          <button className={page === "cart" ? "nav-link active" : "nav-link"} onClick={() => go("cart")}>
+            Carrito
+          </button>
           <button className="nav-link" onClick={() => go("home", "como")}>
             Cómo funciona
           </button>
@@ -4413,7 +4417,10 @@ const submitReview = async (request) => {
       ) : (
         <StorePage
           onViewProduct={(product) => setSelectedProduct(product)}
-          onAddToCart={(product) => console.log("Añadido:", product)}
+          onAddToCart={(product) => {
+            addToCart(product);
+            alert("Producto añadido al carrito");
+          }}
         />
       );
 
@@ -4440,6 +4447,14 @@ const submitReview = async (request) => {
 
     case "commissions":
       return <CommissionsPage user={loggedUser} />;
+
+    case "cart":
+      return (
+        <CartPage
+          user={loggedUser}
+          onBack={() => go("store")}
+        />
+      );
 
     case "market":
       return MarketPage();
@@ -4539,6 +4554,7 @@ const submitReview = async (request) => {
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(<App />);
+
 
 
 
