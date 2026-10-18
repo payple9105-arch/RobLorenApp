@@ -23,6 +23,7 @@ export default function ProductForm({ user, onPublished }) {
     image_url: "",
     is_featured: false,
     delivery_days: "0",
+    digital_file_url: "",
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -92,6 +93,7 @@ export default function ProductForm({ user, onPublished }) {
       is_featured: form.is_featured && canFeature,
       image_url: form.image_url.trim() || null,
       delivery_days: form.product_type === "digital" ? 0 : Number(form.delivery_days) || 3,
+      digital_file_url: form.product_type !== "physical" ? form.digital_file_url.trim() || null : null,
     });
 
     setSaving(false);
@@ -113,6 +115,7 @@ export default function ProductForm({ user, onPublished }) {
       image_url: "",
       is_featured: false,
       delivery_days: "0",
+      digital_file_url: "",
     });
     onPublished?.();
   };
@@ -199,6 +202,18 @@ export default function ProductForm({ user, onPublished }) {
               value={form.delivery_days}
               onChange={handleChange}
               placeholder="3"
+            />
+          </label>
+        )}
+
+        {(form.product_type === "digital" || form.product_type === "both") && (
+          <label className="full">
+            URL de descarga del archivo digital
+            <input
+              name="digital_file_url"
+              value={form.digital_file_url}
+              onChange={handleChange}
+              placeholder="https://ejemplo.com/archivo.zip o enlace de Google Drive"
             />
           </label>
         )}
