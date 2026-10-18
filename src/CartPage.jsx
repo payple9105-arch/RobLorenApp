@@ -29,6 +29,16 @@ export function removeFromCart(productId) {
   return cart;
 }
 
+export function updateQty(productId, qty) {
+  const cart = getCart();
+  const item = cart.find((i) => i.id === productId);
+  if (item) {
+    item.qty = Math.max(1, qty);
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  }
+  return getCart();
+}
+
 export function clearCart() {
   localStorage.removeItem(CART_KEY);
 }
@@ -43,6 +53,13 @@ export default function CartPage({ user, onBack }) {
   }, []);
 
   const total = cart.reduce((sum, item) => sum + Number(item.price || 0) * (item.qty || 1), 0);
+
+  const handleQty = (id, delta) => {
+    const item = cart.find((i) => i.id === id);
+    if (!item) return;
+    const newQty = Math.max(1, (item.qty || 1) + delta);
+    setCart(updateQty(id, newQty));
+  };
 
   const handleRemove = (id) => {
     setCart(removeFromCart(id));
@@ -105,19 +122,34 @@ export default function CartPage({ user, onBack }) {
           <div className="requests-grid">
             {cart.map((item) => (
               <article key={item.id} className="request-card">
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <strong>{item.title}</strong>
                     <div style={{ fontSize: 14, color: "var(--muted)" }}>
-                      ${item.price} × {item.qty || 1}
+                      ${item.price} c/u
                     </div>
                   </div>
-                  <button
-                    className="button outline small"
-                    onClick={() => handleRemove(item.id)}
-                  >
-                    Quitar
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                      className="button outline small"
+                      onClick={() => handleQty(item.id, -1)}
+                    >
+                      −
+                    </button>
+                    <span style={{ minWidth: 24, textAlign: "center" }}>{item.qty || 1}</span>
+                    <button
+                      className="button outline small"
+                      onClick={() => handleQty(item.id, 1)}
+                    >
+                      +
+                    </button>
+                    <button
+                      className="button outline small"
+                      onClick={() => handleRemove(item.id)}
+                    >
+                      Quitar
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
