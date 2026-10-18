@@ -32,6 +32,11 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
       return;
     }
 
+    if (product.stock !== null && product.stock < qty) {
+      setMessage("No hay suficiente stock.");
+      return;
+    }
+
     setBuying(true);
     setMessage("");
 
@@ -42,8 +47,8 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
           buyer_id: user.id,
           seller_id: product.seller_id,
           product_id: product.id,
-          amount: Number(product.price) || 0,
-          total: Number(product.price) || 0,
+          amount: Number(product.price) * qty,
+          total: Number(product.price) * qty,
           status: "pending",
         })
         .select()
@@ -53,6 +58,14 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
         console.error("Error creando pedido:", error);
         setMessage(`Error: ${error.message || "No se pudo crear el pedido."}`);
         return;
+      }
+
+      // Reducir stock
+      if (product.stock !== null) {
+        await supabase
+          .from("products")
+          .update({ stock: product.stock - qty })
+          .eq("id", product.id);
       }
 
       setMessage("Pedido creado correctamente. La comisión se registró automáticamente.");
