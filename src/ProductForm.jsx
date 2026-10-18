@@ -21,6 +21,7 @@ export default function ProductForm({ user, onPublished }) {
     product_type: "digital",
     stock: "1",
     image_url: "",
+    is_featured: false,
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -55,11 +56,18 @@ export default function ProductForm({ user, onPublished }) {
 
     const { data: plan } = await supabase
       .from("plans")
-      .select("max_products, name")
+      .select("max_products, name, features")
       .eq("id", planId)
       .maybeSingle();
 
     const maxProducts = plan?.max_products ?? 5;
+    const canFeature = planId !== "free";
+
+    if (form.is_featured && !canFeature) {
+      setSaving(false);
+      setMessage("Solo los planes Pro y Premium pueden destacar productos.");
+      return;
+    }
 
     const { count } = await supabase
       .from("products")
@@ -81,6 +89,7 @@ export default function ProductForm({ user, onPublished }) {
       product_type: form.product_type,
       stock: Number(form.stock) || 0,
       is_available: true,
+      is_featured: form.is_featured && canFeature,
       image_url: form.image_url.trim() || null,
     });
 
@@ -101,6 +110,7 @@ export default function ProductForm({ user, onPublished }) {
       product_type: "digital",
       stock: "1",
       image_url: "",
+      is_featured: false,
     });
     onPublished?.();
   };
@@ -184,6 +194,16 @@ export default function ProductForm({ user, onPublished }) {
             onChange={handleChange}
             placeholder="/media/design.jpg o una URL externa"
           />
+        </label>
+
+        <label className="full" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <input
+            type="checkbox"
+            name="is_featured"
+            checked={form.is_featured}
+            onChange={(e) => setForm((prev) => ({ ...prev, is_featured: e.target.checked }))}
+          />
+          Destacar este producto (solo planes Pro y Premium)
         </label>
 
         <div className="full" style={{ marginTop: 8 }}>
