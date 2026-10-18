@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
+import PayPalCheckout from "./PayPalCheckout";
 
 const CART_KEY = "robloren-cart";
 
@@ -49,6 +50,7 @@ export default function CartPage({ user, onBack }) {
   const [cart, setCart] = useState([]);
   const [buying, setBuying] = useState(false);
   const [message, setMessage] = useState("");
+  const [showPayPal, setShowPayPal] = useState(false);
 
   useEffect(() => {
     setCart(getCart());
@@ -67,13 +69,17 @@ export default function CartPage({ user, onBack }) {
     setCart(removeFromCart(id));
   };
 
-  const checkout = async () => {
+  const startCheckout = () => {
     if (!user) {
       setMessage("Debes iniciar sesión para comprar.");
       return;
     }
     if (cart.length === 0) return;
+    setShowPayPal(true);
+    setMessage("");
+  };
 
+  const handlePaid = async (details) => {
     setBuying(true);
     setMessage("");
 
@@ -82,19 +88,20 @@ export default function CartPage({ user, onBack }) {
         if (!item.seller_id) continue;
 
         const qty = item.qty || 1;
+        const itemTotal = Number(item.price) * qty;
 
         const { error } = await supabase.from("orders").insert({
           buyer_id: user.id,
           seller_id: item.seller_id,
           product_id: item.id,
-          amount: Number(item.price) * qty,
-          total: Number(item.price) * qty,
-          status: "pending",
+          amount: itemTotal,
+          total: itemTotal,
+          status: "paid",
+          paypal_order_id: details?.id || null,
         });
 
         if (error) throw error;
 
-        // Reducir stock
         if (item.stock !== null && item.stock !== undefined) {
           await supabase
             .from("products")
@@ -105,10 +112,11 @@ export default function CartPage({ user, onBack }) {
 
       clearCart();
       setCart([]);
-      setMessage("Pedido creado correctamente. Las comisiones se registraron.");
+      setShowPayPal(false);
+      setMessage("Pago completado. Pedidos creados correctamente.");
     } catch (err) {
       console.error(err);
-      setMessage("No se pudo completar la compra. Inténtalo de nuevo.");
+      setMessage("Pago recibido, pero hubo un error al guardar los pedidos.");
     } finally {
       setBuying(false);
     }
@@ -171,20 +179,32 @@ export default function CartPage({ user, onBack }) {
             <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>
               Total: ${total.toFixed(2)}
             </div>
-            <button
-              className="button primary large"
-              style={{ width: "100%", maxWidth: 320 }}
-              disabled={buying}
-              onClick={checkout}
-            >
-              {buying ? "Procesando..." : "Comprar ahora"}
-            </button>
+
+            {!showPayPal ? (
+              <button
+                className="button primary large"
+                style={{ width: "100%", maxWidth: 320 }}
+                disabled={buying}
+                onClick={startCheckout}
+              >
+                {buying ? "Procesando..." : "Pagar con PayPal"}
+              </button>
+            ) : (
+              <div style={{ maxWidth: 400, margin: "0 auto" }}>
+                <PayPalCheckout
+                  amount={total}
+                  description={`Carrito RobLoren (${cart.length} productos)`}
+                  onPaid={handlePaid}
+                  onError={() => setMessage("Error en el pago. Inténtalo de nuevo.")}
+                />
+              </div>
+            )}
           </div>
         </>
       )}
 
       {message && (
-        <p style={{ marginTop: 16, color: message.includes("correctamente") ? "#16a34a" : "#dc2626" }}>
+        <p style={{ marginTop: 16, color: message.includes("completado") || message.includes("correctamente") ? "#16a34a" : "#dc2626" }}>
           {message}
         </p>
       )}
