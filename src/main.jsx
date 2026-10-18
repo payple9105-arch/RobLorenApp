@@ -15,6 +15,7 @@ import PlansPage from "./PlansPage";
 import CommissionsPage from "./CommissionsPage";
 import ProductDetailPage from "./ProductDetailPage";
 import CartPage, { addToCart } from "./CartPage";
+import OrdersPage from "./OrdersPage";
 
 const PAYPAL_CLIENT_ID =
   "BAA_Ux_XQQKppjplmdc2V6jZZGOlSQATrlf2UKoc4Pi1lRIbKqtejqk2di8a9hRJ5e0xZFL46K_xfEYt-I";
@@ -2123,6 +2124,11 @@ const submitReview = async (request) => {
           <button className={page === "cart" ? "nav-link active" : "nav-link"} onClick={() => go("cart")}>
             Carrito
           </button>
+          {loggedUser && (
+            <button className={page === "orders" ? "nav-link active" : "nav-link"} onClick={() => go("orders")}>
+              Pedidos
+            </button>
+          )}
           <button className="nav-link" onClick={() => go("home", "como")}>
             Cómo funciona
           </button>
@@ -4459,6 +4465,9 @@ const submitReview = async (request) => {
         />
       );
 
+    case "orders":
+      return <OrdersPage user={loggedUser} />;
+
     case "market":
       return MarketPage();
 
@@ -4557,6 +4566,7 @@ const submitReview = async (request) => {
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(<App />);
+
 
 
 
