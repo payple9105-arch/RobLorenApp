@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
+import { notifyOrder } from "./notify";
 
 export default function OrdersPage({ user }) {
   const [orders, setOrders] = useState([]);
@@ -34,6 +35,8 @@ export default function OrdersPage({ user }) {
   const markAsReceived = async (orderId) => {
     setUpdating(orderId);
 
+    const current = orders.find((o) => o.id === orderId);
+
     const { error: orderError } = await supabase
       .from("orders")
       .update({ status: "completed" })
@@ -55,6 +58,14 @@ export default function OrdersPage({ user }) {
       prev.map((o) => (o.id === orderId ? { ...o, status: "completed" } : o))
     );
 
+    if (current) {
+      await notifyOrder({
+        type: "UPDATE",
+        record: { ...current, status: "completed" },
+        old_record: current,
+      });
+    }
+
     setUpdating(null);
     alert("Pedido marcado como recibido. El pago se ha liberado al vendedor (menos la comisión de RobLoren).");
   };
@@ -64,6 +75,8 @@ export default function OrdersPage({ user }) {
     if (!reason?.trim()) return;
 
     setUpdating(orderId);
+
+    const current = orders.find((o) => o.id === orderId);
 
     const { error } = await supabase
       .from("orders")
@@ -75,6 +88,15 @@ export default function OrdersPage({ user }) {
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: "disputed", dispute_reason: reason.trim() } : o))
       );
+
+      if (current) {
+        await notifyOrder({
+          type: "UPDATE",
+          record: { ...current, status: "disputed", dispute_reason: reason.trim() },
+          old_record: current,
+        });
+      }
+
       alert("Disputa abierta. El equipo de RobLoren revisará el caso.");
     } else {
       alert("No se pudo abrir la disputa.");
@@ -89,6 +111,8 @@ export default function OrdersPage({ user }) {
 
     setUpdating(orderId);
 
+    const current = orders.find((o) => o.id === orderId);
+
     const { error } = await supabase
       .from("orders")
       .update({ tracking_url: trackingUrl })
@@ -100,6 +124,14 @@ export default function OrdersPage({ user }) {
         prev.map((o) => (o.id === orderId ? { ...o, tracking_url: trackingUrl } : o))
       );
       setTrackingInput((prev) => ({ ...prev, [orderId]: "" }));
+
+      if (current) {
+        await notifyOrder({
+          type: "UPDATE",
+          record: { ...current, tracking_url: trackingUrl },
+          old_record: current,
+        });
+      }
     }
 
     setUpdating(null);
