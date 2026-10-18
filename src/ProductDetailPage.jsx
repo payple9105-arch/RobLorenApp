@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { supabase } from "./supabaseClient";
+import PayPalCheckout from "./PayPalCheckout";
 
 export default function ProductDetailPage({ product, user, onBack, onOrderCreated, onAddToCart }) {
   const [buying, setBuying] = useState(false);
   const [message, setMessage] = useState("");
   const [qty, setQty] = useState(1);
+  const [showPayPal, setShowPayPal] = useState(false);
 
   if (!product) {
     return (
@@ -21,22 +23,9 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
     return `Entrega estimada: ${days} día${days === 1 ? "" : "s"}`;
   };
 
-  const buyProduct = async () => {
-    if (!user) {
-      setMessage("Debes iniciar sesión para comprar.");
-      return;
-    }
+  const total = Number(product.price) * qty;
 
-    if (!product.seller_id) {
-      setMessage("Este producto no tiene vendedor asignado. No se puede comprar.");
-      return;
-    }
-
-    if (product.stock !== null && product.stock < qty) {
-      setMessage("No hay suficiente stock.");
-      return;
-    }
-
+  const handlePaid = async (details) => {
     setBuying(true);
     setMessage("");
 
@@ -47,20 +36,20 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
           buyer_id: user.id,
           seller_id: product.seller_id,
           product_id: product.id,
-          amount: Number(product.price) * qty,
-          total: Number(product.price) * qty,
-          status: "pending",
+          amount: total,
+          total,
+          status: "paid",
+          paypal_order_id: details?.id || null,
         })
         .select()
         .single();
 
       if (error) {
         console.error("Error creando pedido:", error);
-        setMessage(`Error: ${error.message || "No se pudo crear el pedido."}`);
+        setMessage(`Pago recibido, pero error al guardar el pedido: ${error.message}`);
         return;
       }
 
-      // Reducir stock
       if (product.stock !== null) {
         await supabase
           .from("products")
@@ -68,14 +57,32 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
           .eq("id", product.id);
       }
 
-      setMessage("Pedido creado correctamente. La comisión se registró automáticamente.");
+      setMessage("Pago completado. Pedido creado correctamente.");
+      setShowPayPal(false);
       onOrderCreated?.(data);
     } catch (err) {
       console.error(err);
-      setMessage("No se pudo crear el pedido. Inténtalo de nuevo.");
+      setMessage("Pago recibido, pero hubo un error al guardar el pedido.");
     } finally {
       setBuying(false);
     }
+  };
+
+  const startCheckout = () => {
+    if (!user) {
+      setMessage("Debes iniciar sesión para comprar.");
+      return;
+    }
+    if (!product.seller_id) {
+      setMessage("Este producto no tiene vendedor asignado.");
+      return;
+    }
+    if (product.stock !== null && product.stock < qty) {
+      setMessage("No hay suficiente stock.");
+      return;
+    }
+    setShowPayPal(true);
+    setMessage("");
   };
 
   return (
@@ -118,19 +125,13 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
 
           <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 14, color: "var(--muted)" }}>Cantidad:</span>
-            <button
-              className="button outline small"
-              onClick={() => setQty((q) => Math.max(1, q - 1))}
-            >
-              −
-            </button>
+            <button className="button outline small" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
             <span style={{ minWidth: 28, textAlign: "center", fontWeight: 600 }}>{qty}</span>
-            <button
-              className="button outline small"
-              onClick={() => setQty((q) => q + 1)}
-            >
-              +
-            </button>
+            <button className="button outline small" onClick={() => setQty((q) => q + 1)}>+</button>
+          </div>
+
+          <div style={{ marginTop: 12, fontSize: 18, fontWeight: 600 }}>
+            Total: ${total.toFixed(2)}
           </div>
 
           <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
@@ -148,15 +149,26 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
             <button
               className="button primary large"
               style={{ flex: 1 }}
-              disabled={buying || product.stock === 0}
-              onClick={buyProduct}
+              disabled={buying || product.stock === 0 || showPayPal}
+              onClick={startCheckout}
             >
-              {buying ? "Procesando..." : product.stock === 0 ? "Agotado" : "Comprar ahora"}
+              {buying ? "Procesando..." : product.stock === 0 ? "Agotado" : "Pagar con PayPal"}
             </button>
           </div>
 
+          {showPayPal && (
+            <div style={{ marginTop: 20 }}>
+              <PayPalCheckout
+                amount={total}
+                description={`${product.title} x${qty} - RobLoren`}
+                onPaid={handlePaid}
+                onError={() => setMessage("Error en el pago. Inténtalo de nuevo.")}
+              />
+            </div>
+          )}
+
           {message && (
-            <p style={{ marginTop: 16, color: message.includes("correctamente") ? "#16a34a" : "#dc2626" }}>
+            <p style={{ marginTop: 16, color: message.includes("correctamente") || message.includes("completado") ? "#16a34a" : "#dc2626" }}>
               {message}
             </p>
           )}
