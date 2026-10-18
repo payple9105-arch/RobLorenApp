@@ -22,6 +22,7 @@ export default function ProductForm({ user, onPublished }) {
     stock: "1",
     image_url: "",
     is_featured: false,
+    delivery_days: "0",
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -45,7 +46,6 @@ export default function ProductForm({ user, onPublished }) {
     setSaving(true);
     setMessage("");
 
-    // Verificar límite según el plan
     const { data: profile } = await supabase
       .from("profiles")
       .select("plan_id")
@@ -91,6 +91,7 @@ export default function ProductForm({ user, onPublished }) {
       is_available: true,
       is_featured: form.is_featured && canFeature,
       image_url: form.image_url.trim() || null,
+      delivery_days: form.product_type === "digital" ? 0 : Number(form.delivery_days) || 3,
     });
 
     setSaving(false);
@@ -111,6 +112,7 @@ export default function ProductForm({ user, onPublished }) {
       stock: "1",
       image_url: "",
       is_featured: false,
+      delivery_days: "0",
     });
     onPublished?.();
   };
@@ -185,6 +187,21 @@ export default function ProductForm({ user, onPublished }) {
             <option value="both">Ambos</option>
           </select>
         </label>
+
+        {(form.product_type === "physical" || form.product_type === "both") && (
+          <label>
+            Tiempo de entrega (días)
+            <input
+              name="delivery_days"
+              type="number"
+              min="1"
+              max="30"
+              value={form.delivery_days}
+              onChange={handleChange}
+              placeholder="3"
+            />
+          </label>
+        )}
 
         <label className="full">
           URL de la imagen (opcional)
