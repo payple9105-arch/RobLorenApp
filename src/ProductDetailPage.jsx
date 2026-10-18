@@ -15,6 +15,12 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
     );
   }
 
+  const deliveryText = () => {
+    if (product.product_type === "digital") return "Entrega inmediata";
+    const days = Number(product.delivery_days) || 3;
+    return `Entrega estimada: ${days} día${days === 1 ? "" : "s"}`;
+  };
+
   const buyProduct = async () => {
     if (!user) {
       setMessage("Debes iniciar sesión para comprar.");
@@ -93,9 +99,8 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
           </p>
 
           <div style={{ marginTop: 16, fontSize: 14, color: "var(--muted)" }}>
-            {product.product_type === "digital" && "Descarga digital inmediata"}
-            {product.product_type === "physical" && `Envío disponible · Stock: ${product.stock ?? "—"}`}
-            {product.product_type === "both" && "Digital y físico"}
+            {deliveryText()}
+            {product.product_type === "physical" && ` · Stock: ${product.stock ?? "—"}`}
           </div>
 
           <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 12 }}>
