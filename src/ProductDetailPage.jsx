@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { supabase } from "./supabaseClient";
 import PayPalCheckout from "./PayPalCheckout";
+import { notifyOrder } from "./notify";
 
 export default function ProductDetailPage({ product, user, onBack, onOrderCreated, onAddToCart }) {
   const [buying, setBuying] = useState(false);
@@ -55,6 +56,13 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
           .from("products")
           .update({ stock: product.stock - qty })
           .eq("id", product.id);
+      }
+
+      if (data) {
+        await notifyOrder({
+          type: "INSERT",
+          record: data,
+        });
       }
 
       setMessage("Pago completado. Pedido creado correctamente.");
