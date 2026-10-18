@@ -14,10 +14,12 @@ export function getCart() {
 export function addToCart(product) {
   const cart = getCart();
   const existing = cart.find((item) => item.id === product.id);
+  const addQty = Number(product.qty) || 1;
+
   if (existing) {
-    existing.qty = (existing.qty || 1) + 1;
+    existing.qty = (existing.qty || 1) + addQty;
   } else {
-    cart.push({ ...product, qty: 1 });
+    cart.push({ ...product, qty: addQty });
   }
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
   return cart;
