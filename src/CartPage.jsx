@@ -123,13 +123,13 @@ export default function CartPage({ user, onBack }) {
             ))}
           </div>
 
-          <div className="service-card" style={{ marginTop: 24, textAlign: "right" }}>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>
+          <div className="service-card" style={{ marginTop: 24, textAlign: "center", padding: "20px" }}>
+            <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>
               Total: ${total.toFixed(2)}
             </div>
             <button
-              className="button primary"
-              style={{ marginTop: 12 }}
+              className="button primary large"
+              style={{ width: "100%", maxWidth: 320 }}
               disabled={buying}
               onClick={checkout}
             >
