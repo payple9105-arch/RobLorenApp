@@ -6,6 +6,7 @@ export default function OrdersPage({ user }) {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("buyer");
   const [updating, setUpdating] = useState(null);
+  const [trackingInput, setTrackingInput] = useState({});
 
   useEffect(() => {
     if (!user?.id) return;
@@ -45,7 +46,6 @@ export default function OrdersPage({ user }) {
       return;
     }
 
-    // Liberar comisiones relacionadas
     await supabase
       .from("commissions")
       .update({ status: "released" })
@@ -57,6 +57,28 @@ export default function OrdersPage({ user }) {
 
     setUpdating(null);
     alert("Pedido marcado como recibido. El pago se ha liberado al vendedor (menos la comisión de RobLoren).");
+  };
+
+  const saveTracking = async (orderId) => {
+    const tracking = trackingInput[orderId]?.trim();
+    if (!tracking) return;
+
+    setUpdating(orderId);
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ tracking_number: tracking })
+      .eq("id", orderId)
+      .eq("seller_id", user.id);
+
+    if (!error) {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, tracking_number: tracking } : o))
+      );
+      setTrackingInput((prev) => ({ ...prev, [orderId]: "" }));
+    }
+
+    setUpdating(null);
   };
 
   const statusLabel = (status) => {
@@ -132,6 +154,12 @@ export default function OrdersPage({ user }) {
                 })}
               </small>
 
+              {order.tracking_number && (
+                <p style={{ marginTop: 8, fontSize: 13 }}>
+                  <strong>Tracking:</strong> {order.tracking_number}
+                </p>
+              )}
+
               {tab === "buyer" && order.status !== "completed" && (
                 <button
                   className="button outline small"
@@ -143,14 +171,35 @@ export default function OrdersPage({ user }) {
                 </button>
               )}
 
+              {tab === "seller" && order.status !== "completed" && (
+                <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
+                  <input
+                    type="text"
+                    placeholder="Número de tracking"
+                    value={trackingInput[order.id] || ""}
+                    onChange={(e) =>
+                      setTrackingInput((prev) => ({ ...prev, [order.id]: e.target.value }))
+                    }
+                    style={{ flex: 1, padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd" }}
+                  />
+                  <button
+                    className="button outline small"
+                    disabled={updating === order.id || !trackingInput[order.id]?.trim()}
+                    onClick={() => saveTracking(order.id)}
+                  >
+                    {updating === order.id ? "..." : "Guardar"}
+                  </button>
+                </div>
+              )}
+
               {tab === "seller" && order.status === "completed" && (
                 <p style={{ marginTop: 12, fontSize: 13, color: "#16a34a" }}>
                   ✓ Pago liberado — listo para cobrar (menos comisión)
                 </p>
               )}
 
-              {tab === "seller" && order.status !== "completed" && (
-                <p style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>
+              {tab === "seller" && order.status !== "completed" && !order.tracking_number && (
+                <p style={{ marginTop: 8, fontSize: 13, color: "var(--muted)" }}>
                   Esperando confirmación del comprador
                 </p>
               )}
