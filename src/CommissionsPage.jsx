@@ -4,7 +4,8 @@ import { supabase } from "./supabaseClient";
 export default function CommissionsPage({ user }) {
   const [commissions, setCommissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
+  const [totalCommission, setTotalCommission] = useState(0);
+  const [totalNet, setTotalNet] = useState(0);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -20,8 +21,10 @@ export default function CommissionsPage({ user }) {
 
       if (!error && data) {
         setCommissions(data);
-        const sum = data.reduce((acc, c) => acc + Number(c.commission_amount || 0), 0);
-        setTotal(sum);
+        const commissionSum = data.reduce((acc, c) => acc + Number(c.commission_amount || 0), 0);
+        const netSum = data.reduce((acc, c) => acc + (Number(c.amount || 0) - Number(c.commission_amount || 0)), 0);
+        setTotalCommission(commissionSum);
+        setTotalNet(netSum);
       }
 
       setLoading(false);
@@ -54,13 +57,18 @@ export default function CommissionsPage({ user }) {
         <p>Aquí puedes ver las comisiones generadas por tus ventas.</p>
       </header>
 
-      <div className="service-card" style={{ marginBottom: 24, textAlign: "center" }}>
-        <div style={{ fontSize: 14, color: "var(--muted)" }}>Total acumulado</div>
-        <div style={{ fontSize: 36, fontWeight: 700, marginTop: 4 }}>
-          ${total.toFixed(2)}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+        <div className="service-card" style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 14, color: "var(--muted)" }}>Comisión (RobLoren)</div>
+          <div style={{ fontSize: 28, fontWeight: 700, marginTop: 4, color: "#dc2626" }}>
+            ${totalCommission.toFixed(2)}
+          </div>
         </div>
-        <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
-          {commissions.length} registro{commissions.length !== 1 ? "s" : ""}
+        <div className="service-card" style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 14, color: "var(--muted)" }}>Te queda</div>
+          <div style={{ fontSize: 28, fontWeight: 700, marginTop: 4, color: "#16a34a" }}>
+            ${totalNet.toFixed(2)}
+          </div>
         </div>
       </div>
 
@@ -73,8 +81,16 @@ export default function CommissionsPage({ user }) {
           {commissions.map((c) => (
             <article key={c.id} className="request-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <strong>${Number(c.commission_amount).toFixed(2)}</strong>
-                <span className="category-pill">{c.status || "pending"}</span>
+                <div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>Comisión</div>
+                  <strong style={{ color: "#dc2626" }}>${Number(c.commission_amount).toFixed(2)}</strong>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>Te queda</div>
+                  <strong style={{ color: "#16a34a" }}>
+                    ${(Number(c.amount) - Number(c.commission_amount)).toFixed(2)}
+                  </strong>
+                </div>
               </div>
               <p style={{ margin: "8px 0 4px", fontSize: 14 }}>
                 Venta: ${Number(c.amount).toFixed(2)} · {c.commission_rate}%
