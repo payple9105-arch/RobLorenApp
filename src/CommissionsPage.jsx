@@ -4,34 +4,61 @@ import { supabase } from "./supabaseClient";
 export default function CommissionsPage({ user }) {
   const [commissions, setCommissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [totalCommission, setTotalCommission] = useState(0);
-  const [totalNet, setTotalNet] = useState(0);
+  const [available, setAvailable] = useState(0);
+  const [pending, setPending] = useState(0);
 
   useEffect(() => {
     if (!user?.id) return;
-
-    const load = async () => {
-      setLoading(true);
-
-      const { data, error } = await supabase
-        .from("commissions")
-        .select("*")
-        .eq("seller_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (!error && data) {
-        setCommissions(data);
-        const commissionSum = data.reduce((acc, c) => acc + Number(c.commission_amount || 0), 0);
-        const netSum = data.reduce((acc, c) => acc + (Number(c.amount || 0) - Number(c.commission_amount || 0)), 0);
-        setTotalCommission(commissionSum);
-        setTotalNet(netSum);
-      }
-
-      setLoading(false);
-    };
-
     load();
   }, [user]);
+
+  const load = async () => {
+    setLoading(true);
+
+    const { data, error } = await supabase
+      .from("commissions")
+      .select("*")
+      .eq("seller_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setCommissions(data);
+
+      const availableSum = data
+        .filter((c) => c.status === "released")
+        .reduce((acc, c) => acc + (Number(c.amount || 0) - Number(c.commission_amount || 0)), 0);
+
+      const pendingSum = data
+        .filter((c) => c.status !== "released")
+        .reduce((acc, c) => acc + (Number(c.amount || 0) - Number(c.commission_amount || 0)), 0);
+
+      setAvailable(availableSum);
+      setPending(pendingSum);
+    }
+
+    setLoading(false);
+  };
+
+  const requestPayout = async () => {
+    if (available <= 0) return;
+    const confirm = window.confirm(
+      `¿Solicitar el retiro de $${available.toFixed(2)}?\n\n(Por ahora se marcará como solicitado. El pago real se activará cuando conectemos PayPal Payouts.)`
+    );
+    if (!confirm) return;
+
+    const { error } = await supabase
+      .from("commissions")
+      .update({ status: "payout_requested" })
+      .eq("seller_id", user.id)
+      .eq("status", "released");
+
+    if (!error) {
+      alert("Solicitud de retiro registrada. Te avisaremos cuando se procese el pago.");
+      load();
+    } else {
+      alert("No se pudo registrar la solicitud.");
+    }
+  };
 
   if (!user) {
     return (
@@ -54,20 +81,29 @@ export default function CommissionsPage({ user }) {
       <header className="page-header">
         <span className="eyebrow">PROFESIONAL</span>
         <h1>Mis comisiones</h1>
-        <p>Aquí puedes ver las comisiones generadas por tus ventas.</p>
+        <p>El dinero se libera cuando el comprador confirma que recibió el producto.</p>
       </header>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
         <div className="service-card" style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 14, color: "var(--muted)" }}>Comisión (RobLoren)</div>
-          <div style={{ fontSize: 28, fontWeight: 700, marginTop: 4, color: "#dc2626" }}>
-            ${totalCommission.toFixed(2)}
+          <div style={{ fontSize: 14, color: "var(--muted)" }}>Disponible para retirar</div>
+          <div style={{ fontSize: 28, fontWeight: 700, marginTop: 4, color: "#16a34a" }}>
+            ${available.toFixed(2)}
           </div>
+          {available > 0 && (
+            <button
+              className="button primary"
+              style={{ marginTop: 12 }}
+              onClick={requestPayout}
+            >
+              Solicitar retiro
+            </button>
+          )}
         </div>
         <div className="service-card" style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 14, color: "var(--muted)" }}>Te queda</div>
-          <div style={{ fontSize: 28, fontWeight: 700, marginTop: 4, color: "#16a34a" }}>
-            ${totalNet.toFixed(2)}
+          <div style={{ fontSize: 14, color: "var(--muted)" }}>Pendiente de confirmación</div>
+          <div style={{ fontSize: 28, fontWeight: 700, marginTop: 4, color: "#f59e0b" }}>
+            ${pending.toFixed(2)}
           </div>
         </div>
       </div>
@@ -78,32 +114,39 @@ export default function CommissionsPage({ user }) {
         </p>
       ) : (
         <div className="requests-grid">
-          {commissions.map((c) => (
-            <article key={c.id} className="request-card">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: 12, color: "var(--muted)" }}>Comisión</div>
-                  <strong style={{ color: "#dc2626" }}>${Number(c.commission_amount).toFixed(2)}</strong>
+          {commissions.map((c) => {
+            const net = Number(c.amount || 0) - Number(c.commission_amount || 0);
+            const statusMap = {
+              released: { label: "Disponible", color: "#16a34a" },
+              payout_requested: { label: "Retiro solicitado", color: "#2563eb" },
+              pending: { label: "Pendiente", color: "#f59e0b" },
+            };
+            const st = statusMap[c.status] || statusMap.pending;
+
+            return (
+              <article key={c.id} className="request-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}>Te queda</div>
+                    <strong style={{ color: "#16a34a" }}>${net.toFixed(2)}</strong>
+                  </div>
+                  <span className="category-pill" style={{ background: st.color, color: "#fff" }}>
+                    {st.label}
+                  </span>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 12, color: "var(--muted)" }}>Te queda</div>
-                  <strong style={{ color: "#16a34a" }}>
-                    ${(Number(c.amount) - Number(c.commission_amount)).toFixed(2)}
-                  </strong>
-                </div>
-              </div>
-              <p style={{ margin: "8px 0 4px", fontSize: 14 }}>
-                Venta: ${Number(c.amount).toFixed(2)} · {c.commission_rate}%
-              </p>
-              <small style={{ color: "var(--muted)" }}>
-                {new Date(c.created_at).toLocaleDateString("es-ES", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </small>
-            </article>
-          ))}
+                <p style={{ margin: "8px 0 4px", fontSize: 14 }}>
+                  Venta: ${Number(c.amount).toFixed(2)} · Comisión {c.commission_rate}%
+                </p>
+                <small style={{ color: "var(--muted)" }}>
+                  {new Date(c.created_at).toLocaleDateString("es-ES", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </small>
+              </article>
+            );
+          })}
         </div>
       )}
     </main>
