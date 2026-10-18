@@ -1,22 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 
-const carriers = [
-  { id: "correos", name: "Correos", url: (n) => `https://www.correos.es/es/es/herramientas/localizador/envios?tracking-number=${n}` },
-  { id: "dhl", name: "DHL", url: (n) => `https://www.dhl.com/es-es/home/rastreo.html?tracking-id=${n}` },
-  { id: "ups", name: "UPS", url: (n) => `https://www.ups.com/track?tracknum=${n}` },
-  { id: "fedex", name: "FedEx", url: (n) => `https://www.fedex.com/fedextrack/?trknbr=${n}` },
-  { id: "usps", name: "USPS", url: (n) => `https://tools.usps.com/go/TrackConfirmAction?tLabels=${n}` },
-  { id: "otro", name: "Otro", url: (n) => `https://www.google.com/search?q=${encodeURIComponent(n + " tracking")}` },
-];
-
 export default function OrdersPage({ user }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("buyer");
   const [updating, setUpdating] = useState(null);
   const [trackingInput, setTrackingInput] = useState({});
-  const [carrierInput, setCarrierInput] = useState({});
 
   useEffect(() => {
     if (!user?.id) return;
@@ -94,32 +84,25 @@ export default function OrdersPage({ user }) {
   };
 
   const saveTracking = async (orderId) => {
-    const tracking = trackingInput[orderId]?.trim();
-    const carrier = carrierInput[orderId] || "otro";
-    if (!tracking) return;
+    const trackingUrl = trackingInput[orderId]?.trim();
+    if (!trackingUrl) return;
 
     setUpdating(orderId);
 
     const { error } = await supabase
       .from("orders")
-      .update({ tracking_number: tracking, carrier })
+      .update({ tracking_url: trackingUrl })
       .eq("id", orderId)
       .eq("seller_id", user.id);
 
     if (!error) {
       setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, tracking_number: tracking, carrier } : o))
+        prev.map((o) => (o.id === orderId ? { ...o, tracking_url: trackingUrl } : o))
       );
       setTrackingInput((prev) => ({ ...prev, [orderId]: "" }));
     }
 
     setUpdating(null);
-  };
-
-  const getTrackingUrl = (order) => {
-    if (!order.tracking_number) return null;
-    const c = carriers.find((x) => x.id === (order.carrier || "otro")) || carriers[carriers.length - 1];
-    return c.url(order.tracking_number);
   };
 
   const statusLabel = (status) => {
@@ -197,18 +180,16 @@ export default function OrdersPage({ user }) {
                 })}
               </small>
 
-              {order.tracking_number && (
+              {order.tracking_url && (
                 <p style={{ marginTop: 8, fontSize: 13 }}>
-                  <strong>Tracking:</strong>{" "}
                   <a
-                    href={getTrackingUrl(order)}
+                    href={order.tracking_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: "#2563eb" }}
+                    style={{ color: "#2563eb", fontWeight: 600 }}
                   >
-                    {order.tracking_number}
+                    Ver rastreo del envío
                   </a>
-                  {order.carrier && ` (${carriers.find(c => c.id === order.carrier)?.name || order.carrier})`}
                 </p>
               )}
 
@@ -252,24 +233,15 @@ export default function OrdersPage({ user }) {
               )}
 
               {tab === "seller" && order.status !== "completed" && order.status !== "disputed" && (
-                <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                  <select
-                    value={carrierInput[order.id] || "otro"}
-                    onChange={(e) => setCarrierInput((prev) => ({ ...prev, [order.id]: e.target.value }))}
-                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd" }}
-                  >
-                    {carriers.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+                <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
                   <input
-                    type="text"
-                    placeholder="Número de tracking"
+                    type="url"
+                    placeholder="Pega aquí el enlace de rastreo"
                     value={trackingInput[order.id] || ""}
                     onChange={(e) =>
                       setTrackingInput((prev) => ({ ...prev, [order.id]: e.target.value }))
                     }
-                    style={{ flex: 1, minWidth: 120, padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd" }}
+                    style={{ flex: 1, padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd" }}
                   />
                   <button
                     className="button outline small"
@@ -293,7 +265,7 @@ export default function OrdersPage({ user }) {
                 </p>
               )}
 
-              {tab === "seller" && order.status !== "completed" && order.status !== "disputed" && !order.tracking_number && (
+              {tab === "seller" && order.status !== "completed" && order.status !== "disputed" && !order.tracking_url && (
                 <p style={{ marginTop: 8, fontSize: 13, color: "var(--muted)" }}>
                   Esperando confirmación del comprador
                 </p>
