@@ -59,6 +59,30 @@ export default function OrdersPage({ user }) {
     alert("Pedido marcado como recibido. El pago se ha liberado al vendedor (menos la comisión de RobLoren).");
   };
 
+  const openDispute = async (orderId) => {
+    const reason = prompt("Describe el problema con este pedido:");
+    if (!reason?.trim()) return;
+
+    setUpdating(orderId);
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "disputed", dispute_reason: reason.trim() })
+      .eq("id", orderId)
+      .eq("buyer_id", user.id);
+
+    if (!error) {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: "disputed", dispute_reason: reason.trim() } : o))
+      );
+      alert("Disputa abierta. El equipo de RobLoren revisará el caso.");
+    } else {
+      alert("No se pudo abrir la disputa.");
+    }
+
+    setUpdating(null);
+  };
+
   const saveTracking = async (orderId) => {
     const tracking = trackingInput[orderId]?.trim();
     if (!tracking) return;
@@ -86,6 +110,7 @@ export default function OrdersPage({ user }) {
       pending: "Pendiente de confirmación",
       paid: "Pagado (en retención)",
       completed: "Recibido — pago liberado",
+      disputed: "En disputa",
     };
     return map[status] || status || "Pendiente";
   };
@@ -160,18 +185,33 @@ export default function OrdersPage({ user }) {
                 </p>
               )}
 
-              {tab === "buyer" && order.status !== "completed" && (
-                <button
-                  className="button outline small"
-                  style={{ marginTop: 12 }}
-                  disabled={updating === order.id}
-                  onClick={() => markAsReceived(order.id)}
-                >
-                  {updating === order.id ? "Actualizando..." : "Marcar como recibido"}
-                </button>
+              {order.status === "disputed" && order.dispute_reason && (
+                <p style={{ marginTop: 8, fontSize: 13, color: "#dc2626" }}>
+                  <strong>Disputa:</strong> {order.dispute_reason}
+                </p>
               )}
 
-              {tab === "seller" && order.status !== "completed" && (
+              {tab === "buyer" && order.status !== "completed" && order.status !== "disputed" && (
+                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                  <button
+                    className="button outline small"
+                    disabled={updating === order.id}
+                    onClick={() => markAsReceived(order.id)}
+                  >
+                    {updating === order.id ? "Actualizando..." : "Marcar como recibido"}
+                  </button>
+                  <button
+                    className="button outline small"
+                    style={{ color: "#dc2626", borderColor: "#dc2626" }}
+                    disabled={updating === order.id}
+                    onClick={() => openDispute(order.id)}
+                  >
+                    Abrir disputa
+                  </button>
+                </div>
+              )}
+
+              {tab === "seller" && order.status !== "completed" && order.status !== "disputed" && (
                 <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
                   <input
                     type="text"
@@ -198,7 +238,13 @@ export default function OrdersPage({ user }) {
                 </p>
               )}
 
-              {tab === "seller" && order.status !== "completed" && !order.tracking_number && (
+              {tab === "seller" && order.status === "disputed" && (
+                <p style={{ marginTop: 12, fontSize: 13, color: "#dc2626" }}>
+                  Este pedido tiene una disputa abierta
+                </p>
+              )}
+
+              {tab === "seller" && order.status !== "completed" && order.status !== "disputed" && !order.tracking_number && (
                 <p style={{ marginTop: 8, fontSize: 13, color: "var(--muted)" }}>
                   Esperando confirmación del comprador
                 </p>
