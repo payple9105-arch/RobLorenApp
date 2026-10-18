@@ -29,6 +29,20 @@ export default function OrdersPage({ user }) {
     setLoading(false);
   };
 
+  const markAsReceived = async (orderId) => {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "completed" })
+      .eq("id", orderId)
+      .eq("buyer_id", user.id);
+
+    if (!error) {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: "completed" } : o))
+      );
+    }
+  };
+
   if (!user) {
     return (
       <main className="page-container">
@@ -89,6 +103,16 @@ export default function OrdersPage({ user }) {
                   year: "numeric",
                 })}
               </small>
+
+              {tab === "buyer" && order.status !== "completed" && (
+                <button
+                  className="button outline small"
+                  style={{ marginTop: 12 }}
+                  onClick={() => markAsReceived(order.id)}
+                >
+                  Marcar como recibido
+                </button>
+              )}
             </article>
           ))}
         </div>
