@@ -4,7 +4,8 @@ import { supabase } from "./supabaseClient";
 export default function OrdersPage({ user }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("buyer"); // "buyer" | "seller"
+  const [tab, setTab] = useState("buyer");
+  const [updating, setUpdating] = useState(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -30,17 +31,45 @@ export default function OrdersPage({ user }) {
   };
 
   const markAsReceived = async (orderId) => {
-    const { error } = await supabase
+    setUpdating(orderId);
+
+    // 1. Marcar el pedido como completed
+    const { error: orderError } = await supabase
       .from("orders")
       .update({ status: "completed" })
       .eq("id", orderId)
       .eq("buyer_id", user.id);
 
-    if (!error) {
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: "completed" } : o))
-      );
+    if (orderError) {
+      alert("Error al marcar el pedido: " + orderError.message);
+      setUpdating(null);
+      return;
     }
+
+    // 2. Liberar las comisiones relacionadas con este pedido
+    // (cambia su status a 'released' para que el vendedor pueda cobrar)
+    await supabase
+      .from("commissions")
+      .update({ status: "released" })
+      .eq("order_id", orderId);
+
+    // 3. Actualizar la UI
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status: "completed" } : o))
+    );
+
+    setUpdating(null);
+    alert("Pedido marcado como recibido. El pago se ha liberado al vendedor.");
+  };
+
+  const statusLabel = (status) => {
+    const map = {
+      pending: "Pendiente",
+      paid: "Pagado",
+      completed: "Recibido",
+      released: "Pagado al vendedor",
+    };
+    return map[status] || status || "Pendiente";
   };
 
   if (!user) {
@@ -91,7 +120,7 @@ export default function OrdersPage({ user }) {
             <article key={order.id} className="request-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <strong>${Number(order.total || order.amount || 0).toFixed(2)}</strong>
-                <span className="category-pill">{order.status || "pending"}</span>
+                <span className="category-pill">{statusLabel(order.status)}</span>
               </div>
               <p style={{ margin: "8px 0 4px", fontSize: 14, color: "var(--muted)" }}>
                 Pedido #{order.id?.slice(0, 8)}
@@ -108,10 +137,17 @@ export default function OrdersPage({ user }) {
                 <button
                   className="button outline small"
                   style={{ marginTop: 12 }}
+                  disabled={updating === order.id}
                   onClick={() => markAsReceived(order.id)}
                 >
-                  Marcar como recibido
+                  {updating === order.id ? "Actualizando..." : "Marcar como recibido"}
                 </button>
+              )}
+
+              {tab === "seller" && order.status === "completed" && (
+                <p style={{ marginTop: 12, fontSize: 13, color: "green" }}>
+                  Pago liberado — listo para cobrar
+                </p>
               )}
             </article>
           ))}
