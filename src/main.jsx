@@ -4409,6 +4409,9 @@ const submitReview = async (request) => {
           product={selectedProduct}
           user={loggedUser}
           onBack={() => setSelectedProduct(null)}
+          onAddToCart={(product) => {
+            addToCart(product);
+          }}
           onOrderCreated={() => {
             setSelectedProduct(null);
             alert("Pedido creado y comisión registrada");
@@ -4554,6 +4557,7 @@ const submitReview = async (request) => {
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(<App />);
+
 
 
 
