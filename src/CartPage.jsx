@@ -81,16 +81,26 @@ export default function CartPage({ user, onBack }) {
       for (const item of cart) {
         if (!item.seller_id) continue;
 
+        const qty = item.qty || 1;
+
         const { error } = await supabase.from("orders").insert({
           buyer_id: user.id,
           seller_id: item.seller_id,
           product_id: item.id,
-          amount: Number(item.price) * (item.qty || 1),
-          total: Number(item.price) * (item.qty || 1),
+          amount: Number(item.price) * qty,
+          total: Number(item.price) * qty,
           status: "pending",
         });
 
         if (error) throw error;
+
+        // Reducir stock
+        if (item.stock !== null && item.stock !== undefined) {
+          await supabase
+            .from("products")
+            .update({ stock: Math.max(0, (item.stock || 0) - qty) })
+            .eq("id", item.id);
+        }
       }
 
       clearCart();
