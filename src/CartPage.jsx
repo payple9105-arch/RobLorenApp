@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import PayPalCheckout from "./PayPalCheckout";
+import { notifyOrder } from "./notify";
 
 const CART_KEY = "robloren-cart";
 
@@ -84,13 +85,15 @@ export default function CartPage({ user, onBack }) {
     setMessage("");
 
     try {
+      const createdOrders = [];
+
       for (const item of cart) {
         if (!item.seller_id) continue;
 
         const qty = item.qty || 1;
         const itemTotal = Number(item.price) * qty;
 
-        const { error } = await supabase.from("orders").insert({
+        const { data, error } = await supabase.from("orders").insert({
           buyer_id: user.id,
           seller_id: item.seller_id,
           product_id: item.id,
@@ -98,9 +101,11 @@ export default function CartPage({ user, onBack }) {
           total: itemTotal,
           status: "paid",
           paypal_order_id: details?.id || null,
-        });
+        }).select().single();
 
         if (error) throw error;
+
+        if (data) createdOrders.push(data);
 
         if (item.stock !== null && item.stock !== undefined) {
           await supabase
@@ -108,6 +113,13 @@ export default function CartPage({ user, onBack }) {
             .update({ stock: Math.max(0, (item.stock || 0) - qty) })
             .eq("id", item.id);
         }
+      }
+
+      for (const order of createdOrders) {
+        await notifyOrder({
+          type: "INSERT",
+          record: order,
+        });
       }
 
       clearCart();
