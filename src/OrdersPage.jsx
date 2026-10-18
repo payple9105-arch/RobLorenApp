@@ -20,7 +20,7 @@ export default function OrdersPage({ user }) {
 
     const { data, error } = await supabase
       .from("orders")
-      .select("*")
+      .select("*, products(title, product_type, digital_file_url)")
       .eq(column, user.id)
       .order("created_at", { ascending: false });
 
@@ -170,6 +170,7 @@ export default function OrdersPage({ user }) {
               </div>
               <p style={{ margin: "8px 0 4px", fontSize: 14, color: "var(--muted)" }}>
                 Pedido #{order.id?.slice(0, 8)}
+                {order.products?.title && ` — ${order.products.title}`}
               </p>
               <small style={{ color: "var(--muted)" }}>
                 {new Date(order.created_at).toLocaleDateString("es-ES", {
@@ -182,6 +183,19 @@ export default function OrdersPage({ user }) {
               {order.tracking_number && (
                 <p style={{ marginTop: 8, fontSize: 13 }}>
                   <strong>Tracking:</strong> {order.tracking_number}
+                </p>
+              )}
+
+              {tab === "buyer" && order.products?.digital_file_url && (
+                <p style={{ marginTop: 8, fontSize: 13 }}>
+                  <a
+                    href={order.products.digital_file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#2563eb", fontWeight: 600 }}
+                  >
+                    Descargar archivo
+                  </a>
                 </p>
               )}
 
