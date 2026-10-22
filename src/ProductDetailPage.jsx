@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { supabase } from "./supabaseClient";
+import PayPalCheckout from "./PayPalCheckout";
+import { notifyOrder } from "./notify";
 
 export default function ProductDetailPage({ product, user, onBack, onOrderCreated, onAddToCart }) {
   const [buying, setBuying] = useState(false);
   const [message, setMessage] = useState("");
   const [qty, setQty] = useState(1);
+  const [showPayPal, setShowPayPal] = useState(false);
 
   if (!product) {
     return (
@@ -15,17 +18,26 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
     );
   }
 
-  const buyProduct = async () => {
+  const total = (Number(product.price) || 0) * qty;
+
+  const startCheckout = () => {
     if (!user) {
       setMessage("Debes iniciar sesión para comprar.");
       return;
     }
-
     if (!product.seller_id) {
       setMessage("Este producto no tiene vendedor asignado. No se puede comprar.");
       return;
     }
+    if (product.stock === 0) {
+      setMessage("Producto agotado.");
+      return;
+    }
+    setShowPayPal(true);
+    setMessage("");
+  };
 
+  const handlePaid = async (details) => {
     setBuying(true);
     setMessage("");
 
@@ -36,24 +48,37 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
           buyer_id: user.id,
           seller_id: product.seller_id,
           product_id: product.id,
-          amount: Number(product.price) || 0,
-          total: Number(product.price) || 0,
-          status: "pending",
+          amount: total,
+          total: total,
+          status: "paid",
+          paypal_order_id: details?.id || null,
         })
         .select()
         .single();
 
       if (error) {
         console.error("Error creando pedido:", error);
-        setMessage(`Error: ${error.message || "No se pudo crear el pedido."}`);
+        setMessage(`Pago recibido, pero hubo un error al guardar el pedido: ${error.message}`);
         return;
       }
 
-      setMessage("Pedido creado correctamente. La comisión se registró automáticamente.");
-      onOrderCreated?.(data);
+      if (product.stock !== null && product.stock !== undefined) {
+        await supabase
+          .from("products")
+          .update({ stock: Math.max(0, (product.stock || 0) - qty) })
+          .eq("id", product.id);
+      }
+
+      if (data) {
+        await notifyOrder({ type: "INSERT", record: data });
+        onOrderCreated?.(data);
+      }
+
+      setShowPayPal(false);
+      setMessage("Pago completado. Pedido creado correctamente.");
     } catch (err) {
       console.error(err);
-      setMessage("No se pudo crear el pedido. Inténtalo de nuevo.");
+      setMessage("Pago recibido, pero hubo un error al guardar el pedido.");
     } finally {
       setBuying(false);
     }
@@ -103,6 +128,7 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
             <button
               className="button outline small"
               onClick={() => setQty((q) => Math.max(1, q - 1))}
+              disabled={showPayPal}
             >
               −
             </button>
@@ -110,35 +136,66 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
             <button
               className="button outline small"
               onClick={() => setQty((q) => q + 1)}
+              disabled={showPayPal}
             >
               +
             </button>
           </div>
 
-          <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
-            <button
-              className="button outline large"
-              style={{ flex: 1 }}
-              onClick={() => {
-                const productWithQty = { ...product, qty };
-                onAddToCart?.(productWithQty);
-                alert(`${qty} producto${qty > 1 ? "s" : ""} añadido${qty > 1 ? "s" : ""} al carrito`);
-              }}
-            >
-              Añadir al carrito
-            </button>
-            <button
-              className="button primary large"
-              style={{ flex: 1 }}
-              disabled={buying || product.stock === 0}
-              onClick={buyProduct}
-            >
-              {buying ? "Procesando..." : product.stock === 0 ? "Agotado" : "Comprar ahora"}
-            </button>
-          </div>
+          {!showPayPal ? (
+            <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
+              <button
+                className="button outline large"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  const productWithQty = { ...product, qty };
+                  onAddToCart?.(productWithQty);
+                  alert(`${qty} producto${qty > 1 ? "s" : ""} añadido${qty > 1 ? "s" : ""} al carrito`);
+                }}
+              >
+                Añadir al carrito
+              </button>
+              <button
+                className="button primary large"
+                style={{ flex: 1 }}
+                disabled={buying || product.stock === 0}
+                onClick={startCheckout}
+              >
+                {product.stock === 0 ? "Agotado" : "Comprar ahora"}
+              </button>
+            </div>
+          ) : (
+            <div style={{ marginTop: 24 }}>
+              <div style={{ marginBottom: 12, fontWeight: 700, fontSize: 18 }}>
+                Total a pagar: ${total.toFixed(2)}
+              </div>
+              <PayPalCheckout
+                amount={total}
+                description={`${product.title} x${qty}`}
+                onPaid={handlePaid}
+                onError={() => setMessage("Error en el pago. Inténtalo de nuevo.")}
+              />
+              <button
+                className="button outline"
+                style={{ width: "100%", marginTop: 12 }}
+                onClick={() => setShowPayPal(false)}
+                disabled={buying}
+              >
+                Cancelar
+              </button>
+            </div>
+          )}
 
           {message && (
-            <p style={{ marginTop: 16, color: message.includes("correctamente") ? "#16a34a" : "#dc2626" }}>
+            <p
+              style={{
+                marginTop: 16,
+                color:
+                  message.includes("completado") || message.includes("correctamente")
+                    ? "#16a34a"
+                    : "#dc2626",
+              }}
+            >
               {message}
             </p>
           )}
