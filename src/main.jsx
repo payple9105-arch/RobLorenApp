@@ -53,12 +53,12 @@ function PayPalCheckout({ amount, description, onPaid }) {
         if (!alive || !host.current || !paypal) return;
         host.current.innerHTML = "";
 
-        const order = {
+        const orderConfig = {
           createOrder: (_data, actions) =>
             actions.order.create({
               purchase_units: [
                 {
-                  description,
+                  description: description || "Compra en RobLoren",
                   amount: {
                     currency_code: "USD",
                     value: money(amount),
@@ -67,36 +67,40 @@ function PayPalCheckout({ amount, description, onPaid }) {
               ],
             }),
           onApprove: async (_data, actions) => {
-            const details = await actions.order.capture();
-            paid.current?.(details);
+            try {
+              const details = await actions.order.capture();
+              paid.current?.(details);
+            } catch (err) {
+              console.error(err);
+              alert("No se pudo completar el pago. Inténtalo de nuevo.");
+            }
           },
           onError: () => {
-            alert("No se pudo completar el pago. Inténtalo de nuevo.");
+            alert("Ocurrió un error con el pago. Inténtalo de nuevo.");
           },
         };
 
-        const buttons = [
-          paypal.Buttons({
-            ...order,
-            fundingSource: paypal.FUNDING.PAYPAL,
-            style: { shape: "rect", color: "gold", label: "paypal" },
-          }),
-          paypal.Buttons({
-            ...order,
-            fundingSource: paypal.FUNDING.CARD,
-            style: { shape: "rect", color: "black", label: "pay" },
-          }),
-        ];
+        const paypalBtn = paypal.Buttons({
+          ...orderConfig,
+          fundingSource: paypal.FUNDING.PAYPAL,
+          style: { shape: "rect", color: "gold", label: "paypal", height: 48 },
+        });
 
-        return Promise.all(
-          buttons
-            .filter((button) => button.isEligible())
-            .map((button) => button.render(host.current))
-        );
+        const cardBtn = paypal.Buttons({
+          ...orderConfig,
+          fundingSource: paypal.FUNDING.CARD,
+          style: { shape: "rect", color: "black", label: "pay", height: 48 },
+        });
+
+        const renders = [];
+        if (paypalBtn.isEligible()) renders.push(paypalBtn.render(host.current));
+        if (cardBtn.isEligible()) renders.push(cardBtn.render(host.current));
+
+        return Promise.all(renders);
       })
       .catch(() => {
         if (host.current) {
-          host.current.textContent = "No se pudo abrir PayPal en este momento.";
+          host.current.textContent = "No se pudo cargar PayPal. Recarga la página.";
         }
       });
 
@@ -105,7 +109,13 @@ function PayPalCheckout({ amount, description, onPaid }) {
     };
   }, [amount, description]);
 
-  return <div className="paypal-slot" ref={host} />;
+  return (
+    <div
+      className="paypal-slot"
+      ref={host}
+      style={{ minHeight: 110, display: "grid", gap: 10 }}
+    />
+  );
 }
 
 const categories = [
