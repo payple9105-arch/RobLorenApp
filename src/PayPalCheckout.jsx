@@ -38,6 +38,59 @@ export default function PayPalCheckout({ amount, description, onPaid, onError })
         if (!alive || !host.current || !paypal) return;
         host.current.innerHTML = "";
 
+        // Contenedor visual
+        const wrapper = document.createElement("div");
+        wrapper.style.cssText = "display:grid;gap:14px;width:100%;";
+
+        const title = document.createElement("div");
+        title.style.cssText =
+          "font-size:15px;font-weight:700;color:#101828;text-align:center;";
+        title.textContent = "Elige cómo pagar";
+        wrapper.appendChild(title);
+
+        // PayPal
+        const paypalBox = document.createElement("div");
+        paypalBox.style.cssText = "display:grid;gap:6px;";
+        const paypalLabel = document.createElement("div");
+        paypalLabel.style.cssText =
+          "font-size:12px;font-weight:600;color:#5d6b80;text-align:center;";
+        paypalLabel.textContent = "PayPal";
+        const paypalSlot = document.createElement("div");
+        paypalSlot.id = "paypal-btn-slot";
+        paypalBox.appendChild(paypalLabel);
+        paypalBox.appendChild(paypalSlot);
+        wrapper.appendChild(paypalBox);
+
+        // Separador
+        const sep = document.createElement("div");
+        sep.style.cssText =
+          "display:flex;align-items:center;gap:10px;color:#5d6b80;font-size:12px;";
+        sep.innerHTML =
+          '<div style="flex:1;height:1px;background:#e6ebf2;"></div><span>o</span><div style="flex:1;height:1px;background:#e6ebf2;"></div>';
+        wrapper.appendChild(sep);
+
+        // Tarjeta
+        const cardBox = document.createElement("div");
+        cardBox.style.cssText = "display:grid;gap:6px;";
+        const cardLabel = document.createElement("div");
+        cardLabel.style.cssText =
+          "font-size:12px;font-weight:600;color:#5d6b80;text-align:center;";
+        cardLabel.textContent = "Tarjeta (Visa / Mastercard)";
+        const cardSlot = document.createElement("div");
+        cardSlot.id = "card-btn-slot";
+        cardBox.appendChild(cardLabel);
+        cardBox.appendChild(cardSlot);
+        wrapper.appendChild(cardBox);
+
+        // Nota
+        const note = document.createElement("div");
+        note.style.cssText =
+          "font-size:11px;color:#5d6b80;text-align:center;margin-top:2px;";
+        note.textContent = "Pago seguro · Visa · Mastercard · Amex";
+        wrapper.appendChild(note);
+
+        host.current.appendChild(wrapper);
+
         const orderConfig = {
           createOrder: (_data, actions) =>
             actions.order.create({
@@ -81,14 +134,27 @@ export default function PayPalCheckout({ amount, description, onPaid, onError })
         });
 
         const renders = [];
-        if (paypalBtn.isEligible()) renders.push(paypalBtn.render(host.current));
-        if (cardBtn.isEligible()) renders.push(cardBtn.render(host.current));
+
+        if (paypalBtn.isEligible()) {
+          renders.push(paypalBtn.render("#paypal-btn-slot"));
+        } else {
+          paypalSlot.innerHTML =
+            '<div style="padding:12px;background:#f5f7fb;border-radius:10px;text-align:center;font-size:13px;color:#5d6b80;">PayPal no disponible</div>';
+        }
+
+        if (cardBtn.isEligible()) {
+          renders.push(cardBtn.render("#card-btn-slot"));
+        } else {
+          cardSlot.innerHTML =
+            '<div style="padding:12px;background:#f5f7fb;border-radius:10px;text-align:center;font-size:13px;color:#5d6b80;">Pago con tarjeta disponible en breve</div>';
+        }
 
         return Promise.all(renders);
       })
       .catch(() => {
         if (host.current) {
-          host.current.textContent = "No se pudo cargar PayPal. Recarga la página.";
+          host.current.innerHTML =
+            '<div style="padding:16px;background:#fff0f3;border-radius:12px;color:#d3456a;font-size:14px;text-align:center;">No se pudo cargar PayPal. Recarga la página.</div>';
         }
       });
 
@@ -101,7 +167,7 @@ export default function PayPalCheckout({ amount, description, onPaid, onError })
     <div
       className="paypal-slot"
       ref={host}
-      style={{ minHeight: 110, display: "grid", gap: 10 }}
+      style={{ minHeight: 160, width: "100%" }}
     />
   );
 }
