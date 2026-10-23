@@ -74,7 +74,7 @@ export default function CommissionsPage({ user }) {
     }
 
     const ok = window.confirm(
-      `¿Solicitar retiro de $${available.toFixed(2)} a ${email}?\n\nRobLoren procesará el pago a esa cuenta PayPal.`
+      `¿Solicitar retiro de $${available.toFixed(2)} a ${email}?\n\nSe intentará enviar el dinero automáticamente por PayPal.`
     );
     if (!ok) return;
 
@@ -104,24 +104,41 @@ export default function CommissionsPage({ user }) {
         return;
       }
 
-      const { error: updateError } = await supabase
+      await supabase
         .from("commissions")
         .update({ status: "payout_requested" })
         .eq("seller_id", user.id)
         .eq("status", "released");
 
-      if (updateError) {
-        console.error(updateError);
+      // Intento de pago automático vía Edge Function
+      const { data: fnData, error: fnError } = await supabase.functions.invoke(
+        "process-payout",
+        { body: { payout_id: payout.id } }
+      );
+
+      if (fnError) {
+        console.error(fnError);
+        alert(
+          "Solicitud creada, pero el pago automático aún no está configurado o falló.\n" +
+            "Revisa los secrets de Supabase y que Payouts esté activo en PayPal.\n" +
+            (fnError.message || "")
+        );
+      } else if (fnData?.error) {
+        alert(
+          "Solicitud creada. PayPal respondió: " +
+            (fnData.error || "error") +
+            "\nPuedes procesarla manualmente si hace falta."
+        );
+      } else {
+        alert(
+          "¡Retiro enviado! PayPal está procesando el pago a " +
+            email +
+            "."
+        );
       }
 
       setShowForm(false);
-      alert(
-        "Solicitud enviada. Te pagaremos a " +
-          email +
-          " cuando se procese el retiro."
-      );
       await load();
-      void payout;
     } catch (err) {
       console.error(err);
       alert("Error al solicitar el retiro.");
@@ -169,7 +186,7 @@ export default function CommissionsPage({ user }) {
         <h1>Ganancias y retiros</h1>
         <p>
           El dinero se libera cuando el comprador confirma la recepción. Luego puedes
-          solicitar el retiro a tu PayPal.
+          solicitar el retiro a tu PayPal (pago automático si está configurado).
         </p>
       </header>
 
@@ -238,7 +255,7 @@ export default function CommissionsPage({ user }) {
                   disabled={submitting}
                   onClick={requestPayout}
                 >
-                  {submitting ? "Enviando..." : "Confirmar retiro"}
+                  {submitting ? "Procesando..." : "Confirmar retiro automático"}
                 </button>
                 <button
                   className="button outline"
@@ -351,8 +368,8 @@ export default function CommissionsPage({ user }) {
           lineHeight: 1.5,
         }}
       >
-        Los retiros se pagan manualmente a tu PayPal por el equipo de RobLoren.
-        Tiempo estimado: 1–3 días hábiles después de solicitarlo.
+        Si el pago automático está configurado, el dinero se envía al instante a tu PayPal.
+        Si falla, la solicitud queda pendiente para procesarla manualmente.
       </p>
     </main>
   );
