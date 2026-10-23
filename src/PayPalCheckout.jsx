@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 
 const PAYPAL_CLIENT_ID =
-  "BAA_Ux_XQQKppjplmdc2V6jZZGOlSQATrlf2UKoc4Pi1lRIbKqtejqk2di8a9hRJ5e0xZFL46K_xfEYt-I";
+  "AdE3Rfow5IlmAtfn361m5LsJGr01L4KZo7V6cxJovroYWxwXHIZsh5Ja_01uHMV19DEExovLW8YXsdZN";
 
 function loadPayPal() {
   if (window.paypal) return Promise.resolve(window.paypal);
@@ -38,7 +38,6 @@ export default function PayPalCheckout({ amount, description, onPaid, onError })
         if (!alive || !host.current || !paypal) return;
         host.current.innerHTML = "";
 
-        // Contenedor visual
         const wrapper = document.createElement("div");
         wrapper.style.cssText = "display:grid;gap:14px;width:100%;";
 
@@ -48,7 +47,6 @@ export default function PayPalCheckout({ amount, description, onPaid, onError })
         title.textContent = "Elige cómo pagar";
         wrapper.appendChild(title);
 
-        // PayPal
         const paypalBox = document.createElement("div");
         paypalBox.style.cssText = "display:grid;gap:6px;";
         const paypalLabel = document.createElement("div");
@@ -61,7 +59,6 @@ export default function PayPalCheckout({ amount, description, onPaid, onError })
         paypalBox.appendChild(paypalSlot);
         wrapper.appendChild(paypalBox);
 
-        // Separador
         const sep = document.createElement("div");
         sep.style.cssText =
           "display:flex;align-items:center;gap:10px;color:#5d6b80;font-size:12px;";
@@ -69,7 +66,6 @@ export default function PayPalCheckout({ amount, description, onPaid, onError })
           '<div style="flex:1;height:1px;background:#e6ebf2;"></div><span>o</span><div style="flex:1;height:1px;background:#e6ebf2;"></div>';
         wrapper.appendChild(sep);
 
-        // Tarjeta
         const cardBox = document.createElement("div");
         cardBox.style.cssText = "display:grid;gap:6px;";
         const cardLabel = document.createElement("div");
@@ -82,7 +78,6 @@ export default function PayPalCheckout({ amount, description, onPaid, onError })
         cardBox.appendChild(cardSlot);
         wrapper.appendChild(cardBox);
 
-        // Nota
         const note = document.createElement("div");
         note.style.cssText =
           "font-size:11px;color:#5d6b80;text-align:center;margin-top:2px;";
