@@ -1,20 +1,11 @@
 import React from "react";
 
-/**
- * Número en formato internacional sin + ni espacios.
- * Ejemplo Cuba: 5355512345
- * Ejemplo USA: 15551234567
- */
-const SUPPORT_WHATSAPP = "15551234567";
+/** Número internacional sin + ni espacios (Cuba) */
+const SUPPORT_WHATSAPP = "5354732279";
 
-const DEFAULT_MESSAGE =
-  "Hola, necesito soporte con RobLoren.";
+const DEFAULT_MESSAGE = "Hola, necesito soporte con RobLoren.";
 
 export default function WhatsAppButton() {
-  if (!SUPPORT_WHATSAPP || SUPPORT_WHATSAPP === "15551234567") {
-    // Sigue visible; cambia SUPPORT_WHATSAPP por tu número real
-  }
-
   const href = `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(
     DEFAULT_MESSAGE
   )}`;
