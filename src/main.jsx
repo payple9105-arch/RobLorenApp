@@ -16,6 +16,7 @@ import CommissionsPage from "./CommissionsPage";
 import ProductDetailPage from "./ProductDetailPage";
 import CartPage, { addToCart } from "./CartPage";
 import OrdersPage from "./OrdersPage";
+import LegalPage from "./LegalPage";
 
 const PAYPAL_CLIENT_ID =
   "AdE3Rfow5IlmAtfn361m5LsJGr01L4KZo7V6cxJovroYWxwXHIZsh5Ja_01uHMV19DEExovLW8YXsdZN";
@@ -4496,6 +4497,12 @@ const submitReview = async (request) => {
     case "offer":
       return OfferPage();
 
+    case "terms":
+      return <LegalPage type="terms" onBack={() => go("home")} />;
+
+    case "privacy":
+      return <LegalPage type="privacy" onBack={() => go("home")} />;
+
     case "blog":
       return (
         <main className="page-container">
@@ -4566,7 +4573,13 @@ const submitReview = async (request) => {
         </div>
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} RobLoren. Todos los derechos reservados.</span>
-          <span>Términos de uso · Política de privacidad · Ayuda</span>
+          <span style={{ display: "flex", flexWrap: "wrap", gap: "8px 12px" }}>
+            <button type="button" onClick={() => go("terms")} style={{ background: "none", border: 0, color: "inherit", cursor: "pointer", padding: 0, font: "inherit" }}>Términos de uso</button>
+            <span>·</span>
+            <button type="button" onClick={() => go("privacy")} style={{ background: "none", border: 0, color: "inherit", cursor: "pointer", padding: 0, font: "inherit" }}>Política de privacidad</button>
+            <span>·</span>
+            <button type="button" onClick={() => go("account")} style={{ background: "none", border: 0, color: "inherit", cursor: "pointer", padding: 0, font: "inherit" }}>Ayuda</button>
+          </span>
         </div>
       </footer>
     </>
