@@ -57,7 +57,10 @@ export default function CartPage({ user, onBack }) {
     setCart(getCart());
   }, []);
 
-  const total = cart.reduce((sum, item) => sum + Number(item.price || 0) * (item.qty || 1), 0);
+  const total = cart.reduce(
+    (sum, item) => sum + Number(item.price || 0) * (item.qty || 1),
+    0
+  );
 
   const handleQty = (id, delta) => {
     const item = cart.find((i) => i.id === id);
@@ -85,50 +88,54 @@ export default function CartPage({ user, onBack }) {
     setMessage("");
 
     try {
-      const createdOrders = [];
-
-      for (const item of cart) {
-        if (!item.seller_id) continue;
-
-        const qty = item.qty || 1;
-        const itemTotal = Number(item.price) * qty;
-
-        const { data, error } = await supabase.from("orders").insert({
-          buyer_id: user.id,
-          seller_id: item.seller_id,
-          product_id: item.id,
-          amount: itemTotal,
-          total: itemTotal,
-          status: "paid",
-          paypal_order_id: details?.id || null,
-        }).select().single();
-
-        if (error) throw error;
-
-        if (data) createdOrders.push(data);
-
-        if (item.stock !== null && item.stock !== undefined) {
-          await supabase
-            .from("products")
-            .update({ stock: Math.max(0, (item.stock || 0) - qty) })
-            .eq("id", item.id);
-        }
+      const paypalOrderId = details?.id;
+      if (!paypalOrderId) {
+        setMessage("No se recibió el ID de pago de PayPal.");
+        return;
       }
 
-      for (const order of createdOrders) {
-        await notifyOrder({
-          type: "INSERT",
-          record: order,
-        });
+      const items = cart.map((item) => ({
+        product_id: item.id,
+        qty: item.qty || 1,
+      }));
+
+      const { data, error } = await supabase.functions.invoke("confirm-payment", {
+        body: {
+          paypal_order_id: paypalOrderId,
+          items,
+        },
+      });
+
+      if (error) {
+        console.error(error);
+        setMessage(
+          "El pago se recibió en PayPal, pero no se pudo verificar en el servidor. Contacta soporte con el ID: " +
+            paypalOrderId
+        );
+        return;
+      }
+
+      if (data?.error) {
+        setMessage(data.error);
+        return;
+      }
+
+      const orders = data?.orders || [];
+      for (const order of orders) {
+        await notifyOrder({ type: "INSERT", record: order });
       }
 
       clearCart();
       setCart([]);
       setShowPayPal(false);
-      setMessage("Pago completado. Pedidos creados correctamente.");
+      setMessage(
+        data?.duplicate
+          ? "Este pago ya estaba registrado."
+          : "Pago verificado. Pedidos creados correctamente."
+      );
     } catch (err) {
       console.error(err);
-      setMessage("Pago recibido, pero hubo un error al guardar los pedidos.");
+      setMessage("Error al confirmar el pago con el servidor.");
     } finally {
       setBuying(false);
     }
@@ -154,7 +161,13 @@ export default function CartPage({ user, onBack }) {
           <div className="requests-grid">
             {cart.map((item) => (
               <article key={item.id} className="request-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <div>
                     <strong>{item.title}</strong>
                     <div style={{ fontSize: 14, color: "var(--muted)" }}>
@@ -168,7 +181,9 @@ export default function CartPage({ user, onBack }) {
                     >
                       −
                     </button>
-                    <span style={{ minWidth: 24, textAlign: "center" }}>{item.qty || 1}</span>
+                    <span style={{ minWidth: 24, textAlign: "center" }}>
+                      {item.qty || 1}
+                    </span>
                     <button
                       className="button outline small"
                       onClick={() => handleQty(item.id, 1)}
@@ -187,7 +202,10 @@ export default function CartPage({ user, onBack }) {
             ))}
           </div>
 
-          <div className="service-card" style={{ marginTop: 24, textAlign: "center", padding: "20px" }}>
+          <div
+            className="service-card"
+            style={{ marginTop: 24, textAlign: "center", padding: "20px" }}
+          >
             <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>
               Total: ${total.toFixed(2)}
             </div>
@@ -203,12 +221,18 @@ export default function CartPage({ user, onBack }) {
               </button>
             ) : (
               <div style={{ maxWidth: 400, margin: "0 auto" }}>
-                <PayPalCheckout
-                  amount={total}
-                  description={`Carrito RobLoren (${cart.length} productos)`}
-                  onPaid={handlePaid}
-                  onError={() => setMessage("Error en el pago. Inténtalo de nuevo.")}
-                />
+                {buying ? (
+                  <p style={{ color: "var(--muted)" }}>Verificando pago...</p>
+                ) : (
+                  <PayPalCheckout
+                    amount={total}
+                    description={`Carrito RobLoren (${cart.length} productos)`}
+                    onPaid={handlePaid}
+                    onError={() =>
+                      setMessage("Error en el pago. Inténtalo de nuevo.")
+                    }
+                  />
+                )}
               </div>
             )}
           </div>
@@ -216,7 +240,17 @@ export default function CartPage({ user, onBack }) {
       )}
 
       {message && (
-        <p style={{ marginTop: 16, color: message.includes("completado") || message.includes("correctamente") ? "#16a34a" : "#dc2626" }}>
+        <p
+          style={{
+            marginTop: 16,
+            color:
+              message.includes("verificado") ||
+              message.includes("correctamente") ||
+              message.includes("registrado")
+                ? "#16a34a"
+                : "#dc2626",
+          }}
+        >
           {message}
         </p>
       )}
