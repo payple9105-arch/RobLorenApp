@@ -3,7 +3,13 @@ import { supabase } from "./supabaseClient";
 import PayPalCheckout from "./PayPalCheckout";
 import { notifyOrder } from "./notify";
 
-export default function ProductDetailPage({ product, user, onBack, onOrderCreated, onAddToCart }) {
+export default function ProductDetailPage({
+  product,
+  user,
+  onBack,
+  onOrderCreated,
+  onAddToCart,
+}) {
   const [buying, setBuying] = useState(false);
   const [message, setMessage] = useState("");
   const [qty, setQty] = useState(1);
@@ -13,7 +19,9 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
     return (
       <main className="page-container">
         <p style={{ textAlign: "center", marginTop: 40 }}>Producto no encontrado.</p>
-        <button className="button outline" onClick={onBack}>Volver</button>
+        <button className="button outline" onClick={onBack}>
+          Volver
+        </button>
       </main>
     );
   }
@@ -42,43 +50,48 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
     setMessage("");
 
     try {
-      const { data, error } = await supabase
-        .from("orders")
-        .insert({
-          buyer_id: user.id,
-          seller_id: product.seller_id,
-          product_id: product.id,
-          amount: total,
-          total: total,
-          status: "paid",
-          paypal_order_id: details?.id || null,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Error creando pedido:", error);
-        setMessage(`Pago recibido, pero hubo un error al guardar el pedido: ${error.message}`);
+      const paypalOrderId = details?.id;
+      if (!paypalOrderId) {
+        setMessage("No se recibió el ID de pago de PayPal.");
         return;
       }
 
-      if (product.stock !== null && product.stock !== undefined) {
-        await supabase
-          .from("products")
-          .update({ stock: Math.max(0, (product.stock || 0) - qty) })
-          .eq("id", product.id);
+      const { data, error } = await supabase.functions.invoke("confirm-payment", {
+        body: {
+          paypal_order_id: paypalOrderId,
+          items: [{ product_id: product.id, qty }],
+        },
+      });
+
+      if (error) {
+        console.error(error);
+        setMessage(
+          "El pago se recibió en PayPal, pero no se pudo verificar en el servidor. Contacta soporte con el ID: " +
+            paypalOrderId
+        );
+        return;
       }
 
-      if (data) {
-        await notifyOrder({ type: "INSERT", record: data });
-        onOrderCreated?.(data);
+      if (data?.error) {
+        setMessage(data.error);
+        return;
+      }
+
+      const order = data?.orders?.[0];
+      if (order) {
+        await notifyOrder({ type: "INSERT", record: order });
+        onOrderCreated?.(order);
       }
 
       setShowPayPal(false);
-      setMessage("Pago completado. Pedido creado correctamente.");
+      setMessage(
+        data?.duplicate
+          ? "Este pago ya estaba registrado."
+          : "Pago verificado. Pedido creado correctamente."
+      );
     } catch (err) {
       console.error(err);
-      setMessage("Pago recibido, pero hubo un error al guardar el pedido.");
+      setMessage("Error al confirmar el pago con el servidor.");
     } finally {
       setBuying(false);
     }
@@ -95,14 +108,22 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
           <img
             src={product.image_url || "/media/design.jpg"}
             alt={product.title}
-            style={{ width: "100%", borderRadius: 16, maxHeight: 420, objectFit: "cover" }}
+            style={{
+              width: "100%",
+              borderRadius: 16,
+              maxHeight: 420,
+              objectFit: "cover",
+            }}
           />
         </div>
 
         <div>
           <span className="category-pill">{product.category || "Producto"}</span>
           {product.is_featured && (
-            <span className="category-pill" style={{ background: "#f59e0b", color: "#fff", marginLeft: 8 }}>
+            <span
+              className="category-pill"
+              style={{ background: "#f59e0b", color: "#fff", marginLeft: 8 }}
+            >
               Destacado
             </span>
           )}
@@ -119,7 +140,8 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
 
           <div style={{ marginTop: 16, fontSize: 14, color: "var(--muted)" }}>
             {product.product_type === "digital" && "Descarga digital inmediata"}
-            {product.product_type === "physical" && `Envío disponible · Stock: ${product.stock ?? "—"}`}
+            {product.product_type === "physical" &&
+              `Envío disponible · Stock: ${product.stock ?? "—"}`}
             {product.product_type === "both" && "Digital y físico"}
           </div>
 
@@ -128,7 +150,7 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
             <button
               className="button outline small"
               onClick={() => setQty((q) => Math.max(1, q - 1))}
-              disabled={showPayPal}
+              disabled={showPayPal || buying}
             >
               −
             </button>
@@ -136,7 +158,7 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
             <button
               className="button outline small"
               onClick={() => setQty((q) => q + 1)}
-              disabled={showPayPal}
+              disabled={showPayPal || buying}
             >
               +
             </button>
@@ -150,7 +172,9 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
                 onClick={() => {
                   const productWithQty = { ...product, qty };
                   onAddToCart?.(productWithQty);
-                  alert(`${qty} producto${qty > 1 ? "s" : ""} añadido${qty > 1 ? "s" : ""} al carrito`);
+                  alert(
+                    `${qty} producto${qty > 1 ? "s" : ""} añadido${qty > 1 ? "s" : ""} al carrito`
+                  );
                 }}
               >
                 Añadir al carrito
@@ -169,12 +193,16 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
               <div style={{ marginBottom: 12, fontWeight: 700, fontSize: 18 }}>
                 Total a pagar: ${total.toFixed(2)}
               </div>
-              <PayPalCheckout
-                amount={total}
-                description={`${product.title} x${qty}`}
-                onPaid={handlePaid}
-                onError={() => setMessage("Error en el pago. Inténtalo de nuevo.")}
-              />
+              {buying ? (
+                <p style={{ color: "var(--muted)" }}>Verificando pago en el servidor...</p>
+              ) : (
+                <PayPalCheckout
+                  amount={total}
+                  description={`${product.title} x${qty}`}
+                  onPaid={handlePaid}
+                  onError={() => setMessage("Error en el pago. Inténtalo de nuevo.")}
+                />
+              )}
               <button
                 className="button outline"
                 style={{ width: "100%", marginTop: 12 }}
@@ -191,7 +219,9 @@ export default function ProductDetailPage({ product, user, onBack, onOrderCreate
               style={{
                 marginTop: 16,
                 color:
-                  message.includes("completado") || message.includes("correctamente")
+                  message.includes("verificado") ||
+                  message.includes("correctamente") ||
+                  message.includes("registrado")
                     ? "#16a34a"
                     : "#dc2626",
               }}
