@@ -483,6 +483,42 @@ footer a {
   display: flex;
   flex-wrap: wrap;
   gap: 10px 14px;
+  align-items: center;
+}
+
+/* Footer nav: solo texto, sin burbuja blanca */
+.footer-links button,
+.footer nav button,
+.footer .footer-links button,
+footer .footer-links button {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 2px 0 !important;
+  min-height: auto !important;
+  color: #e8eef7 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.footer-links button:hover,
+.footer nav button:hover {
+  color: #ffffff !important;
+  text-decoration: underline;
+  background: transparent !important;
+}
+
+.footer-social span,
+.footer-social button {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: #9eb0c8 !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
 }
 
 .footer-bottom {
@@ -731,7 +767,6 @@ footer a {
     font-size: 13px;
   }
 
-  /* 5 items visibles; el 6º (Perfil) se oculta para no romper la barra */
   .bottom-nav {
     position: fixed;
     left: 0;
