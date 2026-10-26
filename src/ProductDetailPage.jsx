@@ -1,7 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import PayPalCheckout from "./PayPalCheckout";
 import { notifyOrder } from "./notify";
+
+function Stars({ value = 0, size = 16 }) {
+  const v = Math.round(Number(value) || 0);
+  return (
+    <span style={{ color: "#f5b400", fontSize: size, letterSpacing: 1 }} aria-label={`${v} de 5`}>
+      {"★".repeat(Math.min(5, Math.max(0, v)))}
+      <span style={{ color: "#d1d5db" }}>{"★".repeat(Math.max(0, 5 - v))}</span>
+    </span>
+  );
+}
 
 export default function ProductDetailPage({
   product,
@@ -14,6 +24,32 @@ export default function ProductDetailPage({
   const [message, setMessage] = useState("");
   const [qty, setQty] = useState(1);
   const [showPayPal, setShowPayPal] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+
+  useEffect(() => {
+    if (!product?.id) return;
+    loadReviews();
+  }, [product?.id]);
+
+  const loadReviews = async () => {
+    const { data } = await supabase
+      .from("reviews")
+      .select("id, rating, comment, created_at, reviewer_id")
+      .eq("product_id", product.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    const list = data || [];
+    setReviews(list);
+    if (list.length) {
+      const avg =
+        list.reduce((s, r) => s + Number(r.rating || 0), 0) / list.length;
+      setAvgRating(avg);
+    } else {
+      setAvgRating(0);
+    }
+  };
 
   if (!product) {
     return (
@@ -130,6 +166,23 @@ export default function ProductDetailPage({
 
           <h1 style={{ marginTop: 12 }}>{product.title}</h1>
 
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            <Stars value={avgRating} size={18} />
+            <span style={{ fontSize: 14, color: "var(--muted)" }}>
+              {reviews.length > 0
+                ? `${avgRating.toFixed(1)} · ${reviews.length} reseña${reviews.length === 1 ? "" : "s"}`
+                : "Sin reseñas todavía"}
+            </span>
+          </div>
+
           <div style={{ fontSize: 32, fontWeight: 700, margin: "12px 0" }}>
             ${product.price}
           </div>
@@ -229,8 +282,46 @@ export default function ProductDetailPage({
               {message}
             </p>
           )}
+
+          <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)" }}>
+            Después de recibir el producto, podrás calificarlo con estrellas en{" "}
+            <strong>Mis pedidos</strong>.
+          </p>
         </div>
       </div>
+
+      <section style={{ marginTop: 36 }}>
+        <h2 style={{ fontSize: 20, marginBottom: 14 }}>Reseñas de compradores</h2>
+        {reviews.length === 0 ? (
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>
+            Aún no hay reseñas para este producto.
+          </p>
+        ) : (
+          <div style={{ display: "grid", gap: 12 }}>
+            {reviews.map((r) => (
+              <article
+                key={r.id}
+                className="service-card"
+                style={{ padding: "14px 16px" }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <Stars value={r.rating} size={16} />
+                  <small style={{ color: "var(--muted)" }}>
+                    {r.created_at
+                      ? new Date(r.created_at).toLocaleDateString("es-ES")
+                      : ""}
+                  </small>
+                </div>
+                {r.comment && (
+                  <p style={{ marginTop: 8, fontSize: 14, lineHeight: 1.5 }}>
+                    {r.comment}
+                  </p>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </main>
   );
 }
