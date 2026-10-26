@@ -13,8 +13,19 @@ const categories = [
   "Otros",
 ];
 
+function Stars({ value = 0, size = 13 }) {
+  const v = Math.round(Number(value) || 0);
+  return (
+    <span style={{ color: "#f5b400", fontSize: size, letterSpacing: 0.5 }}>
+      {"★".repeat(Math.min(5, Math.max(0, v)))}
+      <span style={{ color: "#d1d5db" }}>{"★".repeat(Math.max(0, 5 - v))}</span>
+    </span>
+  );
+}
+
 export default function StorePage({ onViewProduct, onAddToCart }) {
   const [products, setProducts] = useState([]);
+  const [ratings, setRatings] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Todas");
@@ -34,7 +45,33 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
         console.error("Error cargando productos:", error);
         setProducts([]);
       } else {
-        setProducts(data || []);
+        const list = data || [];
+        setProducts(list);
+
+        const ids = list.map((p) => p.id).filter(Boolean);
+        if (ids.length) {
+          const { data: revs } = await supabase
+            .from("reviews")
+            .select("product_id, rating")
+            .in("product_id", ids);
+
+          const map = {};
+          (revs || []).forEach((r) => {
+            if (!r.product_id) return;
+            if (!map[r.product_id]) map[r.product_id] = { sum: 0, n: 0 };
+            map[r.product_id].sum += Number(r.rating || 0);
+            map[r.product_id].n += 1;
+          });
+
+          const avg = {};
+          Object.keys(map).forEach((id) => {
+            avg[id] = {
+              rating: map[id].sum / map[id].n,
+              count: map[id].n,
+            };
+          });
+          setRatings(avg);
+        }
       }
       setLoading(false);
     };
@@ -100,7 +137,6 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
         </p>
       </header>
 
-      {/* Buscador */}
       <div style={{ marginBottom: 14 }}>
         <div
           style={{
@@ -131,7 +167,6 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
         </div>
       </div>
 
-      {/* Categorías */}
       <div
         style={{
           display: "flex",
@@ -167,7 +202,6 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
         })}
       </div>
 
-      {/* Orden */}
       <div
         style={{
           display: "flex",
@@ -177,9 +211,7 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
           gap: 12,
         }}
       >
-        <span style={{ fontSize: 13, color: "var(--muted)" }}>
-          Ordenar por
-        </span>
+        <span style={{ fontSize: 13, color: "var(--muted)" }}>Ordenar por</span>
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
@@ -226,6 +258,7 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
         >
           {filtered.map((product) => {
             const outOfStock = product.stock === 0;
+            const r = ratings[product.id];
             return (
               <article
                 key={product.id}
@@ -238,7 +271,6 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
                   display: "flex",
                   flexDirection: "column",
                   cursor: "pointer",
-                  transition: "box-shadow 0.15s ease",
                   minWidth: 0,
                 }}
               >
@@ -331,6 +363,13 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
                     {product.title}
                   </h3>
 
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <Stars value={r?.rating || 0} />
+                    <span style={{ fontSize: 11, color: "#64748b" }}>
+                      {r?.count ? `(${r.count})` : ""}
+                    </span>
+                  </div>
+
                   <div
                     style={{
                       fontSize: 18,
@@ -363,7 +402,8 @@ export default function StorePage({ onViewProduct, onAddToCart }) {
                       Ver
                     </button>
                     <button
-                      type="button"iggl                      className="button primary small"
+                      type="button"
+                      className="button primary small"
                       style={{ flex: 1, minHeight: 36, fontSize: 12 }}
                       disabled={outOfStock}
                       onClick={(e) => handleAddToCart(product, e)}
