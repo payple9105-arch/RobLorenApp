@@ -364,7 +364,7 @@ export default function ProductForm({ user, onPublished }) {
               />
             ) : (
               <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 10 }}>
-                Elige una imagen desde tu galería
+                Elige una imagen desde tu galería o toma una foto
               </p>
             )}
             <label className="button outline" style={{ cursor: "pointer" }}>
@@ -372,7 +372,6 @@ export default function ProductForm({ user, onPublished }) {
               <input
                 type="file"
                 accept="image/*"
-                capture="environment"
                 onChange={onImagePick}
                 style={{ display: "none" }}
               />
