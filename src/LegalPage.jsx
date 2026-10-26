@@ -1,10 +1,17 @@
 import React from "react";
 
+const LEGAL_NAME = "Roberto Lorenzo Hechavarria";
+const CONTACT_EMAIL = "roblorentodonegocio@gmail.com";
 const CONTACT_WHATSAPP = "+53 5473 2279";
+
 const CONTACT_NOTE =
-  "Puedes contactarnos por WhatsApp al " +
+  "Operador: " +
+  LEGAL_NAME +
+  ". Email: " +
+  CONTACT_EMAIL +
+  ". WhatsApp: " +
   CONTACT_WHATSAPP +
-  " o desde la sección de cuenta / soporte de la Plataforma.";
+  ". También puedes escribir desde la sección de cuenta / soporte de la Plataforma.";
 
 const termsContent = [
   {
@@ -14,7 +21,9 @@ const termsContent = [
   {
     title: "2. Quién opera el servicio",
     body:
-      "RobLoren es un marketplace digital operado bajo la marca RobLoren. Para contacto comercial o de soporte: " +
+      "RobLoren es un marketplace digital operado por " +
+      LEGAL_NAME +
+      ". Contacto: " +
       CONTACT_NOTE,
   },
   {
@@ -71,12 +80,14 @@ const privacyContent = [
   {
     title: "1. Responsable del tratamiento",
     body:
-      "El responsable del tratamiento de los datos personales recopilados a través de RobLoren es el operador de la Plataforma bajo la marca RobLoren. Contacto: " +
+      "El responsable del tratamiento de los datos personales recopilados a través de RobLoren es " +
+      LEGAL_NAME +
+      ". Contacto: " +
       CONTACT_NOTE,
   },
   {
     title: "2. Datos que recopilamos",
-    body: "Podemos recopilar: datos de registro (nombre, correo electrónico, usuario), datos de perfil (biografía, ubicación, habilidades, fotos), datos de transacciones (pedidos, importes, estado de pago, identificadores de pago), datos de comunicación (mensajes en la Plataforma), datos de soporte (WhatsApp u otros canales) e información técnica básica (tipo de dispositivo, registros de acceso) necesaria para operar y asegurar el servicio.",
+    body: "Podemos recopilar: datos de registro (nombre, correo electrónico, usuario), datos de perfil (biografía, ubicación, habilidades, fotos), datos de transacciones (pedidos, importes, estado de pago, identificadores de pago), datos de comunicación (mensajes en la Plataforma), datos de soporte (email, WhatsApp u otros canales) e información técnica básica (tipo de dispositivo, registros de acceso) necesaria para operar y asegurar el servicio.",
   },
   {
     title: "3. Finalidades",
@@ -100,7 +111,9 @@ const privacyContent = [
   },
   {
     title: "8. Tus derechos",
-    body: "Según la normativa aplicable, puedes solicitar acceso, rectificación, eliminación, limitación del tratamiento, portabilidad u oposición. Para ejercerlos, contacta por los canales de soporte de RobLoren. También puedes presentar una reclamación ante la autoridad de protección de datos competente en tu jurisdicción.",
+    body: "Según la normativa aplicable, puedes solicitar acceso, rectificación, eliminación, limitación del tratamiento, portabilidad u oposición. Para ejercerlos, escribe a " +
+      CONTACT_EMAIL +
+      " o usa los canales de soporte de RobLoren. También puedes presentar una reclamación ante la autoridad de protección de datos competente en tu jurisdicción.",
   },
   {
     title: "9. Menores de edad",
@@ -139,7 +152,10 @@ export default function LegalPage({ type = "terms", onBack }) {
           Última actualización: {updated}
         </p>
         <p style={{ color: "var(--muted)", marginTop: 6, fontSize: 14 }}>
-          Soporte: WhatsApp {CONTACT_WHATSAPP}
+          Operador: {LEGAL_NAME}
+        </p>
+        <p style={{ color: "var(--muted)", marginTop: 4, fontSize: 14 }}>
+          Email: {CONTACT_EMAIL} · WhatsApp {CONTACT_WHATSAPP}
         </p>
       </header>
 
